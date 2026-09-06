@@ -1769,6 +1769,9 @@ strong {
   .has-answer-bar {
     padding-bottom: 80px;
   }
+  .app-shell:has(.has-answer-bar) .site-footer {
+    padding-bottom: calc(var(--sp-8) + 80px);
+  }
 }
 
 /* Share modal */

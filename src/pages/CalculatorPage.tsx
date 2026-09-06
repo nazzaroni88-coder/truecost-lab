@@ -253,6 +253,23 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
             <div className="print-only" style={{ marginBottom: 8 }}>
               <strong>TrueCost Lab — {def.name}</strong> · Scenario: {active.name} · {new Date().toLocaleDateString()}
             </div>
+            {def.assumptions && (
+              <div className="chips no-print" aria-label="Key assumptions" style={{ alignItems: 'center' }}>
+                <span className="micro muted" style={{ fontWeight: 600 }}>
+                  Assumes
+                </span>
+                {def.assumptions(deferredInputs)
+                  .slice(0, 4)
+                  .map((a: { label: string; value: string }) => (
+                    <span key={a.label} className="chip" style={{ cursor: 'default' }} title={a.label}>
+                      {a.value}
+                    </span>
+                  ))}
+                <a href="#method" className="micro" style={{ fontWeight: 600 }}>
+                  All assumptions
+                </a>
+              </div>
+            )}
             {activePreset && (
               <div className="callout callout-neutral no-print" style={{ padding: '8px 12px' }}>
                 <IconWarning />

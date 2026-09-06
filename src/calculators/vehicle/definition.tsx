@@ -41,14 +41,16 @@ export function vehicleQuickAdjust(inputs: VehicleInputs): QuickAdjust<VehicleIn
 
 export function vehicleAssumptions(i: VehicleInputs): { label: string; value: string }[] {
   const s = i.shared;
+  const anyGas = i.a.fuelType === 'gas' || i.b.fuelType === 'gas';
+  const anyEv = i.a.fuelType === 'electric' || i.b.fuelType === 'electric';
   return [
     { label: 'Ownership period', value: `${s.ownershipYears} years` },
-    { label: 'Miles per year', value: `${fmtNumber(s.annualMiles, 0)} mi` },
-    { label: 'Gas price', value: `${fmtMoney(s.gasPrice, 2)}/gal` },
-    { label: 'Electricity rate', value: `${fmtMoney(s.electricityRate, 3)}/kWh` },
+    { label: 'Miles per year', value: `${fmtNumber(s.annualMiles, 0)} mi/yr` },
+    ...(anyGas ? [{ label: 'Gas price', value: `${fmtMoney(s.gasPrice, 2)}/gal` }] : []),
+    ...(anyEv ? [{ label: 'Electricity rate', value: `${fmtMoney(s.electricityRate, 2)}/kWh` }] : []),
+    { label: 'Investment return (for invest-the-difference)', value: `${fmtPct(s.investmentReturn, 1)} return` },
     { label: 'Fuel & electricity price growth', value: `${fmtPct(s.fuelPriceGrowth, 1)}/yr` },
     { label: 'Cost inflation (insurance, maintenance, etc.)', value: `${fmtPct(s.costInflation, 1)}/yr` },
-    { label: 'Investment return (for invest-the-difference)', value: `${fmtPct(s.investmentReturn, 1)}/yr` },
     { label: `${i.a.name}: depreciation`, value: `${fmtPct(i.a.firstYearDepreciation, 0)} first year, then ${fmtPct(i.a.annualDepreciation, 0)}/yr${i.a.resaleOverride !== null ? ` (resale set to ${fmtMoney(i.a.resaleOverride)})` : ''}` },
     { label: `${i.b.name}: depreciation`, value: `${fmtPct(i.b.firstYearDepreciation, 0)} first year, then ${fmtPct(i.b.annualDepreciation, 0)}/yr${i.b.resaleOverride !== null ? ` (resale set to ${fmtMoney(i.b.resaleOverride)})` : ''}` },
   ];

@@ -54,6 +54,17 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
       ? { label: 'Biggest gap', value: biggestGap ? biggestGap.label : '—', sub: biggestGap ? `${fmtMoney(Math.abs(biggestGap.diff))} more for ${biggestGap.diff > 0 ? a.name : b.name}` : '', help: 'The single cost category with the largest difference between the two options.' }
       : { label: 'Cash due at signing', value: `${fmtMoneyCompact(a.cashAtSigning)} vs ${fmtMoneyCompact(b.cashAtSigning)}`, sub: `${a.name} vs ${b.name}`, help: 'Down payment when financing, or the full price plus tax and fees when paying cash (minus any trade-in).' },
     { label: 'Monthly out of pocket', value: `${fmtMoney(a.monthlyOutOfPocket)} vs ${fmtMoney(b.monthlyOutOfPocket)}`, sub: 'payments + running costs, averaged', help: 'Average monthly spend while you own the car: loan payment plus fuel, insurance, maintenance, repairs, tires and registration. Excludes the upfront cash and the resale you get back.' },
+    ...(wealthWinner !== 'tie' && wealthWinner !== winner
+      ? [
+          {
+            label: `Counting timing at ${fmtPct(inputs.shared.investmentReturn, 1)}`,
+            value: `${(wealthWinner === 'a' ? a : b).name} +${fmtMoney(roundHeadline(wealthAbs))}`,
+            sub: 'wealth after investing the cash-flow difference',
+            tone: wealthWinner as 'a' | 'b',
+            help: 'When the option that is cheaper on paper also needs more cash early, the other option can come out ahead once the money it leaves in your pocket is invested. This is the wealth-based verdict.',
+          },
+        ]
+      : []),
   ];
 
   const rows: StackRow[] = [a, b].map((o, i) => ({

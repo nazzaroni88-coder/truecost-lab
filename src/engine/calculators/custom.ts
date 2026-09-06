@@ -216,6 +216,11 @@ export function computeCustom(i: CustomInputs): CustomResult {
     }
   }
   if (a.totalCost === 0 && b.totalCost === 0) warnings.push('Add some costs to each option to see a comparison.');
+  const horizon = Math.max(1, Math.round(i.horizonYears));
+  for (const side of ['a', 'b'] as const) {
+    const late = i[side].oneTime.filter((c) => Math.round(c.year) > horizon);
+    if (late.length) warnings.push(`${i[side].name}: ${late.map((c) => `"${c.label}" (year ${Math.round(c.year)})`).join(', ')} falls after the ${horizon}-year horizon and is not counted.`);
+  }
   return { a, b, comparison, sensitivity, breakEvens, warnings };
 }
 
