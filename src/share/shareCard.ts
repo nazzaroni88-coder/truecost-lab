@@ -13,7 +13,10 @@ export interface ShareCardData {
 const W = 1200;
 const H = 630;
 const FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
-const COLORS = { ink: '#1a1f2b', ink2: '#454d5c', ink3: '#6b7484', line: '#e2e7ef', primary: '#1b6ef3', primaryStrong: '#1256c7', a: '#1256c7', b: '#b85a08', soft: '#f1f4f9', positive: '#167a4a', negative: '#cf3a2e' };
+// Mirrors the light tokens in tokens.css. Canvas cannot read CSS variables, so these are copied by
+// hand and must be updated alongside them — b was left on the old #b85a08 when the token moved to
+// #ad5407 for AA contrast, and the card quietly drifted away from the app.
+const COLORS = { ink: '#1a1f2b', ink2: '#454d5c', ink3: '#616978', line: '#e0e3e8', primary: '#1b6ef3', primaryStrong: '#1256c7', a: '#1256c7', b: '#ad5407', soft: '#f1f4f9', positive: '#167a4a', negative: '#cf3a2e' };
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(/\s+/);
@@ -92,16 +95,12 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
   // Background
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, W, H);
-  // Soft corner wash
-  const wash = ctx.createLinearGradient(W, 0, W - 500, 400);
-  wash.addColorStop(0, '#eaf1ff');
-  wash.addColorStop(1, 'rgba(234,241,255,0)');
-  ctx.fillStyle = wash;
-  ctx.fillRect(0, 0, W, H);
-  // Accent bar
+  // No decorative wash. The app dropped gradients and soft fills in favour of rules and whitespace,
+  // and this image is the most public thing the brand puts out — it should look like the product.
+  // Accent bar: the winner's colour, kept as a brand device but thinner than the old 10px slab.
   const accent = data.summary.winner === 'a' ? '#1b6ef3' : data.summary.winner === 'b' ? '#f0811f' : '#1b6ef3';
   ctx.fillStyle = accent;
-  ctx.fillRect(0, 0, W, 10);
+  ctx.fillRect(0, 0, W, 6);
 
   // Header: mark + wordmark + calculator name
   drawMark(ctx, 56, 44, 44);
@@ -142,29 +141,31 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
     y += 30;
   }
 
-  // Rows panel on the right
-  const rows = data.summary.rows.slice(0, 6);
+  /*
+   * Figures down the right, as ruled ledger columns rather than a rounded bordered panel.
+   *
+   * The old treatment was an 18px-radius white box with a border — the card idiom the app removed
+   * everywhere else. These now match `.stat` in the answer hero exactly: a rule on top carrying the
+   * option's colour, the label under it, the figure beneath.
+   */
+  const rows = data.summary.rows.slice(0, 5);
   if (rows.length) {
-    const px = 812,
-      py = 120,
-      pw = 332,
-      ph = 40 + rows.length * 54;
-    roundRect(ctx, px, py, pw, Math.min(ph, 400), 18);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-    ctx.strokeStyle = COLORS.line;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    let ry = py + 40;
+    const px = 812;
+    const pw = 332;
+    let ry = 132;
     for (const r of rows) {
+      const tone = r.tone === 'a' ? COLORS.a : r.tone === 'b' ? COLORS.b : r.tone === 'positive' ? COLORS.positive : r.tone === 'negative' ? COLORS.negative : COLORS.ink;
+      // The rule states which option the figure belongs to; neutral rows get a plain hairline.
+      ctx.fillStyle = r.tone === 'a' || r.tone === 'b' ? tone : COLORS.line;
+      ctx.fillRect(px, ry, pw, 2);
       ctx.fillStyle = COLORS.ink3;
       ctx.font = `500 14px ${FONT}`;
-      ctx.fillText(r.label.length > 34 ? r.label.slice(0, 33) + '…' : r.label, px + 22, ry);
-      ctx.font = `600 22px ${FONT}`;
-      ctx.fillStyle = r.tone === 'a' ? COLORS.a : r.tone === 'b' ? COLORS.b : r.tone === 'positive' ? COLORS.positive : r.tone === 'negative' ? COLORS.negative : COLORS.ink;
-      ctx.fillText(r.value, px + 22, ry + 26);
-      ry += 54;
-      if (ry > py + 380) break;
+      ctx.fillText(r.label.length > 34 ? r.label.slice(0, 33) + '…' : r.label, px, ry + 24);
+      ctx.font = `600 24px ${FONT}`;
+      ctx.fillStyle = tone;
+      ctx.fillText(r.value, px, ry + 52);
+      ry += 76;
+      if (ry > 500) break;
     }
   }
 
