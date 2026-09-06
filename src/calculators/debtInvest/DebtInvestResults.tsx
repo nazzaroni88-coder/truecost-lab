@@ -151,8 +151,10 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
               </tr>
             </thead>
             <tbody>
+              {/* The row matching the return the user actually entered is marked with the same
+                  margin rule the ledger uses for a driver row, rather than a filled band. */}
               {r.returnScenarios.map((s) => (
-                <tr key={s.returnPct} style={s.returnPct === i.investmentReturn ? { background: 'var(--tc-surface-2)' } : undefined}>
+                <tr key={s.returnPct} className={s.returnPct === i.investmentReturn ? 'driver' : undefined}>
                   <td>{fmtPct(s.returnPct, 0)} per year</td>
                   <td className={s.winner === 'payDebt' ? 'text-a' : s.winner === 'invest' ? 'text-b' : ''} style={{ textAlign: 'right', fontWeight: 500 }}>
                     {s.winner === 'payDebt' ? 'Pay debt first' : s.winner === 'invest' ? 'Invest the extra' : 'Tie'}

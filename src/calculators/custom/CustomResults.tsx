@@ -62,6 +62,14 @@ export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomI
   const catKeys = Array.from(new Set([...a.categories.map((x) => x.key), ...b.categories.map((x) => x.key)]));
   const catLabel = (k: string) => a.categories.find((x) => x.key === k)?.label ?? b.categories.find((x) => x.key === k)?.label ?? k;
   const catAmt = (o: CustomOptionResult, k: string) => o.categories.find((x) => x.key === k)?.amount ?? 0;
+  // Same marginal annotation the Vehicle ledger uses: mark the line that actually decides the
+  // answer. Read from category totals the engine already returned, and suppressed below $1 so a
+  // rounding artefact never gets labelled a driver.
+  const biggestGapKey =
+    catKeys
+      .map((k) => ({ key: k, diff: Math.abs(catAmt(a, k) - catAmt(b, k)) }))
+      .sort((x, y) => y.diff - x.diff)
+      .filter((x) => x.diff > 1)[0]?.key ?? null;
 
   return (
     <>
@@ -83,10 +91,11 @@ export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomI
                 </thead>
                 <tbody>
                   {catKeys.map((k) => (
-                    <tr key={k}>
+                    <tr key={k} className={k === biggestGapKey ? 'driver' : undefined}>
                       <td>
                         <span className="cat-dot" style={{ background: categoryColor(k) }} />
                         {catLabel(k)}
+                        {k === biggestGapKey && <span className="row-note">largest gap</span>}
                       </td>
                       <td>{fmtMoney(catAmt(a, k))}</td>
                       <td>{fmtMoney(catAmt(b, k))}</td>

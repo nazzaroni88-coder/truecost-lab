@@ -619,29 +619,38 @@ table,
 }
 
 /* Disclosure / accordion */
+/*
+ * Disclosures as a ruled list. The methodology panel stacks six or seven of these, and each drawing
+ * its own bordered rounded surface turned "show me the math" into another wall of boxes. The
+ * summary row is now a ruled line you open, which is also how the working reads on paper.
+ */
 .disclosure {
-  border: 1px solid var(--tc-line);
-  border-radius: var(--r-md);
-  background: var(--tc-surface);
+  border: 0;
+  border-top: 1px solid var(--tc-rule);
+  border-radius: 0;
+  background: transparent;
+}
+.disclosure:first-child {
+  border-top: 0;
 }
 .disclosure + .disclosure {
-  margin-top: var(--sp-2);
+  margin-top: 0;
 }
 .disclosure > summary {
   list-style: none;
   cursor: pointer;
-  padding: 12px 14px;
+  padding: 12px 0;
   display: flex;
   align-items: center;
   gap: 10px;
   font-weight: 500;
-  border-radius: var(--r-md);
+  border-radius: 0;
 }
 .disclosure > summary::-webkit-details-marker {
   display: none;
 }
 .disclosure > summary:hover {
-  background: var(--tc-surface-2);
+  color: var(--tc-ink);
 }
 .disclosure > summary .chev {
   margin-left: auto;
@@ -652,7 +661,7 @@ table,
   transform: rotate(180deg);
 }
 .disclosure-body {
-  padding: 4px 14px 14px;
+  padding: 2px 0 16px;
   font-size: var(--fs-small);
   color: var(--tc-ink-2);
 }
@@ -1748,8 +1757,11 @@ table,
   margin-top: 4px;
   line-height: 1.4;
 }
+/* The milestone at your horizon. Marked by its rule, like every other emphasised column here —
+   a filled band was the last place emphasis was still done with a tint rather than a rule. */
 .milestone.hi {
-  background: var(--tc-primary-soft);
+  background: transparent;
+  border-top-color: var(--tc-primary);
 }
 .milestone.hi .val {
   color: var(--tc-primary-strong);
@@ -1760,25 +1772,36 @@ table,
   display: grid;
   gap: 10px;
 }
+/*
+ * Break-even findings as ruled entries. These were filled --tc-surface-2 tiles with a rounded,
+ * bordered 32px icon chip inside each one — a box, holding a box, repeated down the section.
+ */
 .be-item {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: start;
-  padding: 12px 14px;
-  background: var(--tc-surface-2);
-  border-radius: var(--r-md);
+  padding: 11px 0;
+  background: transparent;
+  border-radius: 0;
+  border-top: 1px solid var(--tc-rule);
   font-size: var(--fs-small);
 }
+.be-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+/* A glyph set in the margin, not a chip. */
 .be-item .ico {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--tc-surface);
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  background: none;
+  border: 0;
+  border-radius: 0;
   display: grid;
   place-items: center;
-  color: var(--tc-primary-strong);
-  border: 1px solid var(--tc-line);
+  color: var(--tc-ink-4);
 }
 .be-item .ico svg {
   width: 16px;
@@ -1797,14 +1820,22 @@ table,
   display: grid;
   gap: 8px;
 }
+/*
+ * Plain-English Q&A as a ruled accordion. Each item used to draw its own bordered, rounded box, so
+ * a five-question section rendered as five more cards inside the section that contained them.
+ */
 .insight {
-  border: 1px solid var(--tc-line);
-  border-radius: var(--r-md);
+  border: 0;
+  border-top: 1px solid var(--tc-rule);
+  border-radius: 0;
+}
+.insight:first-child {
+  border-top: 0;
 }
 .insight summary {
   list-style: none;
   cursor: pointer;
-  padding: 12px 14px;
+  padding: 12px 0;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -1815,11 +1846,11 @@ table,
   display: none;
 }
 .insight summary .q {
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  background: var(--tc-primary-soft);
-  color: var(--tc-primary-strong);
+  width: 18px;
+  height: 18px;
+  border-radius: 0;
+  background: none;
+  color: var(--tc-ink-4);
   display: grid;
   place-items: center;
   flex: none;
@@ -1837,7 +1868,7 @@ table,
   transform: rotate(180deg);
 }
 .insight .body {
-  padding: 0 14px 14px 50px;
+  padding: 0 0 14px 28px;
   font-size: var(--fs-small);
   color: var(--tc-ink-2);
 }
@@ -1853,17 +1884,19 @@ table,
 }
 @media (max-width: 520px) {
   .insight .body {
-    padding-left: 14px;
+    padding-left: 0;
   }
 }
 
 /* Methodology panel */
+/* The worked figures: a quoted block set off by a rule, not a filled code chip. */
 .formula {
   font-family: var(--tc-font-mono);
   font-size: 0.8125rem;
-  background: var(--tc-surface-2);
-  border-radius: 8px;
-  padding: 8px 10px;
+  background: transparent;
+  border-left: 2px solid var(--tc-line);
+  border-radius: 0;
+  padding: 2px 0 2px 12px;
   overflow-x: auto;
   white-space: pre;
   color: var(--tc-ink);
@@ -2837,4 +2870,9 @@ dialog.modal::backdrop {
 .cmp-table tr.driver td:first-child {
   box-shadow: inset 2px 0 0 var(--tc-line-strong);
   padding-left: 10px;
+}
+
+/* A driver row's label carries the marker; its figures stay in their columns unshaded. */
+.cmp-table tr.driver td {
+  color: var(--tc-ink);
 }

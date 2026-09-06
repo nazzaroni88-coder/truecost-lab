@@ -123,7 +123,7 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
                 <td>—</td>
                 <td>{fmtMoney(r.buy.closingCosts + r.buy.sellingCosts)}</td>
               </tr>
-              <tr className="total">
+              <tr className="subtotal">
                 <td>Money that is gone</td>
                 <td>{fmtMoney(r.rent.nominalCost)}</td>
                 <td>{fmtMoney(r.buy.unrecoverableCosts)}</td>
