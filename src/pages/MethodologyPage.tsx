@@ -133,7 +133,7 @@ cost per mile = true cost ÷ (miles × years)`}</pre>
           Everything it cannot see stays visible as a caveat rather than being silently resolved: funding rounds that open and close, eligible-vehicle lists, battery-sourcing rules, census tracts, and legislation that has repeatedly changed. Those programmes are still counted in the suggested amount, because excluding all of them would suggest nothing to almost everyone, but each one carries its own “confirm this” note and a second, caveat-free total is offered alongside. Nothing is ever written into your comparison until you press a button, and the amount lands in the ordinary incentive field where you can edit it like any other input.
         </p>
         <p>
-          Two deliberate omissions. Utility rebates are listed as a prompt with no amount, because they are set locally and we would only be guessing. And the New Jersey sales-tax exemption is described but excluded from every total, because a tax exemption belongs in the sales-tax rate field, not in a cash rebate.
+          Programmes you can only hold one of — competing utilities, or a statewide programme and its regional twin — are grouped, and only the largest counts toward the total. Summing every utility in a state would invent money nobody can receive. Charger rebates are capped at the charger cost you entered, since a rebate is worth nothing if you are not buying one. And the New Jersey sales-tax exemption is described but excluded from every total, because a tax exemption belongs in the sales-tax rate field, not in a cash rebate.
         </p>
 
         <h2 id="rent-buy">Rent vs Buy</h2>

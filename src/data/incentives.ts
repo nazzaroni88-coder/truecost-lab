@@ -81,6 +81,18 @@ export interface Incentive {
    * figure we can actually check against what the user tells us.
    */
   incomeQualifiedOnly?: boolean;
+  /**
+   * 'charger' programmes pay toward a home charger rather than the vehicle. Both end up as cash at
+   * purchase in the model, but a charger rebate is worth nothing if you are not buying a charger,
+   * so it is capped at the charger cost entered on the form.
+   */
+  kind?: 'vehicle' | 'charger';
+  /**
+   * Programmes you can only claim one of — competing utilities, or a statewide programme and its
+   * regional equivalent. Only the largest in a group counts toward a total, because summing
+   * every utility in a state would invent money nobody can actually receive.
+   */
+  exclusiveGroup?: string;
 }
 
 /**
@@ -288,23 +300,178 @@ const STATE: Incentive[] = [
     sourceUrl: 'https://evrebate.oregon.gov/',
     sourceLabel: 'Oregon CVRP',
   },
+  // ---------- California ----------
+  // The statewide rebate (CVRP) closed to new applications in November 2023 and the San Joaquin
+  // Valley district rebate exhausted its funding in October 2025. What remains for most Californians
+  // is an income-qualified scrap-and-replace programme plus a utility charger rebate, so those are
+  // modelled in detail rather than as a single "California" line.
   {
     id: 'ca-cc4a',
     incomeQualifiedOnly: true,
-    name: 'California Clean Cars 4 All / Driving Clean Assistance',
+    exclusiveGroup: 'ca-scrap-replace',
+    name: 'Clean Cars 4 All (five largest air districts)',
     authority: 'state',
     region: 'CA',
-    appliesTo: ['new', 'used'],
+    appliesTo: ['new', 'used', 'lease'],
     maxAmount: 12000,
-    amountNote: 'California has no broad statewide purchase rebate: the Clean Vehicle Rebate Project closed to new applications in November 2023. What remains is income-qualified scrap-and-replace — up to $12,000 toward a replacement vehicle, plus up to $2,000 of charging assistance.',
+    amountNote: 'Up to $12,000 when you scrap an older vehicle and live in a disadvantaged community, or up to $7,500 without scrapping one. A further $2,000 is available toward charging, and the programme offers loans capped at 8%.',
     timing: 'rebate-after-purchase',
     notes: [
-      'Administered by regional air districts, so both the amount and the rules depend on your county.',
-      'Requires retiring an eligible older vehicle and meeting an income test.',
-      'District funding is finite and published balances change frequently; an application does not guarantee payment.',
+      'Runs in the five largest air districts: South Coast, San Joaquin Valley, Bay Area, Sacramento Metro and San Diego. Outside those, use the statewide Driving Clean Assistance Program instead.',
+      'Household income must be at or below 300% of the Federal Poverty Level.',
+      'A used vehicle must be 8 model years or newer with under 75,000 miles.',
+      'One incentive per household for the lifetime of the programme, and district funding is finite — an application does not guarantee payment.',
+    ],
+    sourceUrl: 'https://ww2.arb.ca.gov/our-work/programs/clean-cars-4-all/about',
+    sourceLabel: 'CARB Clean Cars 4 All',
+  },
+  {
+    id: 'ca-dcap',
+    incomeQualifiedOnly: true,
+    exclusiveGroup: 'ca-scrap-replace',
+    name: 'Driving Clean Assistance Program (rest of California)',
+    authority: 'state',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 12000,
+    amountNote: 'The statewide equivalent of Clean Cars 4 All, for residents outside the five participating air districts. Up to $12,000 with a scrapped vehicle, plus up to $2,000 toward charging and access to a rate-capped loan.',
+    timing: 'rebate-after-purchase',
+    notes: [
+      'Use this if your county is not covered by one of the five air districts; you cannot claim both.',
+      'Household income must be at or below 300% of the Federal Poverty Level.',
+      'You do not have to scrap a vehicle to qualify, but the award is smaller if you do not.',
+    ],
+    sourceUrl: 'https://ww2.arb.ca.gov/our-work/programs/driving-clean-assistance-program/about',
+    sourceLabel: 'CARB Driving Clean Assistance',
+  },
+  {
+    id: 'ca-sjv-driveclean',
+    name: 'Drive Clean in the San Joaquin — CLOSED',
+    authority: 'state',
+    region: 'CA',
+    appliesTo: ['new'],
+    maxAmount: 0,
+    amountNote: 'The San Joaquin Valley district rebate, worth up to $3,000, stopped accepting applications on 24 October 2025 when its funding was exhausted. Applications submitted before then are still being processed.',
+    timing: 'rebate-after-purchase',
+    endedOn: '24 October 2025',
+    notes: ['Valley residents should look at Clean Cars 4 All through the San Joaquin Valley air district instead.'],
+    sourceUrl: 'https://ww2.valleyair.org/grants/drive-clean-in-the-san-joaquin/rebate/',
+    sourceLabel: 'Valley Air District',
+  },
+  {
+    id: 'ca-cav-decal',
+    name: 'California carpool-lane (CAV) decal — ENDED',
+    authority: 'state',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 0,
+    amountNote: 'Solo carpool-lane access for clean vehicles ended when the federal authorisation expired. All decals expired on 1 October 2025 and single-occupant EVs must now obey the posted occupancy requirement.',
+    timing: 'varies',
+    endedOn: '30 September 2025',
+    notes: [
+      'California legislated an extension through 2027, but it requires federal approval that has not been granted.',
+      'Not a dollar amount, but it was a real reason people bought EVs in California — worth knowing it is gone before you decide.',
+    ],
+    sourceUrl: 'https://ww2.arb.ca.gov/end-californias-clean-air-vehicle-decal-program',
+    sourceLabel: 'CARB — end of the CAV decal programme',
+  },
+  // Utility charger rebates. You have one electric utility, so these are mutually exclusive: only
+  // the largest counts toward a total. Amounts are the published maximums, usually income-tiered.
+  {
+    id: 'ca-pge-charger',
+    kind: 'charger',
+    exclusiveGroup: 'ca-utility-charger',
+    name: 'PG&E home charger rebate',
+    authority: 'utility',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 2000,
+    amountNote: 'Up to $2,000 toward a home charger and its installation for standard customers, and up to $5,000 for income-qualified customers.',
+    timing: 'rebate-after-purchase',
+    notes: ['Northern and central California. Check whether your address is PG&E or a community choice aggregator — the CCA may add its own rebate on top.'],
+    sourceUrl: afdcStateUrl('CA'),
+    sourceLabel: 'AFDC California utilities',
+  },
+  {
+    id: 'ca-sce-charger',
+    kind: 'charger',
+    exclusiveGroup: 'ca-utility-charger',
+    incomeQualifiedOnly: true,
+    name: 'Southern California Edison charger rebate',
+    authority: 'utility',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 4200,
+    amountNote: 'Up to $4,200 toward charging equipment and installation for income-qualified customers. Standard-customer amounts are smaller.',
+    timing: 'rebate-after-purchase',
+    notes: ['Serves much of southern California outside Los Angeles city limits, which is LADWP.'],
+    sourceUrl: afdcStateUrl('CA'),
+    sourceLabel: 'AFDC California utilities',
+  },
+  {
+    id: 'ca-ladwp-charger',
+    kind: 'charger',
+    exclusiveGroup: 'ca-utility-charger',
+    name: 'LADWP charger rebate',
+    authority: 'utility',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 1000,
+    amountNote: 'Up to $1,000 toward a home charger, rising to about $1,500 for income-qualified customers.',
+    timing: 'rebate-after-purchase',
+    notes: ['City of Los Angeles only. Neighbouring areas are usually Southern California Edison.'],
+    sourceUrl: afdcStateUrl('CA'),
+    sourceLabel: 'AFDC California utilities',
+  },
+  {
+    id: 'ca-smud-charger',
+    kind: 'charger',
+    exclusiveGroup: 'ca-utility-charger',
+    name: 'SMUD charger rebate',
+    authority: 'utility',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 950,
+    amountNote: 'Stacked components rather than one award: about $250 for the charger, $500 for a dedicated circuit and $200 for a circuit-sharing or energy-management device.',
+    timing: 'rebate-after-purchase',
+    notes: ['Sacramento area.'],
+    sourceUrl: afdcStateUrl('CA'),
+    sourceLabel: 'AFDC California utilities',
+  },
+  {
+    id: 'ca-sdge-charger',
+    kind: 'charger',
+    exclusiveGroup: 'ca-utility-charger',
+    name: 'SDG&E charger rebate',
+    authority: 'utility',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 0,
+    amountUnverified: true,
+    amountNote: 'San Diego Gas & Electric has offered $1,000, or $1,500 for Lifeline and EZ-SAVE customers, but did not appear to have an active residential Level 2 charger rebate at the review date. Check before counting on it.',
+    timing: 'rebate-after-purchase',
+    notes: ['San Diego area.'],
+    sourceUrl: afdcStateUrl('CA'),
+    sourceLabel: 'AFDC California utilities',
+  },
+  {
+    id: 'ca-cca',
+    kind: 'charger',
+    exclusiveGroup: 'ca-cca',
+    amountUnverified: true,
+    name: 'Your community choice aggregator',
+    authority: 'utility',
+    region: 'CA',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 0,
+    amountNote: 'Many Californians are served by a CCA — Peninsula Clean Energy, MCE, Silicon Valley Clean Energy, Ava, CleanPowerSF and others — which run their own charger and used-EV rebates on top of the utility that still delivers the power.',
+    timing: 'rebate-after-purchase',
+    notes: [
+      'CCA programmes open and pause independently; MCE\'s vehicle rebate was paused at the review date with a relaunch planned.',
+      'Check your electricity bill: it will name the CCA separately from the delivery utility.',
     ],
     sourceUrl: afdcStateUrl('CA'),
-    sourceLabel: 'AFDC California',
+    sourceLabel: 'AFDC California utilities',
   },
   // Programmes that exist but whose current figure was not verified on the review date.
   // Listed without an amount so the user is pointed at the right place without being given a number.
@@ -429,6 +596,8 @@ export interface IncentiveQuery {
   /** 'unknown' skips the income test rather than guessing. */
   income: number | 'unknown';
   filingStatus: FilingStatus;
+  /** What the user entered for a home charger. Charger rebates cannot exceed it. */
+  chargerCost?: number;
 }
 
 export type MatchStatus = 'likely' | 'check' | 'ruled-out' | 'ended' | 'informational';
@@ -500,8 +669,20 @@ export function matchIncentives(q: IncentiveQuery): IncentiveMatch[] {
     }
 
     if (inc.incomeQualifiedOnly) {
+      // These test income against a percentage of the federal poverty level or area median income,
+      // both of which depend on household size and county, so we cannot decide eligibility. We can
+      // still rule out an income above which no plausible household qualifies.
+      if (q.income !== 'unknown' && q.income > INCOME_QUALIFIED_CEILING) {
+        matches.push({
+          incentive: inc,
+          status: 'ruled-out',
+          amount: 0,
+          reasons: [`Income-qualified programmes cut off well below $${INCOME_QUALIFIED_CEILING.toLocaleString('en-US')}, whatever your household size.`],
+        });
+        continue;
+      }
       status = 'check';
-      reasons.push('Income-qualified only, usually against area median income, which varies by county — confirm you qualify.');
+      reasons.push('Income-qualified only, tested against household size and your county — confirm you qualify.');
     }
     if (inc.timing === 'rebate-after-purchase') {
       if (status === 'likely') status = 'check';
@@ -509,6 +690,20 @@ export function matchIncentives(q: IncentiveQuery): IncentiveMatch[] {
     }
 
     let amount = inc.maxAmount;
+
+    // A charger rebate is worth nothing if you are not buying a charger, and cannot exceed one.
+    if (inc.kind === 'charger') {
+      const charger = q.chargerCost ?? 0;
+      if (charger <= 0) {
+        matches.push({ incentive: inc, status: 'check', amount: 0, reasons: [...reasons, 'You have not entered a home charger cost, so there is nothing for this to reimburse.'] });
+        continue;
+      }
+      if (amount > charger) {
+        reasons.push(`Capped at your ${'$' + Math.round(charger).toLocaleString('en-US')} charger cost — the programme would pay more toward a pricier installation.`);
+        amount = charger;
+      }
+    }
+
     if (inc.bonusUnderPrice) {
       if (q.vehiclePrice <= inc.bonusUnderPrice.threshold) {
         amount += inc.bonusUnderPrice.amount;
@@ -524,8 +719,44 @@ export function matchIncentives(q: IncentiveQuery): IncentiveMatch[] {
   return matches.sort((a, b) => rank[a.status] - rank[b.status] || b.amount - a.amount);
 }
 
+/**
+ * Above this household income, no income-qualified programme in this dataset is plausibly
+ * available. Clean Cars 4 All and its statewide twin cap at 300% of the federal poverty level,
+ * which even for a large household lands well below this figure — so it is a safe upper bound for
+ * ruling a programme out, not a threshold for ruling one in.
+ */
+const INCOME_QUALIFIED_CEILING = 160000;
+
 /** Statuses that can contribute money to a total. */
 const COUNTABLE: MatchStatus[] = ['likely', 'check'];
+
+/**
+ * Sums matches, taking only the largest of any mutually exclusive group.
+ *
+ * You have one electric utility and can use either Clean Cars 4 All or its statewide equivalent,
+ * never both. Adding every listed option together would invent money nobody can receive.
+ */
+function sumRespectingExclusivity(matches: IncentiveMatch[]): number {
+  let total = 0;
+  const bestInGroup = new Map<string, number>();
+  for (const m of matches) {
+    const group = m.incentive.exclusiveGroup;
+    if (!group) total += m.amount;
+    else bestInGroup.set(group, Math.max(bestInGroup.get(group) ?? 0, m.amount));
+  }
+  for (const best of bestInGroup.values()) total += best;
+  return total;
+}
+
+/** True when a group has more than one candidate, so the UI can say "pick the one that serves you". */
+export function exclusiveGroupsWithChoices(matches: IncentiveMatch[]): string[] {
+  const counts = new Map<string, number>();
+  for (const m of matches) {
+    if (!m.incentive.exclusiveGroup || !COUNTABLE.includes(m.status)) continue;
+    counts.set(m.incentive.exclusiveGroup, (counts.get(m.incentive.exclusiveGroup) ?? 0) + 1);
+  }
+  return [...counts.entries()].filter(([, n]) => n > 1).map(([g]) => g);
+}
 
 /**
  * The headline suggestion: everything the answers did not rule out.
@@ -535,10 +766,10 @@ const COUNTABLE: MatchStatus[] = ['likely', 'check'];
  * honesty lives in the per-programme caveats, not in a number quietly rounded to zero.
  */
 export function suggestedTotal(matches: IncentiveMatch[]): number {
-  return matches.filter((m) => COUNTABLE.includes(m.status)).reduce((sum, m) => sum + m.amount, 0);
+  return sumRespectingExclusivity(matches.filter((m) => COUNTABLE.includes(m.status)));
 }
 
 /** The subset with no outstanding question at all. Offered as a cautious alternative when it differs. */
 export function confirmedTotal(matches: IncentiveMatch[]): number {
-  return matches.filter((m) => m.status === 'likely').reduce((sum, m) => sum + m.amount, 0);
+  return sumRespectingExclusivity(matches.filter((m) => m.status === 'likely'));
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_INCENTIVES, DATA_REVIEWED, STATES_WITH_DATA, US_STATES, afdcStateUrl, confirmedTotal, matchIncentives, suggestedTotal, type IncentiveQuery, type MatchStatus } from '../incentives';
+import { ALL_INCENTIVES, DATA_REVIEWED, STATES_WITH_DATA, US_STATES, afdcStateUrl, confirmedTotal, exclusiveGroupsWithChoices, matchIncentives, suggestedTotal, type IncentiveQuery, type MatchStatus } from '../incentives';
 
 const base: IncentiveQuery = {
   purchaseType: 'new',
@@ -204,5 +204,65 @@ describe('Colorado price-tiered credit', () => {
   it('includes the bonus exactly at the threshold', () => {
     const at = matchIncentives({ ...base, state: 'CO', vehiclePrice: 35000, income: 60000 }).find((x) => x.incentive.id === 'co-imvc')!;
     expect(at.amount).toBe(3250);
+  });
+});
+
+describe('California layer', () => {
+  const ca = (over: Partial<IncentiveQuery> = {}): IncentiveQuery => ({ ...base, state: 'CA', vehiclePrice: 40000, income: 40000, ...over });
+
+  it('offers the scrap-and-replace programmes and the dead ones separately', () => {
+    const m = matchIncentives(ca());
+    const byId = (id: string) => m.find((x) => x.incentive.id === id)!;
+    expect(byId('ca-cc4a').status).toBe('check');
+    expect(byId('ca-dcap').status).toBe('check');
+    expect(byId('ca-sjv-driveclean').status).toBe('ended');
+    expect(byId('ca-cav-decal').status).toBe('ended');
+  });
+
+  it('counts only one of Clean Cars 4 All and its statewide twin, not both', () => {
+    const m = matchIncentives(ca());
+    const cc4a = m.find((x) => x.incentive.id === 'ca-cc4a')!;
+    const dcap = m.find((x) => x.incentive.id === 'ca-dcap')!;
+    expect(cc4a.amount).toBe(12000);
+    expect(dcap.amount).toBe(12000);
+    // Naive summing would give $24,000 for two programmes nobody can hold at once.
+    expect(suggestedTotal(m)).toBeLessThan(cc4a.amount + dcap.amount);
+    expect(suggestedTotal(m)).toBe(12000);
+  });
+
+  it('counts only the largest utility charger rebate, not every utility in the state', () => {
+    const m = matchIncentives(ca({ chargerCost: 6000 }));
+    const utilities = m.filter((x) => x.incentive.exclusiveGroup === 'ca-utility-charger' && x.amount > 0);
+    expect(utilities.length).toBeGreaterThan(1);
+    const naive = utilities.reduce((s, u) => s + u.amount, 0);
+    // 12,000 scrap-and-replace + the single best utility rebate (SCE at 4,200).
+    expect(suggestedTotal(m)).toBe(12000 + 4200);
+    expect(suggestedTotal(m)).toBeLessThan(12000 + naive);
+  });
+
+  it('flags the competing groups so the UI can explain the rule', () => {
+    const groups = exclusiveGroupsWithChoices(matchIncentives(ca({ chargerCost: 6000 })));
+    expect(groups).toContain('ca-utility-charger');
+    expect(groups).toContain('ca-scrap-replace');
+  });
+
+  it('pays no charger rebate when no charger is being bought', () => {
+    const m = matchIncentives(ca({ chargerCost: 0 }));
+    for (const x of m.filter((y) => y.incentive.kind === 'charger' && !y.incentive.amountUnverified)) {
+      expect(x.amount, x.incentive.id).toBe(0);
+      expect(x.reasons.some((r) => r.includes('not entered a home charger cost')), x.incentive.id).toBe(true);
+    }
+  });
+
+  it('caps a charger rebate at the charger actually being bought', () => {
+    const m = matchIncentives(ca({ chargerCost: 800 }));
+    const pge = m.find((x) => x.incentive.id === 'ca-pge-charger')!;
+    expect(pge.amount).toBe(800); // programme would pay up to $2,000
+    expect(pge.reasons.some((r) => r.includes('Capped at your'))).toBe(true);
+  });
+
+  it('a high earner is ruled out of the income-qualified programmes', () => {
+    const m = matchIncentives(ca({ income: 400000 }));
+    expect(suggestedTotal(m)).toBe(0);
   });
 });

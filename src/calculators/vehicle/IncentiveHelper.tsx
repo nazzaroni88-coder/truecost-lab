@@ -13,6 +13,7 @@ import {
   US_STATES,
   UTILITY_HINT,
   confirmedTotal,
+  exclusiveGroupsWithChoices,
   matchIncentives,
   suggestedTotal,
   type BodyStyle,
@@ -39,7 +40,7 @@ function readSavedState(): string {
  * census tracts, current legislation — are separated out as "worth checking" so the number we
  * suggest by default is only the part that survives the inputs given.
  */
-export function IncentiveHelper({ open, onClose, vehiclePrice, currentAmount, onApply }: { open: boolean; onClose: () => void; vehiclePrice: number; currentAmount: number; onApply: (amount: number) => void }) {
+export function IncentiveHelper({ open, onClose, vehiclePrice, chargerCost, currentAmount, onApply }: { open: boolean; onClose: () => void; vehiclePrice: number; chargerCost: number; currentAmount: number; onApply: (amount: number) => void }) {
   const [purchaseType, setPurchaseType] = useState<PurchaseType>('new');
   const [bodyStyle, setBodyStyle] = useState<BodyStyle>('car');
   const [state, setState] = useState<string>(readSavedState);
@@ -48,9 +49,10 @@ export function IncentiveHelper({ open, onClose, vehiclePrice, currentAmount, on
   const [income, setIncome] = useState(120000);
 
   const matches = useMemo(
-    () => matchIncentives({ purchaseType, state, vehiclePrice, bodyStyle, income: knowsIncome ? income : 'unknown', filingStatus }),
-    [purchaseType, state, vehiclePrice, bodyStyle, income, knowsIncome, filingStatus],
+    () => matchIncentives({ purchaseType, state, vehiclePrice, bodyStyle, income: knowsIncome ? income : 'unknown', filingStatus, chargerCost }),
+    [purchaseType, state, vehiclePrice, bodyStyle, income, knowsIncome, filingStatus, chargerCost],
   );
+  const exclusiveChoices = exclusiveGroupsWithChoices(matches);
 
   const likely = matches.filter((m) => m.status === 'likely');
   const check = matches.filter((m) => m.status === 'check');
@@ -154,6 +156,7 @@ export function IncentiveHelper({ open, onClose, vehiclePrice, currentAmount, on
             {suggested === 0
               ? 'Nothing in this list survives your answers. Your state or utility may still offer something.'
               : `Everything your answers did not rule out, on a ${fmtMoney(vehiclePrice)} vehicle. Confirm each one below before relying on it.`}
+            {exclusiveChoices.length > 0 && ' Where several options compete — utilities, or a statewide programme and its regional twin — only the largest is counted, because you can claim one.'}
           </div>
         </div>
         <div className="incentive-total-actions">

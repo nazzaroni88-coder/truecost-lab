@@ -110,7 +110,7 @@ function OptionFields({ side, option: o, shared, onPatch }: { side: 'a' | 'b'; o
         <button type="button" className="link-btn small" onClick={() => setHelperOpen(true)} style={{ justifySelf: 'start', marginTop: -4 }}>
           What incentives might I get? →
         </button>
-        <IncentiveHelper open={helperOpen} onClose={() => setHelperOpen(false)} vehiclePrice={o.price} currentAmount={o.purchaseIncentive} onApply={(v) => onPatch({ purchaseIncentive: v })} />
+        <IncentiveHelper open={helperOpen} onClose={() => setHelperOpen(false)} vehiclePrice={o.price} chargerCost={o.chargerCost} currentAmount={o.purchaseIncentive} onApply={(v) => onPatch({ purchaseIncentive: v })} />
       </FormSection>
 
       <FormSection title="Fuel or charging">
