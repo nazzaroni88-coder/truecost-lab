@@ -104,6 +104,20 @@ export const COMPARISONS: Comparison[] = [
     intro: 'Base trim against base trim, financed over five years. Cheap electricity against expensive depreciation — and depreciation is the cost neither sticker mentions.',
   },
   {
+    slug: 'toyota-rav4-vs-honda-crv',
+    calculatorId: 'vehicle',
+    presetId: 'rav4-vs-crv',
+    question: 'RAV4 Hybrid or CR-V Hybrid?',
+    intro: 'The two best-selling compact SUVs in America, both hybrids for 2026 and within a mile per gallon of each other. When the fuel economy ties, the answer is decided by price and by what each is worth when you sell it.',
+  },
+  {
+    slug: 'tesla-model-y-vs-toyota-rav4',
+    calculatorId: 'vehicle',
+    presetId: 'modely-vs-rav4',
+    question: 'Tesla Model Y or Toyota RAV4 Hybrid?',
+    intro: 'The electric SUV question at the size most families actually buy. A hybrid that already returns 41 mpg is a far harder benchmark for an EV to beat than a petrol-only car, because the fuel saving it has to earn back is so much smaller.',
+  },
+  {
     slug: 'electric-car-vs-gas-car-cost',
     calculatorId: 'vehicle',
     presetId: 'ev-vs-gas',

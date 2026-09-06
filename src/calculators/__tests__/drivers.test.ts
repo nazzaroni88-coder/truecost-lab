@@ -86,3 +86,24 @@ describe('summaryDrivers share of gap', () => {
     expect(summaryDrivers([cat('dep', 5000)], [], 'A', 'B', 5000)[0].shareOfGap).toBe(1);
   });
 });
+
+describe('summaryDrivers labelling', () => {
+  it('names a category the way the option paying more names it', () => {
+    // An EV calls its fuel "Electricity" and a petrol car calls it "Fuel". Taking A's label
+    // unconditionally produced "Electricity, $3,131 more for the RAV4 Hybrid", which burns petrol.
+    const [d] = summaryDrivers([cat('fuel', 1200, 'Electricity')], [cat('fuel', 4300, 'Fuel')], 'Model Y', 'RAV4 Hybrid', 3100);
+    expect(d.costlierName).toBe('RAV4 Hybrid');
+    expect(d.label).toBe('Fuel');
+  });
+
+  it('keeps A’s label when A is the one paying more', () => {
+    const [d] = summaryDrivers([cat('fuel', 4300, 'Electricity')], [cat('fuel', 1200, 'Fuel')], 'Model Y', 'RAV4 Hybrid', 3100);
+    expect(d.costlierName).toBe('Model Y');
+    expect(d.label).toBe('Electricity');
+  });
+
+  it('falls back to the other side when only one names the category', () => {
+    const [d] = summaryDrivers([], [cat('charger', 1200, 'Home charger')], 'A', 'B', 1200);
+    expect(d.label).toBe('Home charger');
+  });
+});

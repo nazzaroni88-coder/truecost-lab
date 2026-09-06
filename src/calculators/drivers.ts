@@ -25,7 +25,18 @@ interface Category {
 export function summaryDrivers(aCats: Category[], bCats: Category[], aName: string, bName: string, gap: number): SummaryDriver[] {
   const keys = Array.from(new Set([...aCats.map((c) => c.key), ...bCats.map((c) => c.key)]));
   const amountFor = (cats: Category[], k: string) => cats.find((c) => c.key === k)?.amount ?? 0;
-  const labelFor = (k: string) => aCats.find((c) => c.key === k)?.label ?? bCats.find((c) => c.key === k)?.label ?? k;
+  /*
+   * The label follows whichever option the category is worse for.
+   *
+   * Both sides can name the same key differently — an electric car calls its fuel "Electricity",
+   * a petrol one calls it "Fuel" — and taking A's name unconditionally produced "Electricity,
+   * $3,131 more for the RAV4 Hybrid", which burns petrol. The row is a statement about the option
+   * that pays more, so it takes that option's word for what it is paying for.
+   */
+  const labelFor = (k: string, costlier: 'a' | 'b') => {
+    const own = (costlier === 'a' ? aCats : bCats).find((c) => c.key === k)?.label;
+    return own ?? aCats.find((c) => c.key === k)?.label ?? bCats.find((c) => c.key === k)?.label ?? k;
+  };
   const denominator = Math.abs(gap) > EPS_GAP ? Math.abs(gap) : 0;
   return keys
     .map((k) => {
@@ -42,10 +53,11 @@ export function summaryDrivers(aCats: Category[], bCats: Category[], aName: stri
        */
       const amount = Math.abs(delta);
       const ratio = denominator ? amount / denominator : 0;
+      const costlierFor = (delta > 0 ? 'a' : 'b') as 'a' | 'b';
       return {
-        label: labelFor(k),
+        label: labelFor(k, costlierFor),
         amount,
-        costlierFor: (delta > 0 ? 'a' : 'b') as 'a' | 'b',
+        costlierFor,
         costlierName: delta > 0 ? aName : bName,
         ratio,
         shareOfGap: ratio > 0 && ratio <= 1 ? ratio : 0,

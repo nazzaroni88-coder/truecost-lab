@@ -45,7 +45,13 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
   }
 
   const biggestGap = a.categories
-    .map((cat) => ({ key: cat.key, label: cat.label, diff: cat.amount - (b.categories.find((x) => x.key === cat.key)?.amount ?? 0) }))
+    .map((cat) => {
+      const other = b.categories.find((x) => x.key === cat.key);
+      const diff = cat.amount - (other?.amount ?? 0);
+      // Name the category as whichever car pays more calls it: "Electricity" is wrong on a row
+      // where the petrol car is the one spending more.
+      return { key: cat.key, label: diff > 0 ? cat.label : (other?.label ?? cat.label), diff };
+    })
     .sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff))[0];
   // Only annotate a driver that is actually a driver: a sub-$1 gap is a rounding artefact, not the
   // reason one car wins, and labelling it "largest gap" would be precision theatre.

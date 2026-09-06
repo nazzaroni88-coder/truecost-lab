@@ -99,6 +99,53 @@ export const camry: VehicleOption = {
   annualDepreciation: 11,
 };
 
+/*
+ * The compact-SUV pair, which is the biggest segment in the US market and the comparison most
+ * households are actually making. Both nameplates went hybrid-heavy for 2026, so this is a hybrid
+ * against a hybrid rather than the old hybrid-premium question.
+ */
+export const rav4Hybrid: VehicleOption = {
+  ...baseOption,
+  name: 'Toyota RAV4 Hybrid',
+  price: 33350, // LE FWD, MSRP including the $1,450 destination charge. Hybrid-only from 2026.
+  fuelType: 'gas',
+  mpg: 41, // EPA combined, LE FWD.
+  insuranceAnnual: 2150,
+  maintenanceAnnual: 500,
+  repairsAnnual: 250,
+  firstYearDepreciation: 17,
+  annualDepreciation: 10,
+};
+
+export const crvHybrid: VehicleOption = {
+  ...baseOption,
+  name: 'Honda CR-V Hybrid',
+  price: 37025, // Sport 2WD: $35,630 MSRP + $1,395 destination.
+  fuelType: 'gas',
+  mpg: 40, // EPA combined, Sport 2WD.
+  insuranceAnnual: 2100,
+  maintenanceAnnual: 520,
+  repairsAnnual: 260,
+  firstYearDepreciation: 17,
+  annualDepreciation: 10,
+};
+
+export const modelY: VehicleOption = {
+  ...baseOption,
+  name: 'Tesla Model Y',
+  price: 46630, // Long Range RWD: $44,990 MSRP + $1,640 destination.
+  fuelType: 'electric',
+  milesPerKwh: 3.6, // Less efficient than the Model 3: taller, heavier, bigger wheels.
+  insuranceAnnual: 2700,
+  registrationAnnual: 250,
+  maintenanceAnnual: 400,
+  repairsAnnual: 200,
+  tireSetCost: 1200,
+  tireIntervalMiles: 35000,
+  firstYearDepreciation: 25,
+  annualDepreciation: 15,
+};
+
 export const vehicleDefaults: VehicleFormInputs = withLocation({
   a: modelThree,
   b: camry,
@@ -112,6 +159,20 @@ export const vehiclePresets: Preset<VehicleFormInputs>[] = [
     chip: 'Model 3 vs Camry',
     description: 'Base trim against base trim: a $38,630 Model 3 Standard RWD versus a $30,295 Camry LE, which is hybrid-only now and returns about 51 mpg. Financed over 5 years at 12,000 miles a year.',
     inputs: vehicleDefaults,
+  },
+  {
+    id: 'rav4-vs-crv',
+    name: 'Toyota RAV4 Hybrid vs Honda CR-V Hybrid',
+    chip: 'RAV4 vs CR-V',
+    description: 'The two best-selling compact SUVs in America, both hybrids for 2026: a $33,350 RAV4 LE at 41 mpg against a $37,025 CR-V Sport at 40 mpg. Close enough on fuel that the answer turns on price and resale.',
+    inputs: withLocation({ a: rav4Hybrid, b: crvHybrid, shared: baseShared }),
+  },
+  {
+    id: 'modely-vs-rav4',
+    name: 'Tesla Model Y vs Toyota RAV4 Hybrid',
+    chip: 'Model Y vs RAV4',
+    description: 'The electric SUV question, at the size most families buy: a $46,630 Model Y Long Range against a $33,350 RAV4 Hybrid that already returns 41 mpg. A hybrid is a much harder benchmark for an EV to beat than a petrol-only car.',
+    inputs: withLocation({ a: modelY, b: rav4Hybrid, shared: baseShared }),
   },
   {
     id: 'ev-vs-gas',
