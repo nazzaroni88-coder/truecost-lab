@@ -34,6 +34,18 @@ npm run typecheck  # tsc
 npm run build      # production build to dist/
 ```
 
+## Hosting
+
+`npm run build` produces a static site in `dist/`. It is a single-page app, so the host must serve `index.html` for unknown paths (a Netlify `_redirects` file is included; on Vercel/Cloudflare add the equivalent rewrite, on Apache/Nginx a fallback rule).
+
+To publish under a sub-path of an existing site (e.g. `centsofadventure.com/truecost/`), build with the base path set:
+
+```bash
+VITE_BASE_PATH=/truecost/ npm run build
+```
+
+Routing, share links and assets all respect the base path.
+
 ## Architecture
 
 ```

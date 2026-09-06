@@ -7,7 +7,7 @@ type Listener = () => void;
 export class ScenarioStore {
   private state: PersistedState;
   private listeners = new Set<Listener>();
-  private saveTimer: number | null = null;
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private adapter: StorageAdapter) {
     this.state = adapter.load() ?? { version: STATE_VERSION, scenarios: [], active: {} };

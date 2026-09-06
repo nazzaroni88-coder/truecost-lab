@@ -8,7 +8,7 @@ import { NotFoundPage } from './pages/NotFoundPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, '') || undefined}>
       <Routes>
         <Route element={<AppShell />}>
           <Route path="/" element={<HomePage />} />

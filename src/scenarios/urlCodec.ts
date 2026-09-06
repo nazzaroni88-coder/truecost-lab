@@ -44,6 +44,8 @@ export function decodeShare(hashOrToken: string): SharedScenario | null {
 }
 
 export function buildShareUrl<I>(s: SharedScenario<I>, path: string): string {
-  const base = typeof window !== 'undefined' ? `${window.location.origin}${path}` : path;
+  const basePath = (import.meta.env?.BASE_URL ?? '/').replace(/\/$/, '');
+  const full = `${basePath}${path}`;
+  const base = typeof window !== 'undefined' ? `${window.location.origin}${full}` : full;
   return `${base}#s=${encodeShare(s)}`;
 }

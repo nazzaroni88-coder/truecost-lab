@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import type { Insight, MethodologyItem } from '../../calculators/types';
 import { IconChevron, IconClock, IconLightbulb, IconQuestion, IconTarget } from '../ui/Icons';
 
@@ -97,7 +98,7 @@ export function MethodologyPanel({ items, assumptions, id }: { items: Methodolog
       <p className="micro muted" style={{ marginTop: 'var(--sp-3)', display: 'flex', gap: 6, alignItems: 'flex-start' }}>
         <IconLightbulb width={14} height={14} style={{ flexShrink: 0, marginTop: 2 }} />
         <span>
-          Results are estimates based on the assumptions you entered. Projected investment returns are not guaranteed. TrueCost Lab is an educational tool, not personalized financial advice. Read the full <a href="/methodology">methodology</a>.
+          Results are estimates based on the assumptions you entered. Projected investment returns are not guaranteed. TrueCost Lab is an educational tool, not personalized financial advice. Read the full <Link to="/methodology">methodology</Link>.
         </span>
       </p>
     </ResultSection>

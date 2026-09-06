@@ -129,4 +129,4 @@ export const vehiclePresets: Preset<VehicleInputs>[] = [
   },
 ];
 
-export const TERM_OPTIONS = [24, 36, 48, 60, 72, 84].map((m) => ({ value: m, label: `${m} months (${m / 12} yr)` }));
+export const TERM_OPTIONS = [24, 36, 48, 60, 72, 84].map((m) => ({ value: m, label: `${m} mo · ${m / 12} yr` }));

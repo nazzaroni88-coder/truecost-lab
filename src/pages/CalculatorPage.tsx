@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { getCalculatorBySlug, type AnyCalculator } from '../calculators/registry';
 import type { Preset, ShareSummary } from '../calculators/types';
@@ -82,8 +82,10 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   }, [def.name]);
 
   const inputs = useMemo(() => (active ? def.normalize(active.inputs) : def.defaults), [active, def]);
-  const result = useMemo(() => def.compute(inputs), [def, inputs]);
-  const summary: ShareSummary = useMemo(() => def.summary(inputs, result), [def, inputs, result]);
+  // Defer the (sensitivity-heavy) recompute so typing in a field never feels laggy.
+  const deferredInputs = useDeferredValue(inputs);
+  const result = useMemo(() => def.compute(deferredInputs), [def, deferredInputs]);
+  const summary: ShareSummary = useMemo(() => def.summary(deferredInputs, result), [def, deferredInputs, result]);
   const activePreset = useMemo(() => def.presets.find((p: Preset<unknown>) => deepEqual(def.normalize(p.inputs), inputs)) ?? null, [def, inputs]);
 
   const onChange = useCallback((next: unknown) => setInputs(next), [setInputs]);
@@ -246,13 +248,13 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
               <span className="small muted">
                 Scenario: <strong>{active.name}</strong>
               </span>
-              <ShareBar calculatorId={def.id} calculatorName={def.name} path={path} scenarioName={active.name} inputs={inputs} summary={summary} />
+              <ShareBar calculatorId={def.id} calculatorName={def.name} path={path} scenarioName={active.name} inputs={deferredInputs} summary={summary} />
             </div>
             <div className="print-only" style={{ marginBottom: 8 }}>
               <strong>TrueCost Lab — {def.name}</strong> · Scenario: {active.name} · {new Date().toLocaleDateString()}
             </div>
             <ErrorBoundary label="the results" onReset={() => reset(active.id)}>
-              <Results inputs={inputs} result={result} onChange={onChange} />
+              <Results inputs={deferredInputs} result={result} onChange={onChange} />
             </ErrorBoundary>
             <RelatedCalculators currentId={def.id} />
           </div>

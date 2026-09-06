@@ -81,8 +81,14 @@ function ShareModal({ open, onClose, calculatorName, scenarioName, summary, url,
     if (!open) return;
     const c = canvasRef.current;
     if (c) {
-      // Wait a frame so fonts are ready and the dialog is laid out.
-      requestAnimationFrame(() => renderShareCard(c, { calculatorName, scenarioName, summary }));
+      const render = () => renderShareCard(c, { calculatorName, scenarioName, summary });
+      render();
+      // Re-render once web fonts are available so the card uses Inter instead of the fallback.
+      if (typeof document !== 'undefined' && 'fonts' in document) {
+        (document as Document & { fonts: FontFaceSet }).fonts.ready.then(() => {
+          if (canvasRef.current === c) render();
+        });
+      }
     }
     setCanShareFiles(typeof navigator !== 'undefined' && 'canShare' in navigator && typeof navigator.share === 'function');
   }, [open, calculatorName, scenarioName, summary]);
