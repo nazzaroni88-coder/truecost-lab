@@ -7,6 +7,7 @@ import { OptionTabs } from '../../components/forms/OptionTabs';
 import { Disclosure, FormSection, SegmentedField, SelectField, Switch, TextField } from '../../components/ui/Controls';
 import { effectiveAnnual, fmtMoney, fmtPct, yearsLabel } from '../../lib/format';
 import { TERM_OPTIONS } from './presets';
+import { IncentiveHelper } from './IncentiveHelper';
 
 type Tab = 'a' | 'b' | 'shared';
 
@@ -62,6 +63,7 @@ function OptionFields({ side, option: o, shared, onPatch }: { side: 'a' | 'b'; o
   const overriding = o.resaleOverride !== null;
   const taxable = Math.max(0, o.price - o.tradeInValue);
   const tax = taxable * (o.salesTaxRate / 100);
+  const [helperOpen, setHelperOpen] = useState(false);
 
   return (
     <>
@@ -103,9 +105,12 @@ function OptionFields({ side, option: o, shared, onPatch }: { side: 'a' | 'b'; o
           onChange={(v) => onPatch({ purchaseIncentive: v })}
           min={0}
           max={100000}
-          hint="EV and plug-in incentives can be worth thousands"
           help="Federal or state tax credits, manufacturer rebates and utility incentives. We treat this as cash received at purchase and it does not reduce sales tax or the car's resale value. Eligibility rules change often and depend on the vehicle, your income and whether you buy or lease — check what you actually qualify for and enter that amount."
         />
+        <button type="button" className="link-btn small" onClick={() => setHelperOpen(true)} style={{ justifySelf: 'start', marginTop: -4 }}>
+          What incentives might I get? →
+        </button>
+        <IncentiveHelper open={helperOpen} onClose={() => setHelperOpen(false)} vehiclePrice={o.price} currentAmount={o.purchaseIncentive} onApply={(v) => onPatch({ purchaseIncentive: v })} />
       </FormSection>
 
       <FormSection title="Fuel or charging">

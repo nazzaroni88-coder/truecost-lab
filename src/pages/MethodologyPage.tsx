@@ -125,6 +125,16 @@ cost per mile = true cost ÷ (miles × years)`}</pre>
         <p>
           <strong>Trade-ins.</strong> A trade-in is counted as money you put in, because you could have sold the car for cash instead. It can only offset what this purchase costs, though: if your trade-in is worth more than the car, the surplus comes back to you and is not counted as spent.
         </p>
+        <h3>The incentive helper</h3>
+        <p>
+          The “what incentives might I get?” panel is a research aid, not an eligibility check. It holds a hand-maintained summary of the federal programmes and the larger state programmes, each with a source link and a review date shown in the panel itself. It filters that list against the few things it can test — new versus used versus lease, vehicle price against the published caps, body style, and household income against the published income caps — and rules a programme out only when one of those checks actually fails.
+        </p>
+        <p>
+          Everything it cannot see stays visible as a caveat rather than being silently resolved: funding rounds that open and close, eligible-vehicle lists, battery-sourcing rules, census tracts, and legislation that has repeatedly changed. Those programmes are still counted in the suggested amount, because excluding all of them would suggest nothing to almost everyone, but each one carries its own “confirm this” note and a second, caveat-free total is offered alongside. Nothing is ever written into your comparison until you press a button, and the amount lands in the ordinary incentive field where you can edit it like any other input.
+        </p>
+        <p>
+          Two deliberate omissions. Utility rebates are listed as a prompt with no amount, because they are set locally and we would only be guessing. And the New Jersey sales-tax exemption is described but excluded from every total, because a tax exemption belongs in the sales-tax rate field, not in a cash rebate.
+        </p>
 
         <h2 id="rent-buy">Rent vs Buy</h2>
         <pre className="formula">{`renter outflow(t) = rent(year) + renter's insurance/12;  rent grows yearly at the rent growth rate

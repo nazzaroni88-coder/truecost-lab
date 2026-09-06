@@ -2466,3 +2466,96 @@ dialog.modal::backdrop {
     display: inline-flex;
   }
 }
+
+/* ---------- Incentive helper ---------- */
+.incentive-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+  padding: var(--sp-4);
+  border-radius: var(--r-md);
+  background: var(--tc-primary-soft);
+  border: 1px solid var(--tc-primary-soft-2);
+}
+.incentive-total-val {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--tc-primary-strong);
+  line-height: 1.15;
+}
+.incentive-total-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.incentive-list {
+  display: grid;
+  gap: var(--sp-4);
+}
+.incentive-group {
+  font-size: var(--fs-micro);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tc-ink-3);
+  font-weight: 700;
+  margin-bottom: var(--sp-2);
+}
+.incentive-card {
+  border: 1px solid var(--tc-line);
+  border-left: 3px solid var(--tc-line-strong);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  background: var(--tc-surface);
+}
+.incentive-card + .incentive-card {
+  margin-top: 8px;
+}
+.incentive-card.likely {
+  border-left-color: var(--tc-positive);
+}
+.incentive-card.check {
+  border-left-color: var(--tc-warning);
+}
+.incentive-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: 6px;
+}
+.incentive-card-amt {
+  font-weight: 600;
+  font-size: var(--fs-small);
+  white-space: nowrap;
+  color: var(--tc-ink);
+}
+.incentive-card p {
+  color: var(--tc-ink-2);
+}
+.incentive-reasons {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: var(--fs-micro);
+  color: var(--tc-warning);
+}
+.incentive-reasons li + li {
+  margin-top: 3px;
+}
+.incentive-notes summary {
+  cursor: pointer;
+  color: var(--tc-ink-3);
+  margin-top: 8px;
+}
+.incentive-notes ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: var(--fs-micro);
+  color: var(--tc-ink-2);
+}
+.incentive-notes li + li {
+  margin-top: 4px;
+}
