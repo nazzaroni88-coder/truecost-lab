@@ -66,3 +66,23 @@ describe('summaryDrivers', () => {
     expect(summaryDrivers([cat('dep', 5000)], [cat('dep', 5000)], 'A', 'B', 0)).toEqual([]);
   });
 });
+
+describe('summaryDrivers share of gap', () => {
+  it('reports no share for a category larger than the gap it helps create', () => {
+    // Solar: $57,385 of savings against $18,000 of panels nets to a $39,385 gap, so the savings
+    // line alone is more than the whole answer. A percentage there reads as a bug.
+    const drivers = summaryDrivers([cat('savings', 57385, 'Savings earned')], [cat('upfront', 18000, 'Upfront cost')], 'Grid', 'Solar', 39385);
+    const savings = drivers.find((d) => d.label === 'Savings earned')!;
+    expect(savings.amount).toBe(57385);
+    expect(savings.shareOfGap).toBe(0);
+  });
+
+  it('still reports a share for a category that fits inside the gap', () => {
+    const drivers = summaryDrivers([cat('upfront', 18000, 'Upfront cost')], [], 'A', 'B', 39385);
+    expect(drivers[0].shareOfGap).toBeCloseTo(18000 / 39385, 6);
+  });
+
+  it('reports a share of exactly one when a single category is the whole gap', () => {
+    expect(summaryDrivers([cat('dep', 5000)], [], 'A', 'B', 5000)[0].shareOfGap).toBe(1);
+  });
+});

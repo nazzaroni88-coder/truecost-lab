@@ -3153,3 +3153,104 @@ dialog.modal::backdrop {
     margin-bottom: var(--sp-2);
   }
 }
+
+/*
+ * Comparison pages: the presets as content.
+ *
+ * These read top to bottom rather than being operated, so the page is a column of prose and ruled
+ * lists — the same ledger vocabulary as the results pane, without the controls.
+ */
+.compare-page {
+  max-width: 760px;
+  padding-bottom: var(--sp-8);
+}
+.compare-head {
+  margin-bottom: var(--sp-6);
+}
+.compare-head h1 {
+  letter-spacing: var(--track-tighter);
+  text-wrap: balance;
+}
+.compare-head .lead {
+  max-width: 62ch;
+}
+.compare-page .answer-hero {
+  margin-bottom: var(--sp-2);
+}
+.compare-rows {
+  margin: var(--sp-4) 0 0;
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--sp-3);
+  align-items: baseline;
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--tc-rule);
+}
+.compare-row:first-child {
+  border-top: 1px solid var(--tc-rule);
+}
+.compare-row dt {
+  font-weight: 600;
+  /* The tone tick carries which option a driver is worse for, the same mark the share card uses. */
+  border-left: 3px solid var(--row-tone, var(--tc-line-strong));
+  padding-left: var(--sp-3);
+}
+.compare-row.tone-a {
+  --row-tone: var(--tc-a);
+}
+.compare-row.tone-b {
+  --row-tone: var(--tc-b);
+}
+.compare-row.tone-positive {
+  --row-tone: var(--tc-positive);
+}
+.compare-row dd {
+  margin: 0;
+  text-align: right;
+}
+.compare-row .num {
+  display: block;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.compare-row .who {
+  display: block;
+  font-size: var(--fs-micro);
+  color: var(--tc-ink-3);
+}
+.compare-cta p {
+  max-width: 62ch;
+  margin-bottom: var(--sp-4);
+}
+.compare-list {
+  list-style: none;
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+}
+.compare-list li {
+  padding: var(--sp-3) 0;
+  border-bottom: 1px solid var(--tc-rule);
+}
+.compare-list li:first-child {
+  border-top: 1px solid var(--tc-rule);
+}
+.compare-list a {
+  font-weight: 600;
+  display: block;
+}
+.compare-list .micro {
+  display: block;
+  margin-top: 2px;
+}
+@media (max-width: 560px) {
+  .compare-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+  .compare-row dd {
+    text-align: left;
+    padding-left: calc(var(--sp-3) + 3px);
+  }
+}

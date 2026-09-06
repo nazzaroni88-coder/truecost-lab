@@ -1,4 +1,5 @@
 import { CALCULATORS } from '../calculators/meta';
+import { COMPARISONS } from '../content/comparisons';
 
 /**
  * Every route that gets its own pre-rendered link preview.
@@ -25,6 +26,8 @@ export interface OgRoute {
   kind: 'result' | 'brand';
   /** For result cards, the calculator to compute. */
   calculatorId?: string;
+  /** For a comparison page, the preset to compute instead of the calculator's defaults. */
+  presetId?: string;
 }
 
 const BRAND_ITEMS = CALCULATORS.map((c) => c.name);
@@ -47,6 +50,28 @@ export const OG_ROUTES: OgRoute[] = [
       alt: `${c.name}: an example result from TrueCost Lab`,
       kind: 'result',
       calculatorId: c.id,
+    }),
+  ),
+  {
+    path: 'compare',
+    title: 'Worked comparisons — TrueCost Lab',
+    description: `${COMPARISONS.length} decisions people actually argue about — solar, gym memberships, rent vs buy, paying off debt, new vs used — each run through the model with realistic numbers and opened in the calculator so you can use your own.`,
+    image: 'compare',
+    alt: 'Worked comparisons from TrueCost Lab',
+    kind: 'brand',
+  },
+  // One per comparison: these are the pages meant to be found, so each carries the answer its own
+  // preset produces rather than the calculator's generic default.
+  ...COMPARISONS.map(
+    (c): OgRoute => ({
+      path: `compare/${c.slug}`,
+      title: c.question.length <= 60 ? c.question : `${c.question.slice(0, 57)}…`,
+      description: c.intro,
+      image: `compare-${c.slug}`,
+      alt: `${c.question} — worked through by TrueCost Lab`,
+      kind: 'result',
+      calculatorId: c.calculatorId,
+      presetId: c.presetId,
     }),
   ),
   {
@@ -73,6 +98,13 @@ export function brandCardCopy(route: OgRoute): { title: string; sub: string; ite
     return {
       title: 'Every formula, and what it leaves out.',
       sub: 'Monthly cash flows, nominal APR compounded monthly for loans, effective annual returns for investments — and a written list of the known limitations.',
+      items: BRAND_ITEMS,
+    };
+  }
+  if (route.path === 'compare') {
+    return {
+      title: 'The decisions people argue about, worked out.',
+      sub: `${COMPARISONS.length} comparisons run through the model with realistic numbers — solar, gym memberships, rent vs buy, paying off debt early. Each opens in the calculator with your own figures.`,
       items: BRAND_ITEMS,
     };
   }

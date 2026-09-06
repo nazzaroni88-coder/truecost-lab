@@ -8,6 +8,10 @@ import { NotFoundPage } from './pages/NotFoundPage';
 // Static pages are split out of the main bundle; the calculators stay in it because they are the product.
 const MethodologyPage = lazy(() => import('./pages/MethodologyPage').then((m) => ({ default: m.MethodologyPage })));
 const AboutPage = lazy(() => import('./pages/AboutPage').then((m) => ({ default: m.AboutPage })));
+// The comparison pages are content, not the tool: split out, but they still run the real
+// calculators, so the engine they import is already in the main bundle.
+const ComparisonsIndexPage = lazy(() => import('./pages/ComparisonsIndexPage'));
+const ComparisonPage = lazy(() => import('./pages/ComparisonPage'));
 
 function PageLoading() {
   return (
@@ -30,6 +34,22 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/calculators" element={<Navigate to="/#calculators" replace />} />
           <Route path="/calculators/:slug" element={<CalculatorPage />} />
+          <Route
+            path="/compare"
+            element={
+              <Suspense fallback={<PageLoading />}>
+                <ComparisonsIndexPage />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/compare/:slug"
+            element={
+              <Suspense fallback={<PageLoading />}>
+                <ComparisonPage />
+              </Suspense>
+            }
+          />
           <Route
             path="/methodology"
             element={

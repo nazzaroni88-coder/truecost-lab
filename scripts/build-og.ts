@@ -58,7 +58,14 @@ function draw(route: OgRoute): Buffer {
   if (route.kind === 'result') {
     const calc = REGISTRY.find((c) => c.id === route.calculatorId);
     if (!calc) throw new Error(`No calculator registered for og route "${route.path}" (id ${route.calculatorId})`);
-    const summary = calc.summary(calc.defaults, calc.compute(calc.defaults));
+    // A comparison page names the preset it is about; a calculator page shows its own defaults.
+    let inputs = calc.defaults;
+    if (route.presetId) {
+      const preset = calc.presets.find((p) => p.id === route.presetId);
+      if (!preset) throw new Error(`No preset "${route.presetId}" on calculator "${calc.id}" for og route "${route.path}"`);
+      inputs = calc.normalize(preset.inputs);
+    }
+    const summary = calc.summary(inputs, calc.compute(inputs));
     renderShareCard(target, { calculatorName: calc.name, summary }, 'landscape', SCALE);
   } else {
     renderBrandCard(target, brandCardCopy(route), 'landscape', SCALE);
@@ -121,4 +128,17 @@ for (const route of OG_ROUTES) {
   }
 }
 
-console.log(`og: ${OG_ROUTES.length} images and pages written for ${SITE_URL}`);
+const sitemap = [
+  '<?xml version="1.0" encoding="UTF-8"?>',
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+  ...OG_ROUTES.map((r) => `  <url><loc>${r.path ? `${SITE_URL}${r.path}/` : SITE_URL}</loc></url>`),
+  '</urlset>',
+  '',
+].join('\n');
+writeFileSync(join(dist, 'sitemap.xml'), sitemap);
+writeFileSync(join(dist, 'robots.txt'), `User-agent: *
+Allow: /
+Sitemap: ${SITE_URL}sitemap.xml
+`);
+
+console.log(`og: ${OG_ROUTES.length} images and pages written for ${SITE_URL}, plus sitemap.xml and robots.txt`);

@@ -60,6 +60,9 @@ export function Footer() {
           <h4>About</h4>
           <ul>
             <li>
+              <Link to="/compare">Worked comparisons</Link>
+            </li>
+            <li>
               <Link to="/methodology">Methodology &amp; formulas</Link>
             </li>
             <li>

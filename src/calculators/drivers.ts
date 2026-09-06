@@ -30,15 +30,30 @@ export function summaryDrivers(aCats: Category[], bCats: Category[], aName: stri
   return keys
     .map((k) => {
       const delta = amountFor(aCats, k) - amountFor(bCats, k);
+      /*
+       * The ratio decides what is trivia; only a ratio at or below 1 is worth *printing*.
+       *
+       * Categories push in opposite directions and cancel, so one can exceed the gap it helps
+       * create: solar has $57,385 of savings against $18,000 of panels for a $39,385 gap, making
+       * the savings line 156% of the answer. True, and useless — "156% of the difference" reads as
+       * a bug. But such a category is the biggest driver there is, so it must still rank and still
+       * be shown; only the percentage is withheld. Filtering on the reported share instead would
+       * have deleted exactly the lines that matter most.
+       */
+      const amount = Math.abs(delta);
+      const ratio = denominator ? amount / denominator : 0;
       return {
         label: labelFor(k),
-        amount: Math.abs(delta),
+        amount,
         costlierFor: (delta > 0 ? 'a' : 'b') as 'a' | 'b',
         costlierName: delta > 0 ? aName : bName,
-        shareOfGap: denominator ? Math.abs(delta) / denominator : 0,
+        ratio,
+        shareOfGap: ratio > 0 && ratio <= 1 ? ratio : 0,
       };
     })
-    .filter((d) => d.amount > 1 && (!denominator || d.shareOfGap >= MIN_SHARE))
+    .filter((d) => d.amount > 1 && (!denominator || d.ratio >= MIN_SHARE))
     .sort((x, y) => y.amount - x.amount)
-    .slice(0, 4);
+    .slice(0, 4)
+    // `ratio` is a filtering aid, not part of the published shape.
+    .map(({ ratio: _ratio, ...d }) => d);
 }

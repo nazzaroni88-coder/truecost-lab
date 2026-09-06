@@ -85,6 +85,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   const invalidFields = useInvalidFields()?.invalid ?? [];
   const resultsRef = useRef<HTMLDivElement>(null);
   const importedHash = useRef<string | null>(null);
+  const loadedPreset = useRef<string | null>(null);
 
   // Import a shared scenario from the URL hash (once per hash).
   useEffect(() => {
@@ -196,6 +197,27 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
     if (active && isAutoNamed(active.name)) rename(active.id, p.name);
     toast(`Loaded example: ${p.name}. Values are illustrative — edit anything.`);
   };
+
+  /*
+   * Open a named example from ?preset=<id>, the handoff the /compare pages use.
+   *
+   * It goes through the same loadPreset the chips use rather than a link carrying raw inputs, so
+   * the example is still adapted to anything the reader has already told us about their situation,
+   * and it is recognised as the active preset instead of arriving as an anonymous scenario. The
+   * param is stripped afterwards: it records an action already taken, and leaving it in the URL
+   * would re-run it on every back-navigation.
+   */
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('preset');
+    if (!id || loadedPreset.current === id) return;
+    loadedPreset.current = id;
+    const preset = def.presets.find((p: Preset<unknown>) => p.id === id);
+    if (preset) loadPreset(preset);
+    navigate(location.pathname, { replace: true });
+    // loadPreset closes over inputs that change on every keystroke; re-running on that would
+    // reload the example while the reader is editing it. The ref guard makes it once-per-id.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search, location.pathname, def, navigate]);
 
   const path = `/calculators/${def.slug}`;
 

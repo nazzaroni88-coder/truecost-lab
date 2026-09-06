@@ -60,7 +60,9 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
           value: biggestGap ? biggestGap.label : '—',
           // "$8,798 more for the Tesla" is a number; "81% of the difference" is the insight — it
           // tells you this one category IS the answer, and that the rest is noise around it.
-          sub: biggestGap ? `${fmtMoney(Math.abs(biggestGap.diff))} more for ${biggestGap.diff > 0 ? a.name : b.name}${diff > 1 ? ` · ${fmtPct((Math.abs(biggestGap.diff) / diff) * 100, 0)} of the difference` : ''}` : '',
+          // Only when the part is smaller than the whole: offsetting categories can exceed the gap
+          // they help create, and "156% of the difference" reads as a bug rather than a fact.
+          sub: biggestGap ? `${fmtMoney(Math.abs(biggestGap.diff))} more for ${biggestGap.diff > 0 ? a.name : b.name}${diff > 1 && Math.abs(biggestGap.diff) <= diff ? ` · ${fmtPct((Math.abs(biggestGap.diff) / diff) * 100, 0)} of the difference` : ''}` : '',
           help: 'The single cost category with the largest difference between the two options, and how much of the overall gap it accounts for.',
         }
       : { label: 'Cash due at signing', value: `${fmtMoneyCompact(a.cashAtSigning)} vs ${fmtMoneyCompact(b.cashAtSigning)}`, sub: `${a.name} vs ${b.name}`, help: 'Down payment when financing, or the full price plus tax and fees when paying cash (minus any trade-in).' },

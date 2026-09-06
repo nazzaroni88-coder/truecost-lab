@@ -72,6 +72,9 @@ export function Header() {
               </div>
             )}
           </div>
+          <NavLink to="/compare" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Comparisons
+          </NavLink>
           <NavLink to="/methodology" className={({ isActive }) => (isActive ? 'active' : '')}>
             Methodology
           </NavLink>
@@ -96,6 +99,9 @@ export function Header() {
           <div className="nav-menu-title" style={{ marginTop: 6 }}>
             More
           </div>
+          <NavLink to="/compare" className={({ isActive }) => (isActive ? 'active' : '')}>
+            Comparisons
+          </NavLink>
           <NavLink to="/methodology" className={({ isActive }) => (isActive ? 'active' : '')}>
             Methodology
           </NavLink>
