@@ -1315,6 +1315,10 @@ table,
   display: none;
 }
 .scenario-tab {
+  /* The strip scrolls, so a tab must keep its own width. As flex children they shrank instead, and
+     on a phone three scenarios collapsed to three identical "My c…" stubs — a tab strip that could
+     not tell its tabs apart. */
+  flex: 0 0 auto;
   border: 1px solid var(--tc-line);
   background: var(--tc-surface);
   border-radius: var(--r-sm);
