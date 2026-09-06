@@ -1490,18 +1490,43 @@ strong {
   outline: 2px solid var(--tc-warning);
   outline-offset: -2px;
 }
-.tornado-bar .amt {
+.tornado-axis {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  padding: 0 0 2px;
+}
+.tornado-axis span:nth-child(2) {
+  text-align: center;
+  font-weight: 600;
+}
+.tornado-axis span:last-child {
+  text-align: right;
+}
+.tornado-track {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 56px;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.tornado-amt {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--tc-ink-2);
+  text-align: right;
+  white-space: nowrap;
+}
+.tornado-amt.right {
+  text-align: left;
+}
+.tornado-bar .flip-line {
   position: absolute;
   top: 0;
   bottom: 0;
-  display: flex;
-  align-items: center;
-  font-size: var(--fs-micro);
-  font-weight: 600;
-  color: var(--tc-ink);
-  padding: 0 6px;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
+  width: 0;
+  border-left: 2px dashed var(--tc-warning);
+  z-index: 1;
 }
 .flip-badge {
   display: inline-flex;

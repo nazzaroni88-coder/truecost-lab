@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormProps } from '../types';
 import type { RentBuyInputs } from '../../engine/calculators/rentBuy';
 import { NumberField } from '../../components/ui/NumberField';
+import { OptionTabs } from '../../components/forms/OptionTabs';
 import { Disclosure, FormSection, SelectField } from '../../components/ui/Controls';
 import { fmtMoney } from '../../lib/format';
 import { MORTGAGE_TERMS } from './presets';
@@ -15,20 +16,15 @@ export function RentBuyForm({ inputs: i, onChange }: FormProps<RentBuyInputs>) {
 
   return (
     <div>
-      <div className="option-tabs three" role="tablist" aria-label="Edit inputs for">
-        <button role="tab" type="button" aria-selected={tab === 'rent'} className="option-tab a" onClick={() => setTab('rent')}>
-          <span className="lab">Renting</span>
-          <span className="nm">{fmtMoney(i.monthlyRent)}/mo</span>
-        </button>
-        <button role="tab" type="button" aria-selected={tab === 'buy'} className="option-tab b" onClick={() => setTab('buy')}>
-          <span className="lab">Buying</span>
-          <span className="nm">{fmtMoney(i.homePrice)}</span>
-        </button>
-        <button role="tab" type="button" aria-selected={tab === 'shared'} className="option-tab shared" onClick={() => setTab('shared')}>
-          <span className="lab">Assumptions</span>
-          <span className="nm">{i.horizonYears} yrs · {i.investmentReturn}% return</span>
-        </button>
-      </div>
+      <OptionTabs<Tab>
+        tabs={[
+          { key: 'rent', label: 'Renting', name: `${fmtMoney(i.monthlyRent)}/mo`, tone: 'a' },
+          { key: 'buy', label: 'Buying', name: fmtMoney(i.homePrice), tone: 'b' },
+          { key: 'shared', label: 'Assumptions', name: `${i.horizonYears} yrs · ${i.investmentReturn}% return`, tone: 'shared' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
 
       {tab === 'rent' && (
         <div role="tabpanel">

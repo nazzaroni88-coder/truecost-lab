@@ -14,7 +14,7 @@ export function AnswerHero({ winner, kicker = 'The answer', headline, sub, stats
   return (
     <section className={`answer-hero winner-${winner === 'none' ? 'tie' : winner}`} aria-labelledby="answer-heading">
       <div className="eyebrow">{kicker}</div>
-      <h2 id="answer-heading" className="answer-headline">
+      <h2 id="answer-heading" className="answer-headline" aria-live="polite" aria-atomic="true">
         {headline}
       </h2>
       {sub && <p className="answer-sub">{sub}</p>}

@@ -3,6 +3,7 @@ import type { FormProps } from '../types';
 import type { FuelType, PaymentMethod, VehicleInputs, VehicleOption, VehicleShared } from '../../engine/calculators/vehicle';
 import { vehicleValueAtMonth } from '../../engine/calculators/vehicle';
 import { NumberField } from '../../components/ui/NumberField';
+import { OptionTabs } from '../../components/forms/OptionTabs';
 import { Disclosure, FormSection, SegmentedField, SelectField, Switch, TextField } from '../../components/ui/Controls';
 import { fmtMoney, fmtPct } from '../../lib/format';
 import { TERM_OPTIONS } from './presets';
@@ -16,20 +17,21 @@ export function VehicleForm({ inputs, onChange }: FormProps<VehicleInputs>) {
 
   return (
     <div>
-      <div className="option-tabs three" role="tablist" aria-label="Edit inputs for">
-        {(['a', 'b', 'shared'] as Tab[]).map((t) => (
-          <button key={t} role="tab" type="button" id={`vtab-${t}`} aria-selected={tab === t} aria-controls={`vpanel-${t}`} className={`option-tab ${t}`} onClick={() => setTab(t)}>
-            <span className="lab">{t === 'shared' ? 'Shared' : `Option ${t.toUpperCase()}`}</span>
-            <span className="nm">{t === 'shared' ? 'Miles, prices, years' : inputs[t].name || (t === 'a' ? 'Car A' : 'Car B')}</span>
-          </button>
-        ))}
-      </div>
+      <OptionTabs<Tab>
+        tabs={[
+          { key: 'a', label: 'Option A', name: inputs.a.name || 'Car A', tone: 'a' },
+          { key: 'b', label: 'Option B', name: inputs.b.name || 'Car B', tone: 'b' },
+          { key: 'shared', label: 'Shared', name: 'Miles, prices, years', tone: 'shared' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
       {tab !== 'shared' ? (
-        <div role="tabpanel" id={`vpanel-${tab}`} aria-labelledby={`vtab-${tab}`} key={tab}>
+        <div role="tabpanel" key={tab}>
           <OptionFields side={tab} option={inputs[tab]} shared={inputs.shared} onPatch={(p) => setOpt(tab, p)} />
         </div>
       ) : (
-        <div role="tabpanel" id="vpanel-shared" aria-labelledby="vtab-shared">
+        <div role="tabpanel">
           <SharedFields shared={inputs.shared} onPatch={setShared} anyGas={inputs.a.fuelType === 'gas' || inputs.b.fuelType === 'gas'} anyEv={inputs.a.fuelType === 'electric' || inputs.b.fuelType === 'electric'} />
         </div>
       )}

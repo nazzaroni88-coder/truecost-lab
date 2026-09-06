@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FormProps } from '../types';
 import type { CustomInputs, CustomOption, FutureCost } from '../../engine/calculators/custom';
 import { NumberField } from '../../components/ui/NumberField';
+import { OptionTabs } from '../../components/forms/OptionTabs';
 import { Button } from '../../components/ui/Button';
 import { Disclosure, FormSection, Switch, TextField } from '../../components/ui/Controls';
 import { IconPlus, IconTrash } from '../../components/ui/Icons';
@@ -14,14 +15,15 @@ export function CustomForm({ inputs, onChange }: FormProps<CustomInputs>) {
   const setOpt = (side: 'a' | 'b', patch: Partial<CustomOption>) => onChange({ ...inputs, [side]: { ...inputs[side], ...patch } });
   return (
     <div>
-      <div className="option-tabs three" role="tablist" aria-label="Edit inputs for">
-        {(['a', 'b', 'shared'] as Tab[]).map((t) => (
-          <button key={t} role="tab" type="button" aria-selected={tab === t} className={`option-tab ${t}`} onClick={() => setTab(t)}>
-            <span className="lab">{t === 'shared' ? 'Shared' : `Option ${t.toUpperCase()}`}</span>
-            <span className="nm">{t === 'shared' ? `${inputs.horizonYears} yrs · ${inputs.investmentReturn}%` : inputs[t].name || `Option ${t.toUpperCase()}`}</span>
-          </button>
-        ))}
-      </div>
+      <OptionTabs<Tab>
+        tabs={[
+          { key: 'a', label: 'Option A', name: inputs.a.name || 'Option A', tone: 'a' },
+          { key: 'b', label: 'Option B', name: inputs.b.name || 'Option B', tone: 'b' },
+          { key: 'shared', label: 'Shared', name: `${inputs.horizonYears} yrs · ${inputs.investmentReturn}% return`, tone: 'shared' },
+        ]}
+        value={tab}
+        onChange={setTab}
+      />
       {tab !== 'shared' ? (
         <div role="tabpanel" key={tab}>
           <OptionFields side={tab} o={inputs[tab]} horizon={inputs.horizonYears} onPatch={(p) => setOpt(tab, p)} />
@@ -86,7 +88,7 @@ function OptionFields({ side, o, horizon, onPatch }: { side: 'a' | 'b'; o: Custo
             </div>
             <div className="grid-2">
               <NumberField label="Amount" format="currency" value={c.amount} onChange={(v) => setCost(c.id, { amount: v })} min={0} max={100_000_000} />
-              <NumberField label="In year" suffix="of the comparison" value={c.year} onChange={(v) => setCost(c.id, { year: Math.round(v) })} min={1} max={40} decimals={0} step={1} />
+              <NumberField label="In year" suffix="yr" value={c.year} onChange={(v) => setCost(c.id, { year: Math.round(v) })} min={1} max={40} decimals={0} step={1} help="Which year of the comparison this cost lands in (charged at the end of that year)." />
             </div>
           </div>
         ))}

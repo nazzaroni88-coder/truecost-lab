@@ -253,6 +253,14 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
             <div className="print-only" style={{ marginBottom: 8 }}>
               <strong>TrueCost Lab — {def.name}</strong> · Scenario: {active.name} · {new Date().toLocaleDateString()}
             </div>
+            {activePreset && (
+              <div className="callout callout-neutral no-print" style={{ padding: '8px 12px' }}>
+                <IconWarning />
+                <div>
+                  Showing the <strong>{activePreset.name}</strong> example with illustrative numbers. Edit any input to make it yours.
+                </div>
+              </div>
+            )}
             <ErrorBoundary label="the results" onReset={() => reset(active.id)}>
               <Results inputs={deferredInputs} result={result} onChange={onChange} />
             </ErrorBoundary>
