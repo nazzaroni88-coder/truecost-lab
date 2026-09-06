@@ -60,7 +60,7 @@
   --tc-a-strong: #1256c7;
   --tc-a-soft: #e8f0fe;
   --tc-b: #f0811f;
-  --tc-b-strong: #b85a08;
+  --tc-b-strong: #ad5407;
   --tc-b-soft: #fff1e4;
 
   /* Semantic */
@@ -91,40 +91,40 @@
    */
   --tc-cat-depreciation: #2c3844;
   --tc-cat-interest: #a05a34;
-  --tc-cat-taxes: #415262;
-  --tc-cat-fuel: #586b7e;
-  --tc-cat-charger: #6f909b;
-  --tc-cat-insurance: #6f859b;
-  --tc-cat-maintenance: #8b9eb1;
-  --tc-cat-repairs: #a8b8c7;
-  --tc-cat-registration: #c6d1dc;
+  --tc-cat-taxes: #3f4f5f;
+  --tc-cat-fuel: #546678;
+  --tc-cat-charger: #648996;
+  --tc-cat-insurance: #667d93;
+  --tc-cat-maintenance: #7b91a7;
+  --tc-cat-repairs: #92a6b9;
+  --tc-cat-registration: #aabacb;
   --tc-cat-incentives: #2f7d55;
-  --tc-cat-rent: #415262;
-  --tc-cat-propertyTax: #586b7e;
-  --tc-cat-hoa: #8b9eb1;
+  --tc-cat-rent: #3f4f5f;
+  --tc-cat-propertyTax: #546678;
+  --tc-cat-hoa: #7b91a7;
   --tc-cat-pmi: #a05a34;
-  --tc-cat-closing: #a8b8c7;
-  --tc-cat-selling: #c6d1dc;
+  --tc-cat-closing: #92a6b9;
+  --tc-cat-selling: #aabacb;
   --tc-cat-upfront: #2c3844;
-  --tc-cat-replacements: #a8b8c7;
-  --tc-cat-monthly: #586b7e;
-  --tc-cat-annual: #6f859b;
-  --tc-cat-oneTime: #8b9eb1;
+  --tc-cat-replacements: #92a6b9;
+  --tc-cat-monthly: #546678;
+  --tc-cat-annual: #667d93;
+  --tc-cat-oneTime: #7b91a7;
   --tc-cat-savings: #2f7d55;
   --tc-cat-resale: #2f7d55;
   --tc-cat-appreciation: #2f7d55;
-  --tc-cat-contrib: #6f859b;
+  --tc-cat-contrib: #667d93;
   --tc-cat-growth: #2f7d55;
   /* Fallback rotation for categories with no dedicated colour — the same ramp, well spaced. */
   --tc-cat-1: #2c3844;
-  --tc-cat-2: #586b7e;
-  --tc-cat-3: #8b9eb1;
-  --tc-cat-4: #415262;
-  --tc-cat-5: #a8b8c7;
-  --tc-cat-6: #6f859b;
-  --tc-cat-7: #c6d1dc;
+  --tc-cat-2: #546678;
+  --tc-cat-3: #7b91a7;
+  --tc-cat-4: #3f4f5f;
+  --tc-cat-5: #92a6b9;
+  --tc-cat-6: #667d93;
+  --tc-cat-7: #aabacb;
   --tc-cat-8: #a05a34;
-  --tc-cat-9: #6f909b;
+  --tc-cat-9: #648996;
 
   /*
    * Elevation. --sh-1 is gone to `none`: it used to sit under every card, and a shadow on every

@@ -1392,14 +1392,26 @@ table,
     padding-left: var(--sp-4);
   }
 }
+/*
+ * Two accents per winner, and the distinction matters.
+ *
+ * --hero-accent paints the rule: a solid block of colour, where the vivid fill is right.
+ * --hero-accent-text colours the amount in the headline, and there the fill is NOT safe: the
+ * orange --tc-b measures 2.5:1 on the light page, which fails even the 3:1 large-text threshold —
+ * on the single most important number on the page. The *-strong variants exist precisely because
+ * they are text-safe in both themes, so the headline uses those.
+ */
 .answer-hero.winner-a {
   --hero-accent: var(--tc-a);
+  --hero-accent-text: var(--tc-a-strong);
 }
 .answer-hero.winner-b {
   --hero-accent: var(--tc-b);
+  --hero-accent-text: var(--tc-b-strong);
 }
 .answer-hero.winner-tie {
   --hero-accent: var(--tc-ink-4);
+  --hero-accent-text: var(--tc-ink-2);
 }
 .answer-headline {
   /* Bigger and tighter than before: this sentence is the product. */
@@ -1411,7 +1423,7 @@ table,
   text-wrap: balance;
 }
 .answer-headline .amt {
-  color: var(--hero-accent, var(--tc-primary));
+  color: var(--hero-accent-text, var(--tc-primary-strong));
   font-variant-numeric: tabular-nums;
 }
 .answer-sub {
@@ -1535,7 +1547,9 @@ table,
   display: inline-block;
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
+  border: 1px solid var(--tc-line-strong);
+  box-sizing: border-box;
   margin-right: 8px;
   vertical-align: -1px;
 }
@@ -1560,10 +1574,18 @@ table,
   align-items: center;
   gap: 6px;
 }
+/*
+ * A hairline round every swatch. The tonal ramp deliberately runs to pale steps, and a pale fill on
+ * a light page sits near 1.8:1 against it — the colour still does its job of matching a segment to
+ * a label, but without an edge the swatch itself can be hard to see at 10px. The border guarantees
+ * the shape is perceivable whatever the fill.
+ */
 .legend .sw {
   width: 10px;
   height: 10px;
   border-radius: var(--r-xs);
+  border: 1px solid var(--tc-line-strong);
+  box-sizing: border-box;
 }
 
 /* Chart container */
