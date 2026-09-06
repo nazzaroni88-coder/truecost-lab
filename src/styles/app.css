@@ -2076,6 +2076,16 @@ dialog.modal::backdrop {
 .modal-body {
   padding: 16px 20px 20px;
   display: grid;
+  /*
+   * minmax(0, 1fr), not the implicit `auto` track.
+   *
+   * An `auto` track is sized between min-content and max-content, and the share preview holds a
+   * canvas whose bitmap is 2400px wide, so the track grew to thousands of pixels and the modal
+   * body overflowed with it — the card rendered as a zoomed corner. Capping the track at the
+   * container width is what actually fixes it; min-width on the item cannot, because the item was
+   * faithfully filling an over-wide track.
+   */
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--sp-4);
 }
 /*
