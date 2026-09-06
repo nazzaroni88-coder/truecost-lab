@@ -14,6 +14,7 @@
 
 import { investMonthlyRate, pct, projectInvestment, toTodaysDollars } from '../core/money';
 import { MILESTONE_YEARS } from '../core/cashflow';
+import { fmtMoney } from '../../lib/format';
 
 export interface PurchaseInvestInputs {
   oneTimeAmount: number;
@@ -59,9 +60,15 @@ export function computePurchaseInvest(i: PurchaseInvestInputs): PurchaseInvestRe
   const proj = projectInvestment(contributions, r, HORIZON_MONTHS);
   const totalSpent = contributions.reduce((p, c) => p + c, 0);
   if (totalSpent <= 0) warnings.push('Enter a one-time amount or a monthly amount to see the projection.');
+  // A monthly amount with no duration would otherwise vanish from the model without a word.
+  if (i.monthlyAmount > 0 && recurringMonths === 0) warnings.push(`Your ${fmtMoney(i.monthlyAmount)}/month amount is not counted because "for how long" is set to 0 years. Set the number of years it continues.`);
 
   const resaleYear = Math.max(0, i.resaleYear);
-  const resale = Math.max(0, i.resaleValue);
+  // You cannot get back more than you put in, so a resale above the amount spent is capped
+  // rather than producing a nonsensical negative opportunity cost.
+  const resaleRequested = Math.max(0, i.resaleValue);
+  const resale = Math.min(resaleRequested, totalSpent);
+  if (resaleRequested > totalSpent + 0.5) warnings.push(`A resale value of ${fmtMoney(resaleRequested)} is more than the ${fmtMoney(totalSpent)} you would spend, so we capped it at what you paid.`);
   const m = investMonthlyRate(r);
   const milestones: PurchaseMilestone[] = MILESTONE_YEARS.map((y) => {
     const t = y * 12;

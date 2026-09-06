@@ -7,7 +7,7 @@ import { SensitivitySection } from '../../components/results/SensitivitySection'
 import { LineChart } from '../../components/charts/LineChart';
 import { StackedBars, type StackRow } from '../../components/charts/StackedBars';
 import { categoryColor, OPTION_COLORS } from '../../lib/colors';
-import { fmtMoney, fmtMoneyCompact, fmtNumber, fmtPct, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtMoneyCompact, fmtNumber, fmtPct, roundHeadline, yearsLabel } from '../../lib/format';
 import { rentBuyAssumptions, rentBuyInsights, rentBuyMethodology, rentBuyQuickAdjust, rentBuyWinner } from './definition';
 
 export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<RentBuyInputs, RentBuyResult>) {
@@ -18,21 +18,21 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
 
   const headline =
     w === 'tie' ? (
-      <>Renting and buying come out about even after {years} years.</>
+      <>Renting and buying come out about even after {yearsLabel(years)}.</>
     ) : w === 'buy' ? (
       <>
-        <span className="text-b">Buying</span> leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> wealthier after {years} years.
+        <span className="text-b">Buying</span> leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> wealthier after {yearsLabel(years)}.
       </>
     ) : (
       <>
-        <span className="text-a">Renting</span> and investing the difference leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> ahead after {years} years.
+        <span className="text-a">Renting</span> and investing the difference leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> ahead after {yearsLabel(years)}.
       </>
     );
-  const sub = `Owning costs about ${fmtMoney(r.buy.monthlyOwnerCostYear1)} a month in year one versus ${fmtMoney(r.rent.firstYearMonthly)} to rent — but part of the owner's payment builds equity, and the renter can invest what they don't spend. After ${years} years: home equity of ${fmtMoney(r.buy.netEquityAtEnd)} (net of selling costs) versus a renter's portfolio of ${fmtMoney(r.rent.investedPortfolio)}.${r.breakEvenYear !== null && r.breakEvenYear > 1 && r.breakEvenYear <= years ? ` Buying pulls ahead around year ${r.breakEvenYear}.` : ''}`;
+  const sub = `Owning costs about ${fmtMoney(r.buy.monthlyOwnerCostYear1)} a month in year one versus ${fmtMoney(r.rent.firstYearMonthly)} to rent — but part of the owner's payment builds equity, and the renter can invest what they don't spend. After ${yearsLabel(years)}: home equity of ${fmtMoney(r.buy.netEquityAtEnd)} (net of selling costs) versus a renter's portfolio of ${fmtMoney(r.rent.investedPortfolio)}.${r.breakEvenYear !== null && r.breakEvenYear > 1 && r.breakEvenYear <= years ? ` Buying pulls ahead around year ${r.breakEvenYear}.` : ''}`;
 
   const stats = [
     { label: 'Year-1 monthly cost', value: `${fmtMoney(r.rent.firstYearMonthly)} vs ${fmtMoney(r.buy.monthlyOwnerCostYear1)}`, sub: 'rent vs own', help: 'Cash out the door each month in the first year. Owner cost includes mortgage, property tax, insurance, maintenance, HOA and PMI.' },
-    { label: `Home equity after ${years} yrs`, value: fmtMoney(r.buy.netEquityAtEnd), sub: `after ${fmtPct(i.sellingCostsPct, 0)} selling costs`, tone: 'b' as const },
+    { label: `Home equity after ${years} yr`, value: fmtMoney(r.buy.netEquityAtEnd), sub: `after ${fmtPct(i.sellingCostsPct, 0)} selling costs`, tone: 'b' as const },
     { label: `Renter's investments`, value: fmtMoney(r.rent.investedPortfolio), sub: `at ${fmtPct(i.investmentReturn, 1)}/yr`, tone: 'a' as const },
     { label: 'Break-even', value: r.breakEvenYear === null ? 'Never (40 yrs)' : r.breakEvenYear <= 1 ? 'Year 1' : `~${r.breakEvenYear} years`, sub: r.breakEvenYear === null ? 'renting stays ahead' : 'stay at least this long', help: 'The first year from which buying leaves you wealthier than renting and investing, and stays that way.' },
   ];
@@ -75,7 +75,7 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
           <table className="cmp-table">
             <thead>
               <tr>
-                <th>Over {years} years</th>
+                <th>Over {yearsLabel(years)}</th>
                 <th className="col-a">Renting</th>
                 <th className="col-b">Buying</th>
               </tr>
@@ -171,7 +171,7 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
           xFormat={(v) => `yr ${fmtNumber(v, 0)}`}
           yFormat={(v) => fmtMoneyCompact(v)}
           markers={crossYear !== null ? [{ x: crossYear, label: `rent passes owning · yr ${crossYear}` }] : []}
-          ariaLabel={`Monthly cost of renting versus owning over ${years} years`}
+          ariaLabel={`Monthly cost of renting versus owning over ${yearsLabel(years)}`}
           tooltip={(k) => ({ title: `Year ${cashX[k]}`, rows: [{ label: 'Owning', value: `${fmtMoney(cashOwn[k])}/mo`, color: OPTION_COLORS.b }, { label: 'Renting', value: `${fmtMoney(cashRent[k])}/mo`, color: OPTION_COLORS.a }] })}
         />
         <div className="legend" style={{ marginTop: 8 }}>

@@ -7,7 +7,7 @@ import { SensitivitySection } from '../../components/results/SensitivitySection'
 import { LineChart } from '../../components/charts/LineChart';
 import { StackedBars, type StackRow } from '../../components/charts/StackedBars';
 import { categoryColor, OPTION_COLORS } from '../../lib/colors';
-import { fmtMoney, fmtNumber, fmtYears, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtNumber, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
 import { customAssumptions, customInsights, customMethodology, customQuickAdjust } from './definition';
 
 export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomInputs, CustomResult>) {
@@ -23,10 +23,10 @@ export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomI
   const headline = empty ? (
     <>Add costs to both options to compare them.</>
   ) : winner === 'tie' ? (
-    <>The two options cost about the same over {years} years.</>
+    <>The two options cost about the same over {yearsLabel(years)}.</>
   ) : (
     <>
-      <span className={`text-${winner}`}>{win.name}</span> is estimated to cost <span className="amt">{fmtMoney(roundHeadline(diff))}</span> less over {years} years.
+      <span className={`text-${winner}`}>{win.name}</span> is estimated to cost <span className="amt">{fmtMoney(roundHeadline(diff))}</span> less over {yearsLabel(years)}.
     </>
   );
   const sub = empty
@@ -75,7 +75,7 @@ export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomI
               <table className="cmp-table">
                 <thead>
                   <tr>
-                    <th>Over {years} years</th>
+                    <th>Over {yearsLabel(years)}</th>
                     <th className="col-a">{a.name}</th>
                     <th className="col-b">{b.name}</th>
                     <th>Difference</th>
@@ -123,7 +123,7 @@ export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomI
               ]}
               xFormat={(v) => `yr ${fmtNumber(v, 0)}`}
               markers={c.crossover.year !== null && c.crossover.year > 0 ? [{ x: c.crossover.year, label: `crossover · ${fmtYears(c.crossover.year)}` }] : []}
-              ariaLabel={`Cumulative cost of ${a.name} and ${b.name} over ${years} years`}
+              ariaLabel={`Cumulative cost of ${a.name} and ${b.name} over ${yearsLabel(years)}`}
               zeroLine
               tooltip={(k) => ({ title: `After ${fmtYears(curveX[k])}`, rows: [{ label: a.name, value: fmtMoney(curveA[k]), color: OPTION_COLORS.a }, { label: b.name, value: fmtMoney(curveB[k]), color: OPTION_COLORS.b }] })}
             />

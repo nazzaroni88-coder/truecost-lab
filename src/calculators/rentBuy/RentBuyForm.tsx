@@ -20,7 +20,7 @@ export function RentBuyForm({ inputs: i, onChange }: FormProps<RentBuyInputs>) {
         tabs={[
           { key: 'rent', label: 'Renting', name: `${fmtMoney(i.monthlyRent)}/mo`, tone: 'a' },
           { key: 'buy', label: 'Buying', name: fmtMoney(i.homePrice), tone: 'b' },
-          { key: 'shared', label: 'Assumptions', name: `${i.horizonYears} yrs · ${i.investmentReturn}% return`, tone: 'shared' },
+          { key: 'shared', label: 'Assumptions', name: `${i.horizonYears} yr · ${i.investmentReturn}% return`, tone: 'shared' },
         ]}
         value={tab}
         onChange={setTab}

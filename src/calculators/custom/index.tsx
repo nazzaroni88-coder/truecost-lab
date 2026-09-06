@@ -4,7 +4,7 @@ import { calculatorById } from '../meta';
 import { computeCustom, swapCustomInputs, type CustomInputs, type CustomOption, type FutureCost } from '../../engine/calculators/custom';
 import { CustomForm } from './CustomForm';
 import { CustomResults } from './CustomResults';
-import { customAssumptions, customInsights, customMethodology, customQuickAdjust, customSummary } from './definition';
+import { customAssumptions, customInsights, customMethodology, customNameFor, customQuickAdjust, customSummary } from './definition';
 import { customDefaults, customPresets } from './presets';
 import { uid } from '../../lib/ids';
 
@@ -52,4 +52,5 @@ export const customCalculator: CalculatorDefinition<CustomInputs, ReturnType<typ
   insights: customInsights,
   quickAdjust: customQuickAdjust,
   assumptions: customAssumptions,
+  nameFor: customNameFor,
 };

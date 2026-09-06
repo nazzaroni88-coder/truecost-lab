@@ -1,13 +1,13 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import type { VehicleInputs, VehicleResult } from '../../engine/calculators/vehicle';
-import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
 
 export function vehicleSummary(inputs: VehicleInputs, r: VehicleResult): ShareSummary {
   const { a, b, comparison: c } = r;
   const years = Math.max(1, Math.round(inputs.shared.ownershipYears));
   const win = c.cheaper === 'b' ? b : a;
   const diff = Math.abs(c.nominalDifference);
-  const headline = c.cheaper === 'tie' ? `${a.name} and ${b.name} cost about the same over ${years} years.` : `${win.name} costs about ${fmtMoney(roundHeadline(diff))} less over ${years} years.`;
+  const headline = c.cheaper === 'tie' ? `${a.name} and ${b.name} cost about the same over ${yearsLabel(years)}.` : `${win.name} costs about ${fmtMoney(roundHeadline(diff))} less over ${yearsLabel(years)}.`;
   const sub = `True cost including depreciation, interest, fuel, insurance, maintenance and resale: ${a.name} ${fmtMoney(a.totalCost)} vs ${b.name} ${fmtMoney(b.totalCost)}.`;
   return {
     headline,
@@ -22,7 +22,7 @@ export function vehicleSummary(inputs: VehicleInputs, r: VehicleResult): ShareSu
       { label: `${b.name} true cost`, value: fmtMoney(b.totalCost), tone: 'b' },
       { label: 'Cost per mile', value: `${fmtMoney(a.costPerMile, 2)} vs ${fmtMoney(b.costPerMile, 2)}` },
       { label: 'Depreciation', value: `${fmtMoney(a.depreciation)} vs ${fmtMoney(b.depreciation)}` },
-      { label: `Invest the difference, ${years} yrs @ ${fmtPct(inputs.shared.investmentReturn, 1)}`, value: c.invest.saver === 'tie' ? '—' : fmtMoney(c.invest.balanceAtHorizon), tone: 'positive' },
+      { label: `Invest the difference, ${years} yr @ ${fmtPct(inputs.shared.investmentReturn, 1)}`, value: c.invest.saver === 'tie' ? '—' : fmtMoney(c.invest.balanceAtHorizon), tone: 'positive' },
     ],
   };
 }
@@ -44,7 +44,7 @@ export function vehicleAssumptions(i: VehicleInputs): { label: string; value: st
   const anyGas = i.a.fuelType === 'gas' || i.b.fuelType === 'gas';
   const anyEv = i.a.fuelType === 'electric' || i.b.fuelType === 'electric';
   return [
-    { label: 'Ownership period', value: `${s.ownershipYears} years` },
+    { label: 'Ownership period', value: yearsLabel(s.ownershipYears) },
     { label: 'Miles per year', value: `${fmtNumber(s.annualMiles, 0)} mi/yr` },
     ...(anyGas ? [{ label: 'Gas price', value: `${fmtMoney(s.gasPrice, 2)}/gal` }] : []),
     ...(anyEv ? [{ label: 'Electricity rate', value: `${fmtMoney(s.electricityRate, 2)}/kWh` }] : []),
@@ -127,14 +127,14 @@ export function vehicleInsights(i: VehicleInputs, r: VehicleResult): Insight[] {
     question: 'Explain this result simply',
     answer:
       c.cheaper === 'tie' ? (
-        <p>Once you add up everything — the value each car loses, interest, fuel or charging, insurance, maintenance and repairs — and subtract what you get back when you sell, the two cars cost about the same over {years} years. Pick the one you would rather drive.</p>
+        <p>Once you add up everything — the value each car loses, interest, fuel or charging, insurance, maintenance and repairs — and subtract what you get back when you sell, the two cars cost about the same over {yearsLabel(years)}. Pick the one you would rather drive.</p>
       ) : (
         <>
           <p>
             The sticker prices are {fmtMoney(i.a.price)} and {fmtMoney(i.b.price)}, but you never pay the sticker price — you pay the difference between what you put in and what you get back, plus everything it costs to run the car along the way.
           </p>
           <p>
-            Over {years} years, {win.name} costs {fmtMoney(win.totalCost)} all-in and {lose.name} costs {fmtMoney(lose.totalCost)}. The biggest single gap is <strong>{biggest?.label.toLowerCase()}</strong> ({fmtMoney(Math.abs(biggest?.diff ?? 0))} apart).
+            Over {yearsLabel(years)}, {win.name} costs {fmtMoney(win.totalCost)} all-in and {lose.name} costs {fmtMoney(lose.totalCost)}. The biggest single gap is <strong>{biggest?.label.toLowerCase()}</strong> ({fmtMoney(Math.abs(biggest?.diff ?? 0))} apart).
             {favoringWinner.length > 0 && ` ${win.name} wins on ${favoringWinner.map((x) => x.label.toLowerCase()).join(', ')}.`}
             {favoringLoser.length > 0 && ` ${lose.name} is cheaper on ${favoringLoser.map((x) => x.label.toLowerCase()).join(', ')}, but not by enough to close the gap.`}
           </p>
@@ -209,11 +209,17 @@ export function vehicleInsights(i: VehicleInputs, r: VehicleResult): Insight[] {
             {lose.depreciation > win.depreciation && <li>Negotiate {fmtMoney(Math.min(loseInp.price * 0.15, Math.abs(c.nominalDifference)))} or more off the price — a lower price lowers both the upfront cost and the depreciation hit.</li>}
             {c.crossover.year !== null && c.crossover.cheaperAtStart !== c.crossover.cheaperAtEnd && c.crossover.year > 0.5 && <li>Sell before about {fmtYears(c.crossover.year)} — {lose.name} is ahead until then because of its lower upfront cost or slower early depreciation.</li>}
             {lose.totalInterest > 0 && <li>A lower APR or a bigger down payment would trim its {fmtMoney(lose.totalInterest)} of interest.</li>}
-            {lose.insurance > win.insurance && <li>Shop insurance: it pays {fmtMoney(lose.insurance - win.insurance)} more over {years} years.</li>}
+            {lose.insurance > win.insurance && <li>Shop insurance: it pays {fmtMoney(lose.insurance - win.insurance)} more over {yearsLabel(years)}.</li>}
           </ul>
         </>
       ),
   };
 
   return [explain, matters, overlooking, howFlip];
+}
+
+/** Short, content-derived scenario name: "Model 3 vs Camry · 5 yrs". */
+export function vehicleNameFor(i: VehicleInputs): string {
+  const short = (s: string) => (s.trim().length > 18 ? `${s.trim().slice(0, 17)}…` : s.trim() || 'Option');
+  return `${short(i.a.name)} vs ${short(i.b.name)} · ${Math.round(i.shared.ownershipYears)} yr`;
 }

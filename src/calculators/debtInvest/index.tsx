@@ -4,7 +4,7 @@ import { calculatorById } from '../meta';
 import { computeDebtInvest, type DebtInvestInputs, type DebtInvestResult } from '../../engine/calculators/debtInvest';
 import { DebtInvestForm } from './DebtInvestForm';
 import { DebtInvestResults } from './DebtInvestResults';
-import { debtInvestAssumptions, debtInvestInsights, debtInvestMethodology, debtInvestQuickAdjust, debtInvestSummary } from './definition';
+import { debtInvestAssumptions, debtInvestInsights, debtInvestMethodology, debtInvestNameFor, debtInvestQuickAdjust, debtInvestSummary } from './definition';
 import { debtInvestDefaults, debtInvestPresets } from './presets';
 
 function normalize(raw: unknown): DebtInvestInputs {
@@ -29,4 +29,5 @@ export const debtInvestCalculator: CalculatorDefinition<DebtInvestInputs, DebtIn
   insights: debtInvestInsights,
   quickAdjust: debtInvestQuickAdjust,
   assumptions: debtInvestAssumptions,
+  nameFor: debtInvestNameFor,
 };

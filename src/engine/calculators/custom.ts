@@ -218,8 +218,13 @@ export function computeCustom(i: CustomInputs): CustomResult {
   if (a.totalCost === 0 && b.totalCost === 0) warnings.push('Add some costs to each option to see a comparison.');
   const horizon = Math.max(1, Math.round(i.horizonYears));
   for (const side of ['a', 'b'] as const) {
-    const late = i[side].oneTime.filter((c) => Math.round(c.year) > horizon);
-    if (late.length) warnings.push(`${i[side].name}: ${late.map((c) => `"${c.label}" (year ${Math.round(c.year)})`).join(', ')} falls after the ${horizon}-year horizon and is not counted.`);
+    const o = i[side];
+    const late = o.oneTime.filter((c) => Math.round(c.year) > horizon);
+    if (late.length) warnings.push(`${o.name}: ${late.map((c) => `"${c.label}" (year ${Math.round(c.year)})`).join(', ')} falls after the ${horizon}-year horizon and is not counted.`);
+    // The engine caps resale at the purchase price; say so instead of silently changing the number.
+    if (o.resaleValue > o.upfront + 0.5) {
+      warnings.push(o.upfront <= 0 ? `${o.name}: a resale value needs an upfront cost to come from, so it is not counted.` : `${o.name}: the resale value of ${fmtMoney(o.resaleValue)} is more than its ${fmtMoney(o.upfront)} upfront cost, so we capped it at what you paid.`);
+    }
   }
   return { a, b, comparison, sensitivity, breakEvens, warnings };
 }

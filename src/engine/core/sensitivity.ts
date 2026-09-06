@@ -71,6 +71,15 @@ function safeMetric<I>(metric: (i: I) => number, inputs: I, fallback: number): n
   }
 }
 
+/**
+ * A break-even value is only worth stating as advice if it lands somewhere a person could
+ * actually encounter. Solving for "buying wins below a 0.9% mortgage rate" is arithmetically
+ * true and practically useless, and printing it makes the tool look broken.
+ */
+export function isRealistic(value: number | null, [lo, hi]: [number, number]): value is number {
+  return value !== null && Number.isFinite(value) && value >= lo && value <= hi;
+}
+
 export interface BreakEvenResult {
   /** Value at which the metric crosses zero, or null if none in bounds. */
   value: number | null;

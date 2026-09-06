@@ -7,7 +7,7 @@ import { SensitivitySection } from '../../components/results/SensitivitySection'
 import { LineChart } from '../../components/charts/LineChart';
 import { StackedBars, type StackRow } from '../../components/charts/StackedBars';
 import { categoryColor, OPTION_COLORS } from '../../lib/colors';
-import { fmtMoney, fmtMoneyCompact, fmtNumber, fmtPct, fmtYears, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtMoneyCompact, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
 import { vehicleInsights, vehicleMethodology, vehicleQuickAdjust, vehicleAssumptions } from './definition';
 
 export function VehicleResults({ inputs, result, onChange }: ResultsProps<VehicleInputs, VehicleResult>) {
@@ -23,10 +23,10 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
 
   const headline =
     winner === 'tie' ? (
-      <>The two options cost about the same over {years} years.</>
+      <>The two options cost about the same over {yearsLabel(years)}.</>
     ) : (
       <>
-        <span className={`text-${winner}`}>{win.name}</span> is estimated to cost <span className="amt">{fmtMoney(roundHeadline(diff))}</span> less over {years} years.
+        <span className={`text-${winner}`}>{win.name}</span> is estimated to cost <span className="amt">{fmtMoney(roundHeadline(diff))}</span> less over {yearsLabel(years)}.
       </>
     );
 
@@ -39,7 +39,7 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
       const ww = wealthWinner === 'a' ? a : b;
       sub += ` But timing matters: because ${ww.name} keeps more of your cash invested early, it actually leaves you about ${fmtMoney(roundHeadline(wealthAbs))} wealthier at ${fmtPct(inputs.shared.investmentReturn, 1)} returns.`;
     } else if (wealthWinner !== 'tie') {
-      sub += ` Invest the difference at ${fmtPct(inputs.shared.investmentReturn, 1)} and choosing ${win.name} could leave you about ${fmtMoney(roundHeadline(wealthAbs))} better off after ${years} years.`;
+      sub += ` Invest the difference at ${fmtPct(inputs.shared.investmentReturn, 1)} and choosing ${win.name} could leave you about ${fmtMoney(roundHeadline(wealthAbs))} better off after ${yearsLabel(years)}.`;
     }
   }
 
@@ -94,7 +94,7 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
           <table className="cmp-table">
             <thead>
               <tr>
-                <th>Over {years} years</th>
+                <th>Over {yearsLabel(years)}</th>
                 <th className="col-a">{a.name}</th>
                 <th className="col-b">{b.name}</th>
                 <th>Difference</th>
@@ -108,11 +108,27 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
                 <td>{fmtMoney(inputs.a.price - inputs.b.price)}</td>
               </tr>
               <tr className="subtle">
-                <td>Resale value you get back</td>
-                <td>−{fmtMoney(a.resaleValue)}</td>
-                <td>−{fmtMoney(b.resaleValue)}</td>
-                <td>{fmtMoney(b.resaleValue - a.resaleValue)}</td>
+                <td>Car is worth at the end</td>
+                <td>{fmtMoney(a.resaleValue)}</td>
+                <td>{fmtMoney(b.resaleValue)}</td>
+                <td>{fmtMoney(a.resaleValue - b.resaleValue)}</td>
               </tr>
+              {(a.loanBalanceAtExit > 0.5 || b.loanBalanceAtExit > 0.5) && (
+                <>
+                  <tr className="subtle">
+                    <td>Loan still owed when you sell</td>
+                    <td>{a.loanBalanceAtExit > 0.5 ? `−${fmtMoney(a.loanBalanceAtExit)}` : '—'}</td>
+                    <td>{b.loanBalanceAtExit > 0.5 ? `−${fmtMoney(b.loanBalanceAtExit)}` : '—'}</td>
+                    <td></td>
+                  </tr>
+                  <tr className="subtle">
+                    <td>Cash from the sale</td>
+                    <td className={a.underwaterAtExit ? 'text-negative' : ''}>{a.underwaterAtExit ? `${fmtMoney(a.netProceedsAtExit)} (you pay)` : fmtMoney(a.netProceedsAtExit)}</td>
+                    <td className={b.underwaterAtExit ? 'text-negative' : ''}>{b.underwaterAtExit ? `${fmtMoney(b.netProceedsAtExit)} (you pay)` : fmtMoney(b.netProceedsAtExit)}</td>
+                    <td>{fmtMoney(a.netProceedsAtExit - b.netProceedsAtExit)}</td>
+                  </tr>
+                </>
+              )}
               {catKeys.map((k) => (
                 <tr key={k}>
                   <td>
@@ -145,6 +161,12 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
         </div>
         <p className="micro muted" style={{ marginTop: 'var(--sp-3)' }}>
           Difference column: positive means {a.name} costs more in that category. Depreciation = price minus resale value. Loan principal is not a cost — it buys the car — so only interest appears.
+          {(a.underwaterAtExit || b.underwaterAtExit) && (
+            <>
+              {' '}
+              <strong className="text-negative">Negative equity:</strong> {[a, b].filter((o) => o.underwaterAtExit).map((o) => o.name).join(' and ')} would still owe more than the car is worth at that point, so selling means bringing your own cash to close out the loan.
+            </>
+          )}
         </p>
       </ResultSection>
 
@@ -157,7 +179,7 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
           ]}
           xFormat={(v) => `yr ${fmtNumber(v, 0)}`}
           markers={crossoverYear !== null && crossoverYear > 0 ? [{ x: crossoverYear, label: `crossover · ${fmtYears(crossoverYear)}` }] : []}
-          ariaLabel={`Cumulative cost of ${a.name} and ${b.name} over ${years} years`}
+          ariaLabel={`Cumulative cost of ${a.name} and ${b.name} over ${yearsLabel(years)}`}
           tooltip={(i) => ({ title: `After ${fmtYears(curveX[i])}`, rows: [{ label: a.name, value: fmtMoney(curveA[i]), color: OPTION_COLORS.a }, { label: b.name, value: fmtMoney(curveB[i]), color: OPTION_COLORS.b }] })}
         />
         <div className="legend" style={{ marginTop: 8 }}>

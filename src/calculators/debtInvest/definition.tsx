@@ -1,6 +1,6 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import type { DebtInvestInputs, DebtInvestResult } from '../../engine/calculators/debtInvest';
-import { addMonths, fmtDate, fmtMoney, fmtMonthsLong, fmtNumber, fmtPct, roundHeadline } from '../../lib/format';
+import { addMonths, fmtDate, fmtMoney, fmtMoneyCompact, fmtMonthsLong, fmtNumber, fmtPct, roundHeadline, yearsLabel } from '../../lib/format';
 
 export function payoffLabel(month: number | null): string {
   if (month === null) return 'not within horizon';
@@ -11,7 +11,7 @@ export function payoffLabel(month: number | null): string {
 export function debtInvestSummary(i: DebtInvestInputs, r: DebtInvestResult): ShareSummary {
   const d = Math.abs(r.difference);
   const years = Math.round(i.horizonYears);
-  const headline = r.winner === 'tie' ? `Paying the debt or investing the extra comes out about even after ${years} years.` : r.winner === 'payDebt' ? `Paying off the ${fmtPct(i.apr, 1)} debt first leaves you about ${fmtMoney(roundHeadline(d))} ahead after ${years} years.` : `Investing the extra leaves you about ${fmtMoney(roundHeadline(d))} ahead after ${years} years — if it really earns ${fmtPct(i.investmentReturn, 1)}.`;
+  const headline = r.winner === 'tie' ? `Paying the debt or investing the extra comes out about even after ${yearsLabel(years)}.` : r.winner === 'payDebt' ? `Paying off the ${fmtPct(i.apr, 1)} debt first leaves you about ${fmtMoney(roundHeadline(d))} ahead after ${yearsLabel(years)}.` : `Investing the extra leaves you about ${fmtMoney(roundHeadline(d))} ahead after ${yearsLabel(years)} — if it really earns ${fmtPct(i.investmentReturn, 1)}.`;
   const sub = `${fmtMoney(i.debtBalance)} at ${fmtPct(i.apr, 1)} with ${fmtMoney(i.extraMonthly)}/mo extra. Break-even return: about ${r.breakEvenReturn === null ? '—' : fmtPct(r.breakEvenReturn, 1)}.`;
   return {
     headline,
@@ -22,8 +22,8 @@ export function debtInvestSummary(i: DebtInvestInputs, r: DebtInvestResult): Sha
     keyMetric: r.difference,
     keyMetricLabel: 'Investing advantage (net worth)',
     rows: [
-      { label: `Net worth after ${years} yrs: pay debt first`, value: fmtMoney(r.payDebt.netWorth), tone: 'a' },
-      { label: `Net worth after ${years} yrs: invest the extra`, value: fmtMoney(r.invest.netWorth), tone: 'b' },
+      { label: `Net worth after ${years} yr: pay debt first`, value: fmtMoney(r.payDebt.netWorth), tone: 'a' },
+      { label: `Net worth after ${years} yr: invest the extra`, value: fmtMoney(r.invest.netWorth), tone: 'b' },
       { label: 'Interest avoided by paying first', value: fmtMoney(r.interestAvoided), tone: 'positive' },
       { label: 'Debt-free: pay first vs invest', value: `${r.payDebt.payoffMonth === null ? '—' : fmtMonthsLong(r.payDebt.payoffMonth)} vs ${r.invest.payoffMonth === null ? 'not within horizon' : fmtMonthsLong(r.invest.payoffMonth)}` },
       { label: 'Return needed to break even', value: r.breakEvenReturn === null ? '—' : fmtPct(r.breakEvenReturn, 1) },
@@ -45,7 +45,7 @@ export function debtInvestAssumptions(i: DebtInvestInputs): { label: string; val
     { label: 'Debt', value: `${fmtMoney(i.debtBalance)} at ${fmtPct(i.apr, 2)} APR, ${fmtMoney(i.minimumPayment)}/mo minimum` },
     { label: 'Monthly budget (both strategies)', value: `${fmtMoney(i.minimumPayment + i.extraMonthly)} = minimum + ${fmtMoney(i.extraMonthly)} extra` },
     { label: 'Investment return', value: `${fmtPct(i.investmentReturn, 1)}/yr effective, compounded monthly` },
-    { label: 'Horizon', value: `${i.horizonYears} years` },
+    { label: 'Horizon', value: `${yearsLabel(i.horizonYears)}` },
     { label: 'Taxes, fees, employer match', value: 'not modeled' },
   ];
 }
@@ -55,7 +55,7 @@ export function debtInvestMethodology(i: DebtInvestInputs, r: DebtInvestResult):
   return [
     {
       title: 'Two strategies, one budget',
-      body: `Both strategies spend exactly ${fmtMoney(budget)} a month for ${i.horizonYears} years. The only question is the order: debt first, or investments first.`,
+      body: `Both strategies spend exactly ${fmtMoney(budget)} a month for ${yearsLabel(i.horizonYears)}. The only question is the order: debt first, or investments first.`,
       formula: `Pay debt first : ${fmtMoney(budget)} → debt until paid off, then ${fmtMoney(budget)} → investments\nInvest the extra: ${fmtMoney(i.minimumPayment)} → debt, ${fmtMoney(i.extraMonthly)} → investments; once the debt is gone, ${fmtMoney(budget)} → investments\nNet worth      = investments − remaining debt`,
     },
     {
@@ -97,9 +97,9 @@ export function debtInvestInsights(i: DebtInvestInputs, r: DebtInvestResult): In
           </p>
           <p>
             {r.winner === 'payDebt'
-              ? `Because ${fmtPct(i.apr, 1)} (certain) is more than ${fmtPct(i.investmentReturn, 1)} (hoped for), paying the debt first ends ${fmtMoney(Math.abs(r.difference))} ahead after ${years} years — and you are debt-free ${r.monthsSaved !== null ? fmtMonthsLong(r.monthsSaved) : ''} sooner.`
+              ? `Because ${fmtPct(i.apr, 1)} (certain) is more than ${fmtPct(i.investmentReturn, 1)} (hoped for), paying the debt first ends ${fmtMoney(Math.abs(r.difference))} ahead after ${yearsLabel(years)} — and you are debt-free ${r.monthsSaved !== null ? fmtMonthsLong(r.monthsSaved) : ''} sooner.`
               : r.winner === 'invest'
-                ? `Because you expect ${fmtPct(i.investmentReturn, 1)} from investing and the debt only costs ${fmtPct(i.apr, 1)}, investing the extra ends ${fmtMoney(Math.abs(r.difference))} ahead after ${years} years — but only if that return actually shows up. Paying the debt first is the safer path and gets you debt-free ${r.monthsSaved !== null ? fmtMonthsLong(r.monthsSaved) : ''} sooner.`
+                ? `Because you expect ${fmtPct(i.investmentReturn, 1)} from investing and the debt only costs ${fmtPct(i.apr, 1)}, investing the extra ends ${fmtMoney(Math.abs(r.difference))} ahead after ${yearsLabel(years)} — but only if that return actually shows up. Paying the debt first is the safer path and gets you debt-free ${r.monthsSaved !== null ? fmtMonthsLong(r.monthsSaved) : ''} sooner.`
                 : 'The two come out about even, which means the guaranteed option (paying the debt) is the lower-risk way to the same place.'}
           </p>
         </>
@@ -109,7 +109,7 @@ export function debtInvestInsights(i: DebtInvestInputs, r: DebtInvestResult): In
       question: 'What assumption matters most?',
       answer: (
         <p>
-          The expected return. {be !== null ? `The investments need to earn about ${fmtPct(be, 1)} a year — reliably, after fees and taxes — just to tie with paying off the debt.` : ''} Below that, paying the debt wins; above it, investing wins. The debt's rate is certain; the return is not, so ask how confident you are in {fmtPct(i.investmentReturn, 1)} over {years} years.
+          The expected return. {be !== null ? `The investments need to earn about ${fmtPct(be, 1)} a year — reliably, after fees and taxes — just to tie with paying off the debt.` : ''} Below that, paying the debt wins; above it, investing wins. The debt's rate is certain; the return is not, so ask how confident you are in {fmtPct(i.investmentReturn, 1)} over {yearsLabel(years)}.
         </p>
       ),
     },
@@ -146,4 +146,9 @@ export function debtInvestInsights(i: DebtInvestInputs, r: DebtInvestResult): In
       ),
     },
   ];
+}
+
+/** Short, content-derived scenario name: "$40k at 9% · +$500/mo". */
+export function debtInvestNameFor(i: DebtInvestInputs): string {
+  return `${fmtMoneyCompact(i.debtBalance)} at ${fmtPct(i.apr, 1)} · +${fmtMoney(i.extraMonthly)}/mo`;
 }

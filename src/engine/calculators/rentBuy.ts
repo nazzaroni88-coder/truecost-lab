@@ -19,7 +19,7 @@
 import type { CashflowSeries, CategoryTotal } from '../core/cashflow';
 import { compareCashflows, type ComparisonResult, yearIndexOfMonth } from '../core/cashflow';
 import { amortizationSchedule, inflate, paymentForLoan, pct, projectInvestment } from '../core/money';
-import { findBreakEven, runSensitivity, type SensitivityRow, type SensitivityVariable } from '../core/sensitivity';
+import { findBreakEven, isRealistic, runSensitivity, type SensitivityRow, type SensitivityVariable } from '../core/sensitivity';
 import { fmtMoney, fmtNumber, fmtPct } from '../../lib/format';
 
 export interface RentBuyInputs {
@@ -273,11 +273,19 @@ export function computeRentBuy(i: RentBuyInputs): RentBuyResult {
   const sensitivity = runSensitivity(i, rentBuyMetric, vars);
   const breakEvens: RentBuyResult['breakEvens'] = [];
   const buyingWins = comparison.wealthDifference > 0;
-  const tryVar = (key: string, build: (v: number, posAbove: boolean) => string, label: string) => {
+  /**
+   * @param realistic values outside this range are not stated as advice — solving for a 0.9%
+   *        mortgage rate is arithmetically true and practically useless.
+   */
+  const tryVar = (key: string, build: (v: number, posAbove: boolean) => string, label: string, realistic: [number, number], unreachable?: string) => {
     const v = vars.find((x) => x.key === key);
     if (!v) return;
     const be = findBreakEven(i, rentBuyMetric, v);
     if (be.value === null || be.positiveAbove === null) return;
+    if (!isRealistic(be.value, realistic)) {
+      if (unreachable) breakEvens.push({ key, label, value: null, text: unreachable });
+      return;
+    }
     breakEvens.push({ key, label, value: be.value, text: build(be.value, be.positiveAbove) });
   };
   if (breakEvenYear !== null) {
@@ -290,11 +298,24 @@ export function computeRentBuy(i: RentBuyInputs): RentBuyResult {
   } else {
     breakEvens.push({ key: 'horizon', label: 'Years you stay', value: null, text: `Under these assumptions renting stays ahead for at least ${MAX_YEARS} years. The renter's invested savings outgrow the home equity.` });
   }
-  tryVar('appreciation', (v, posAbove) => (posAbove ? `Buying wins if the home appreciates faster than about ${fmtPct(v, 1)} per year; renting wins below that.` : `Buying wins if appreciation stays below about ${fmtPct(v, 1)} per year.`), 'Home appreciation');
-  tryVar('investmentReturn', (v, posAbove) => (posAbove ? `Buying wins if the renter's investments earn more than ${fmtPct(v, 1)} — unusual; check your assumptions.` : `Renting wins if the money you would put into the home can earn more than about ${fmtPct(v, 1)} per year invested. Below that, buying wins.`), 'Investment return');
-  tryVar('monthlyRent', (v, posAbove) => (posAbove ? `Buying wins once comparable rent is above about ${fmtMoney(v, 0)}/month.` : `Buying wins only if comparable rent is below about ${fmtMoney(v, 0)}/month.`), 'Monthly rent');
-  tryVar('mortgageApr', (v, posAbove) => (posAbove ? `Buying wins if the mortgage rate is above ${fmtPct(v, 2)} — check your assumptions.` : `Buying wins if you can get a mortgage rate below about ${fmtPct(v, 2)}.`), 'Mortgage rate');
-  void buyingWins;
+  tryVar(
+    'appreciation',
+    (v, posAbove) => (posAbove ? `Buying wins if the home appreciates faster than about ${fmtPct(v, 1)} per year; renting wins below that.` : `Buying wins if appreciation stays below about ${fmtPct(v, 1)} per year.`),
+    'Home appreciation',
+    [-2, 12],
+    buyingWins ? 'Buying stays ahead across every appreciation rate we tested, from −2% to 12% a year.' : 'Even at 12% a year appreciation, buying does not catch up over this time frame.',
+  );
+  tryVar(
+    'investmentReturn',
+    (v, posAbove) => (posAbove ? `Buying wins if the renter's investments earn more than ${fmtPct(v, 1)} — unusual; check your assumptions.` : `Renting wins if the money you would put into the home can earn more than about ${fmtPct(v, 1)} per year invested. Below that, buying wins.`),
+    'Investment return',
+    [1, 15],
+    buyingWins ? 'Buying stays ahead even if the renter earns 15% a year on their investments.' : 'Renting stays ahead even if the renter earns as little as 1% a year.',
+  );
+  tryVar('monthlyRent', (v, posAbove) => (posAbove ? `Buying wins once comparable rent is above about ${fmtMoney(v, 0)}/month.` : `Buying wins only if comparable rent is below about ${fmtMoney(v, 0)}/month.`), 'Monthly rent', [i.monthlyRent * 0.4, i.monthlyRent * 2.5]);
+  // A mortgage below ~2% or above ~12% is not something a buyer can go and get, so we say nothing
+  // rather than printing a technically-true but useless number.
+  tryVar('mortgageApr', (v, posAbove) => (posAbove ? `Buying wins if the mortgage rate is above ${fmtPct(v, 2)} — check your assumptions.` : `Buying wins if you can get a mortgage rate below about ${fmtPct(v, 2)}.`), 'Mortgage rate', [2, 12]);
 
   return {
     rent: {

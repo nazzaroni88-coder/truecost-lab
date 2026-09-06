@@ -1,6 +1,6 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import { computePurchaseInvest, type PurchaseInvestInputs, type PurchaseInvestResult } from '../../engine/calculators/purchaseInvest';
-import { fmtMoney, fmtNumber, fmtPct, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtNumber, fmtPct, roundHeadline, yearsLabel } from '../../lib/format';
 
 export function describePurchase(i: PurchaseInvestInputs): string {
   const parts: string[] = [];
@@ -42,7 +42,7 @@ export function purchaseAssumptions(i: PurchaseInvestInputs): { label: string; v
     { label: 'Spend', value: describePurchase(i) },
     { label: 'Investment return', value: `${fmtPct(i.investmentReturn, 1)}/yr effective, compounded monthly` },
     { label: 'Inflation (for today\'s dollars)', value: `${fmtPct(i.inflation, 1)}/yr` },
-    { label: 'Resale', value: i.resaleValue > 0 ? `${fmtMoney(i.resaleValue)} after ${i.resaleYear} years, then invested` : 'none' },
+    { label: 'Resale', value: i.resaleValue > 0 ? `${fmtMoney(i.resaleValue)} after ${yearsLabel(i.resaleYear)}, then invested` : 'none' },
     { label: 'Taxes and fees on investments', value: 'not modeled' },
   ];
 }
@@ -121,4 +121,10 @@ export function purchaseInsights(i: PurchaseInvestInputs, r: PurchaseInvestResul
       ),
     },
   ];
+}
+
+/** Short, content-derived scenario name: "$5,000 today @ 7%". */
+export function purchaseNameFor(i: PurchaseInvestInputs): string {
+  const what = i.oneTimeAmount > 0 ? fmtMoney(i.oneTimeAmount) : i.monthlyAmount > 0 ? `${fmtMoney(i.monthlyAmount)}/mo` : 'No amount';
+  return `${what} @ ${fmtPct(i.investmentReturn, 1)}`;
 }

@@ -24,12 +24,19 @@ export interface StorageAdapter {
   load(): PersistedState | null;
   save(state: PersistedState): void;
   clear(): void;
+  /**
+   * False once a write has failed (private browsing, blocked cookies, quota exceeded).
+   * The app keeps working from memory, but the user needs to be told their work will not survive
+   * a refresh — losing scenarios silently would be worse than any error message.
+   */
+  isPersisting(): boolean;
 }
 
 export const STATE_VERSION = 1;
 const KEY = 'truecost-lab:v1';
 
 export class LocalStorageAdapter implements StorageAdapter {
+  private persisting = true;
   constructor(private key: string = KEY) {}
   load(): PersistedState | null {
     try {
@@ -39,22 +46,28 @@ export class LocalStorageAdapter implements StorageAdapter {
       if (!parsed || typeof parsed !== 'object' || !Array.isArray(parsed.scenarios)) return null;
       return migrate(parsed);
     } catch {
+      this.persisting = false;
       return null;
     }
   }
   save(state: PersistedState): void {
     try {
       window.localStorage.setItem(this.key, JSON.stringify(state));
+      this.persisting = true;
     } catch {
-      /* quota exceeded or private mode — fail silently; the session still works in memory */
+      // Quota exceeded or storage blocked. The session keeps working in memory; the UI surfaces this.
+      this.persisting = false;
     }
   }
   clear(): void {
     try {
       window.localStorage.removeItem(this.key);
     } catch {
-      /* noop */
+      this.persisting = false;
     }
+  }
+  isPersisting(): boolean {
+    return this.persisting;
   }
 }
 
@@ -68,6 +81,9 @@ export class MemoryAdapter implements StorageAdapter {
   }
   clear() {
     this.state = null;
+  }
+  isPersisting() {
+    return true;
   }
 }
 

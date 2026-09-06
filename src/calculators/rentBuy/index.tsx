@@ -4,7 +4,7 @@ import { calculatorById } from '../meta';
 import { computeRentBuy, type RentBuyInputs, type RentBuyResult } from '../../engine/calculators/rentBuy';
 import { RentBuyForm } from './RentBuyForm';
 import { RentBuyResults } from './RentBuyResults';
-import { rentBuyAssumptions, rentBuyInsights, rentBuyMethodology, rentBuyQuickAdjust, rentBuySummary } from './definition';
+import { rentBuyAssumptions, rentBuyInsights, rentBuyMethodology, rentBuyNameFor, rentBuyQuickAdjust, rentBuySummary } from './definition';
 import { rentBuyDefaults, rentBuyPresets } from './presets';
 
 function normalize(raw: unknown): RentBuyInputs {
@@ -28,4 +28,5 @@ export const rentBuyCalculator: CalculatorDefinition<RentBuyInputs, RentBuyResul
   insights: rentBuyInsights,
   quickAdjust: rentBuyQuickAdjust,
   assumptions: rentBuyAssumptions,
+  nameFor: rentBuyNameFor,
 };

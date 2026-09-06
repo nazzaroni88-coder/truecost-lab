@@ -7,7 +7,7 @@ import { LineChart } from '../../components/charts/LineChart';
 import { MilestoneBars } from '../../components/charts/MilestoneBars';
 import { Slider, Switch } from '../../components/ui/Controls';
 import { categoryColor } from '../../lib/colors';
-import { fmtMoney, fmtNumber, fmtPct, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtNumber, fmtPct, roundHeadline, yearsLabel } from '../../lib/format';
 import { describePurchase, purchaseAssumptions, purchaseInsights, purchaseMethodology } from './definition';
 import { computePurchaseInvest } from '../../engine/calculators/purchaseInvest';
 
@@ -27,7 +27,7 @@ export function PurchaseResults({ inputs: i, result: r, onChange }: ResultsProps
   );
   const sub = empty
     ? 'Add a one-time amount, a monthly amount, or both. This calculator shows the long-term opportunity cost of spending — not to shame it, but to make the trade-off visible.'
-    : `That is about ${fmtMoney(m30.realValue)} in today's dollars, assuming a ${fmtPct(i.investmentReturn, 1)} annual return. Of the 30-year total, ${fmtMoney(m30.contributions)} is the money itself and ${fmtMoney(m30.growth)} is growth. ${hasResale ? `Selling it for ${fmtMoney(i.resaleValue)} after ${i.resaleYear} years gets some of that back.` : ''} Whether the purchase is worth it is your call — this is what it costs.`;
+    : `That is about ${fmtMoney(m30.realValue)} in today's dollars, assuming a ${fmtPct(i.investmentReturn, 1)} annual return. Of the 30-year total, ${fmtMoney(m30.contributions)} is the money itself and ${fmtMoney(m30.growth)} is growth. ${hasResale ? `Selling it for ${fmtMoney(i.resaleValue)} after ${yearsLabel(i.resaleYear)} gets some of that back.` : ''} Whether the purchase is worth it is your call — this is what it costs.`;
 
   const stats = empty
     ? undefined

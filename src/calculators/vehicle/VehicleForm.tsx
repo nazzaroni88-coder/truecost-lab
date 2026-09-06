@@ -5,7 +5,7 @@ import { vehicleValueAtMonth } from '../../engine/calculators/vehicle';
 import { NumberField } from '../../components/ui/NumberField';
 import { OptionTabs } from '../../components/forms/OptionTabs';
 import { Disclosure, FormSection, SegmentedField, SelectField, Switch, TextField } from '../../components/ui/Controls';
-import { fmtMoney, fmtPct } from '../../lib/format';
+import { fmtMoney, fmtPct, yearsLabel } from '../../lib/format';
 import { TERM_OPTIONS } from './presets';
 
 type Tab = 'a' | 'b' | 'shared';
@@ -98,10 +98,10 @@ function OptionFields({ side, option: o, shared, onPatch }: { side: 'a' | 'b'; o
         </div>
         <Switch label="I know the expected resale value" checked={overriding} onChange={(on) => onPatch({ resaleOverride: on ? Math.round(curveResale) : null })} help="Turn this on to enter the value you expect to sell the car for at the end of your ownership period instead of using the depreciation rates." />
         {overriding ? (
-          <NumberField label={`Resale value after ${years} years`} format="currency" value={o.resaleOverride ?? 0} onChange={(v) => onPatch({ resaleOverride: v })} min={0} max={o.price} />
+          <NumberField label={`Resale value after ${yearsLabel(years)}`} format="currency" value={o.resaleOverride ?? 0} onChange={(v) => onPatch({ resaleOverride: v })} min={0} max={o.price} />
         ) : (
           <p className="field-hint">
-            Estimated resale after {years} years: <strong className="num">{fmtMoney(curveResale)}</strong> ({fmtPct((curveResale / Math.max(1, o.price)) * 100, 0)} of the price)
+            Estimated resale after {yearsLabel(years)}: <strong className="num">{fmtMoney(curveResale)}</strong> ({fmtPct((curveResale / Math.max(1, o.price)) * 100, 0)} of the price)
           </p>
         )}
       </FormSection>

@@ -70,7 +70,9 @@ export interface VehicleOptionResult {
   series: CashflowSeries;
   categories: CategoryTotal[];
   cashAtSigning: number;
-  initialOutlay: number; // cash + trade-in value
+  initialOutlay: number; // cash + the part of the trade-in actually used on this car
+  /** Trade-in value beyond what the purchase absorbs — the dealer hands this back to you. */
+  tradeInSurplus: number;
   loanAmount: number;
   monthlyPayment: number;
   salesTax: number;
@@ -79,6 +81,13 @@ export interface VehicleOptionResult {
   depreciation: number;
   resaleValue: number;
   loanBalanceAtExit: number;
+  /** Resale minus any remaining loan. Negative means you must bring cash to sell. */
+  netProceedsAtExit: number;
+  underwaterAtExit: boolean;
+  /** First month the car is worth at least the loan balance, or null if never within ownership. */
+  monthAboveWater: number | null;
+  /** Deepest negative equity during ownership (0 if never underwater). */
+  worstNegativeEquity: number;
   fuel: number;
   insurance: number;
   maintenance: number;
@@ -142,13 +151,19 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
   const fees = Math.max(0, o.fees);
   const gross = o.price + salesTax + fees;
 
+  // A trade-in can only offset what you owe on this car; anything beyond that comes back to you as cash.
+  const tradeIn = Math.max(0, o.tradeInValue);
+  const tradeInApplied = Math.min(tradeIn, gross);
+  const tradeInSurplus = tradeIn - tradeInApplied;
+  if (tradeInSurplus > 0.5) warnings.push(`${o.name}: your trade-in is worth ${fmtMoney(tradeInSurplus)} more than this car costs, so that surplus comes back to you and is not counted as money spent.`);
+
   let cashAtSigning: number;
   let loanAmount = 0;
   let monthlyPayment = 0;
   let schedule: ReturnType<typeof amortizationSchedule> = [];
-  const down = Math.min(Math.max(0, o.downPayment), Math.max(0, gross - o.tradeInValue));
+  const down = Math.min(Math.max(0, o.downPayment), Math.max(0, gross - tradeInApplied));
   if (o.paymentMethod === 'finance') {
-    loanAmount = Math.max(0, gross - down - o.tradeInValue);
+    loanAmount = Math.max(0, gross - down - tradeInApplied);
     cashAtSigning = down;
     if (loanAmount > 0) {
       monthlyPayment = paymentForLoan(loanAmount, pct(o.apr), o.termMonths);
@@ -156,9 +171,9 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
     }
     if (o.termMonths > months) warnings.push(`${o.name}: the loan term is longer than your ownership period, so the remaining balance is paid off when you sell.`);
   } else {
-    cashAtSigning = Math.max(0, gross - o.tradeInValue);
+    cashAtSigning = Math.max(0, gross - tradeInApplied);
   }
-  const initialOutlay = cashAtSigning + o.tradeInValue;
+  const initialOutlay = cashAtSigning + tradeInApplied;
 
   const outflows: number[] = new Array(months + 1).fill(0);
   const exitValue: number[] = new Array(months + 1).fill(0);
@@ -179,6 +194,8 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
 
   const valueByYear: number[] = [o.price];
   let loanBalance = loanAmount;
+  let monthAboveWater: number | null = loanAmount > 0 ? null : 0;
+  let worstNegativeEquity = 0;
   for (let t = 1; t <= months; t++) {
     const y = yearIndexOfMonth(t);
     let fuelMonth = 0;
@@ -213,12 +230,23 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
 
     const value = vehicleValueAtMonth(o, years, t);
     exitValue[t] = value - loanBalance;
+    if (exitValue[t] < 0) {
+      worstNegativeEquity = Math.min(worstNegativeEquity, exitValue[t]);
+    } else if (monthAboveWater === null) {
+      monthAboveWater = t;
+    }
     if (t % 12 === 0) valueByYear.push(value);
   }
   exitValue[0] = o.price - loanAmount; // notional: sell immediately for the same price
+  if (exitValue[0] < 0) worstNegativeEquity = Math.min(worstNegativeEquity, exitValue[0]);
 
   const resaleValue = vehicleValueAtMonth(o, years, months);
   const loanBalanceAtExit = loanBalance;
+  const netProceedsAtExit = resaleValue - loanBalanceAtExit;
+  const underwaterAtExit = netProceedsAtExit < -0.5;
+  if (underwaterAtExit) {
+    warnings.push(`${o.name}: after ${years === 1 ? '1 year' : `${years} years`} you would still owe ${fmtMoney(loanBalanceAtExit)} on a car worth ${fmtMoney(resaleValue)} — you would need to bring ${fmtMoney(-netProceedsAtExit)} of your own cash to sell it.`);
+  }
   const depreciation = o.price - resaleValue;
   const totalCost = outflows.reduce((p, c) => p + c, 0) - exitValue[months];
   const totalMiles = s.annualMiles * years;
@@ -246,6 +274,7 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
     categories,
     cashAtSigning,
     initialOutlay,
+    tradeInSurplus,
     loanAmount,
     monthlyPayment,
     salesTax,
@@ -254,6 +283,10 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
     depreciation,
     resaleValue,
     loanBalanceAtExit,
+    netProceedsAtExit,
+    underwaterAtExit,
+    monthAboveWater,
+    worstNegativeEquity,
     fuel,
     insurance,
     maintenance,

@@ -79,6 +79,12 @@ export interface CalculatorDefinition<I, R> extends CalculatorMeta {
   quickAdjust?: (i: I) => QuickAdjust<I>[];
   /** Fields that only affect "invest the difference", listed for the methodology panel. */
   assumptions?: (i: I) => { label: string; value: string }[];
+  /**
+   * A short, content-derived name for a scenario ("Model 3 vs Camry, 5 yrs").
+   * Used when creating scenarios so the tab strip and the compare table stay readable —
+   * "Scenario 2" tells the user nothing when they are comparing four of them.
+   */
+  nameFor?: (i: I) => string;
 }
 
 /**

@@ -4,7 +4,7 @@ import { calculatorById } from '../meta';
 import { computeVehicle, swapVehicleInputs, type VehicleInputs, type VehicleResult } from '../../engine/calculators/vehicle';
 import { VehicleForm } from './VehicleForm';
 import { VehicleResults } from './VehicleResults';
-import { vehicleAssumptions, vehicleInsights, vehicleMethodology, vehicleQuickAdjust, vehicleSummary } from './definition';
+import { vehicleAssumptions, vehicleInsights, vehicleMethodology, vehicleNameFor, vehicleQuickAdjust, vehicleSummary } from './definition';
 import { vehicleDefaults, vehiclePresets } from './presets';
 
 function normalize(raw: unknown): VehicleInputs {
@@ -34,4 +34,5 @@ export const vehicleCalculator: CalculatorDefinition<VehicleInputs, VehicleResul
   insights: vehicleInsights,
   quickAdjust: vehicleQuickAdjust,
   assumptions: vehicleAssumptions,
+  nameFor: vehicleNameFor,
 };

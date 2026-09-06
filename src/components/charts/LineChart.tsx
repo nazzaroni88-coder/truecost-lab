@@ -102,9 +102,20 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
 
   const tip = hover !== null && tooltip ? tooltip(hover) : null;
 
+  // Screen readers get nothing useful from an SVG path, so we also render the underlying numbers
+  // as a real (visually hidden) table at a handful of evenly spaced points.
+  const summaryIdx = useMemo(() => {
+    const n = x.length;
+    if (n <= 1) return [0];
+    const wanted = Math.min(n, 7);
+    const picks = new Set<number>();
+    for (let k = 0; k < wanted; k++) picks.add(Math.round((k * (n - 1)) / (wanted - 1)));
+    return [...picks].sort((p, q) => p - q);
+  }, [x.length]);
+
   return (
     <div className="chart" ref={ref}>
-      <svg width={width} height={height} role="img" aria-label={ariaLabel} onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
+      <svg width={width} height={height} role="presentation" aria-hidden="true" onPointerMove={onMove} onPointerLeave={() => setHover(null)}>
         <g className="grid">
           {yTicks.map((t) => (
             <line key={t} x1={pad.l} x2={pad.l + innerW} y1={sy(t)} y2={sy(t)} />
@@ -143,6 +154,29 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
           </g>
         )}
       </svg>
+      <table className="sr-only">
+        <caption>{ariaLabel}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Point</th>
+            {series.map((s) => (
+              <th scope="col" key={s.key}>
+                {s.label}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {summaryIdx.map((i) => (
+            <tr key={i}>
+              <th scope="row">{xFormat(x[i])}</th>
+              {series.map((s) => (
+                <td key={s.key}>{Number.isFinite(s.values[i]) ? yFormat(s.values[i]) : '—'}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
       {tip && hover !== null && (
         <div className="chart-tip" style={{ left: Math.min(Math.max(sx(x[hover]), 70), width - 70), top: pad.t + 8 }}>
           <div style={{ fontWeight: 600, marginBottom: 2 }}>{tip.title}</div>

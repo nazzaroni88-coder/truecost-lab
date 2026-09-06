@@ -6,10 +6,11 @@ import { CALCULATORS } from '../calculators/meta';
 import { useScenarios } from '../scenarios/store';
 import { decodeShare } from '../scenarios/urlCodec';
 import { Button, IconButton } from '../components/ui/Button';
-import { CalcIcon, IconCompare, IconDuplicate, IconMore, IconPlus, IconRename, IconReset, IconSwap, IconTrash, IconArrowRight, IconWarning } from '../components/ui/Icons';
+import { CalcIcon, IconCheck, IconCompare, IconDuplicate, IconMore, IconPlus, IconRename, IconReset, IconSwap, IconTrash, IconArrowRight, IconWarning } from '../components/ui/Icons';
 import { Modal } from '../components/ui/Modal';
 import { Segmented, TextField } from '../components/ui/Controls';
 import { useMediaQuery } from '../lib/useMeasure';
+import { fmtMoney } from '../lib/format';
 import { useToast } from '../components/ui/Toast';
 import { ShareBar } from '../components/results/ShareBar';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
@@ -27,7 +28,10 @@ function deepEqual(a: unknown, b: unknown): boolean {
 }
 
 function CalculatorShell({ def }: { def: AnyCalculator }) {
-  const { scenarios, active, setInputs, select, create, rename, duplicate, remove, reset } = useScenarios(def.id, def.defaults, `${def.shortName} scenario`);
+  // A scenario's name comes from its contents when the calculator can describe itself, so the tab
+  // strip and the compare table stay readable instead of reading "Scenario 2, Scenario 3".
+  const describe = useCallback((inputs: unknown) => (def.nameFor ? def.nameFor(def.normalize(inputs)) : `${def.shortName} scenario`), [def]);
+  const { scenarios, active, setInputs, select, create, rename, duplicate, remove, reset, persisting, totalSaved, clearAll } = useScenarios(def.id, def.defaults, describe(def.defaults));
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -89,8 +93,13 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   const activePreset = useMemo(() => def.presets.find((p: Preset<unknown>) => deepEqual(def.normalize(p.inputs), inputs)) ?? null, [def, inputs]);
 
   const onChange = useCallback((next: unknown) => setInputs(next), [setInputs]);
+  /** True when the scenario still carries a name we generated, so renaming it won't lose the user's own label. */
+  const isAutoNamed = (name: string) =>
+    name === `${def.shortName} scenario` || name === describe(inputs) || def.presets.some((p: Preset<unknown>) => p.name === name) || scenarios.some((s) => name === describe(s.inputs));
+
   const loadPreset = (p: Preset<unknown>) => {
     setInputs(def.normalize(p.inputs), p.id);
+    if (active && isAutoNamed(active.name)) rename(active.id, p.name);
     toast(`Loaded example: ${p.name}. Values are illustrative — edit anything.`);
   };
 
@@ -138,7 +147,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                 {s.name}
               </button>
             ))}
-            <button type="button" className="scenario-tab" onClick={() => create(`Scenario ${scenarios.length + 1}`, def.defaults)} aria-label="New scenario" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+            <button type="button" className="scenario-tab" onClick={() => create(describe(def.defaults), def.defaults)} aria-label="New scenario" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
               <IconPlus width={14} height={14} /> New
             </button>
           </div>
@@ -213,12 +222,33 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                   >
                     <IconTrash /> Delete scenario
                   </button>
+                  <button
+                    role="menuitem"
+                    className="danger"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      if (window.confirm(`Delete all ${totalSaved} saved scenario${totalSaved === 1 ? '' : 's'} across every TrueCost calculator, and clear this browser's stored data? This cannot be undone.`)) {
+                        clearAll();
+                        toast('All saved scenarios cleared from this browser');
+                      }
+                    }}
+                  >
+                    <IconTrash /> Clear all saved data ({totalSaved})
+                  </button>
                 </div>
               )}
             </div>
           </div>
         </div>
 
+        {!persisting && (
+          <div className="callout callout-warning no-print" style={{ marginBottom: 'var(--sp-4)' }} role="alert">
+            <IconWarning />
+            <div>
+              <strong>This browser is not saving your scenarios.</strong> Private browsing or blocked site data will do this. Everything still works, but your scenarios will be gone if you refresh — use <em>Copy link</em> to keep this one.
+            </div>
+          </div>
+        )}
         <div className="mobile-switch no-print">
           <Segmented
             label="Show inputs or results"
@@ -372,6 +402,12 @@ function CompareModal({ open, onClose, def, scenarios, activeId, onSelect }: { o
   }, [open, scenarios, def]);
   if (!open) return null;
   const labels = rows[0]?.summary.rows.map((r) => r.label) ?? [];
+  // The headline metric is always worth showing per scenario. The "biggest" badge only appears when
+  // every column measures the same thing — comparing scenarios with different option names would
+  // make that badge misleading.
+  const hasMetric = rows.length > 0 && rows.every((r) => Number.isFinite(r.summary.keyMetric));
+  const sameMetric = hasMetric && rows.length > 1 && rows.every((r) => r.summary.keyMetricLabel === rows[0].summary.keyMetricLabel);
+  const best = sameMetric ? rows.reduce((acc, r) => (Math.abs(r.summary.keyMetric) > Math.abs(acc.summary.keyMetric) ? r : acc), rows[0]).id : null;
   return (
     <Modal open={open} onClose={onClose} title="Compare your scenarios" icon={<IconCompare />}>
       <div className="table-scroll">
@@ -397,6 +433,22 @@ function CompareModal({ open, onClose, def, scenarios, activeId, onSelect }: { o
                 </td>
               ))}
             </tr>
+            {hasMetric && (
+              <tr>
+                <td>{sameMetric ? rows[0].summary.keyMetricLabel : 'Headline difference'}</td>
+                {rows.map((r) => (
+                  <td key={r.id} style={{ textAlign: 'left' }}>
+                    <strong>{fmtMoney(r.summary.keyMetric)}</strong>
+                    {!sameMetric && <div className="micro muted">{r.summary.keyMetricLabel}</div>}
+                    {r.id === best && (
+                      <span className="flip-badge" style={{ marginLeft: 8, background: 'var(--tc-positive-soft)', color: 'var(--tc-positive)' }}>
+                        <IconCheck /> biggest
+                      </span>
+                    )}
+                  </td>
+                ))}
+              </tr>
+            )}
             {labels.map((label, i) => (
               <tr key={label}>
                 <td>{label}</td>

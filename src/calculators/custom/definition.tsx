@@ -1,6 +1,6 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import type { CustomInputs, CustomOptionResult, CustomResult } from '../../engine/calculators/custom';
-import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
 
 export function customSummary(i: CustomInputs, r: CustomResult): ShareSummary {
   const { a, b, comparison: c } = r;
@@ -8,7 +8,7 @@ export function customSummary(i: CustomInputs, r: CustomResult): ShareSummary {
   const win = c.cheaper === 'b' ? b : a;
   const diff = Math.abs(c.nominalDifference);
   return {
-    headline: c.cheaper === 'tie' ? `${a.name} and ${b.name} cost about the same over ${years} years.` : `${win.name} costs about ${fmtMoney(roundHeadline(diff))} less over ${years} years.`,
+    headline: c.cheaper === 'tie' ? `${a.name} and ${b.name} cost about the same over ${yearsLabel(years)}.` : `${win.name} costs about ${fmtMoney(roundHeadline(diff))} less over ${yearsLabel(years)}.`,
     sub: `True cost including upfront, ongoing and future costs, savings and resale: ${a.name} ${fmtMoney(a.totalCost)} vs ${b.name} ${fmtMoney(b.totalCost)}.`,
     winner: c.cheaper,
     optionA: a.name,
@@ -20,7 +20,7 @@ export function customSummary(i: CustomInputs, r: CustomResult): ShareSummary {
       { label: `${b.name} true cost`, value: fmtMoney(b.totalCost), tone: 'b' },
       { label: 'Per month', value: `${fmtMoney(a.monthlyCost)} vs ${fmtMoney(b.monthlyCost)}` },
       { label: 'Crossover', value: c.crossover.year === null ? 'none' : `after ${fmtYears(c.crossover.year)}` },
-      { label: `Invest the difference, ${years} yrs @ ${fmtPct(i.investmentReturn, 1)}`, value: c.invest.saver === 'tie' ? '—' : fmtMoney(c.invest.balanceAtHorizon), tone: 'positive' },
+      { label: `Invest the difference, ${years} yr @ ${fmtPct(i.investmentReturn, 1)}`, value: c.invest.saver === 'tie' ? '—' : fmtMoney(c.invest.balanceAtHorizon), tone: 'positive' },
     ],
   };
 }
@@ -34,7 +34,7 @@ export function customQuickAdjust(): QuickAdjust<CustomInputs>[] {
 
 export function customAssumptions(i: CustomInputs): { label: string; value: string }[] {
   return [
-    { label: 'Horizon', value: `${i.horizonYears} years` },
+    { label: 'Horizon', value: `${yearsLabel(i.horizonYears)}` },
     { label: `Inflation${i.growWithInflation ? ' (ongoing costs, savings and replacements)' : ' (replacement prices only)'}`, value: `${fmtPct(i.inflation, 1)} inflation` },
     { label: 'Investment return', value: `${fmtPct(i.investmentReturn, 1)} return` },
     ...(['a', 'b'] as const).map((s) => ({ label: `${i[s].name}: lifespan (replacements bought at the inflated price)`, value: i[s].lifespanYears > 0 ? `${i[s].name}: ${i[s].lifespanYears} yr life` : `${i[s].name}: lasts the whole horizon` })),
@@ -70,10 +70,10 @@ export function customInsights(i: CustomInputs, r: CustomResult): Insight[] {
       question: 'Explain this result simply',
       answer:
         c.cheaper === 'tie' ? (
-          <p>Over {years} years the two options cost about the same once everything is counted, so choose on convenience and preference.</p>
+          <p>Over {yearsLabel(years)} the two options cost about the same once everything is counted, so choose on convenience and preference.</p>
         ) : (
           <p>
-            Over {years} years, {win.name} costs {fmtMoney(win.totalCost)} all-in and {lose.name} costs {fmtMoney(lose.totalCost)}. {lose.upfront > win.upfront ? `${lose.name} costs more up front (${fmtMoney(lose.upfront)} vs ${fmtMoney(win.upfront)}) and its lower running costs don't fully make up for it within ${years} years.` : `${win.name} costs more up front but its lower ongoing costs${win.savings > 0 ? ' and the savings it produces' : ''} more than pay it back.`}
+            Over {yearsLabel(years)}, {win.name} costs {fmtMoney(win.totalCost)} all-in and {lose.name} costs {fmtMoney(lose.totalCost)}. {lose.upfront > win.upfront ? `${lose.name} costs more up front (${fmtMoney(lose.upfront)} vs ${fmtMoney(win.upfront)}) and its lower running costs don't fully make up for it within ${yearsLabel(years)}.` : `${win.name} costs more up front but its lower ongoing costs${win.savings > 0 ? ' and the savings it produces' : ''} more than pay it back.`}
             {c.crossover.year !== null && c.crossover.cheaperAtStart !== c.crossover.cheaperAtEnd && ` It pulls ahead after about ${fmtYears(c.crossover.year)}.`}
           </p>
         ),
@@ -111,4 +111,10 @@ export function customInsights(i: CustomInputs, r: CustomResult): Insight[] {
       ),
     },
   ];
+}
+
+/** Short, content-derived scenario name: "Budget washer vs Premium · 14 yr". */
+export function customNameFor(i: CustomInputs): string {
+  const short = (s: string) => (s.trim().length > 18 ? `${s.trim().slice(0, 17)}…` : s.trim() || 'Option');
+  return `${short(i.a.name)} vs ${short(i.b.name)} · ${Math.round(i.horizonYears)} yr`;
 }

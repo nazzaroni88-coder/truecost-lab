@@ -4,28 +4,49 @@ import { uid } from '../lib/ids';
 
 type Listener = () => void;
 
+/** What React subscribes to. Rebuilt on every change so useSyncExternalStore sees a new identity. */
+export interface StoreSnapshot {
+  state: PersistedState;
+  /** False when writes are failing — scenarios live in memory only for this session. */
+  persisting: boolean;
+}
+
 export class ScenarioStore {
   private state: PersistedState;
+  private snapshot: StoreSnapshot;
   private listeners = new Set<Listener>();
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(private adapter: StorageAdapter) {
     this.state = adapter.load() ?? { version: STATE_VERSION, scenarios: [], active: {} };
+    this.snapshot = { state: this.state, persisting: adapter.isPersisting() };
   }
 
   subscribe = (l: Listener) => {
     this.listeners.add(l);
     return () => this.listeners.delete(l);
   };
-  getSnapshot = () => this.state;
+  getSnapshot = (): StoreSnapshot => this.snapshot;
+
+  private emit() {
+    this.snapshot = { state: this.state, persisting: this.adapter.isPersisting() };
+    this.listeners.forEach((l) => l());
+  }
+
+  private write() {
+    const before = this.adapter.isPersisting();
+    this.adapter.save(this.state);
+    // A newly failing (or recovered) write changes what we must tell the user.
+    if (this.adapter.isPersisting() !== before) this.emit();
+  }
 
   private set(next: PersistedState) {
     this.state = next;
-    this.listeners.forEach((l) => l());
+    this.emit();
     if (this.saveTimer !== null) globalThis.clearTimeout(this.saveTimer);
     this.saveTimer = globalThis.setTimeout(() => {
-      this.adapter.save(this.state);
       this.saveTimer = null;
+      this.write();
     }, 120);
   }
 
@@ -33,7 +54,7 @@ export class ScenarioStore {
     if (this.saveTimer !== null) {
       globalThis.clearTimeout(this.saveTimer);
       this.saveTimer = null;
-      this.adapter.save(this.state);
+      this.write();
     }
   }
 
@@ -125,7 +146,8 @@ export function getStore(): ScenarioStore {
 /** React binding for one calculator's scenarios. */
 export function useScenarios<I>(calculatorId: string, defaults: I, defaultName = 'My scenario') {
   const store = getStore();
-  const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+  const state = snapshot.state;
 
   // Make sure there is always an active scenario for this calculator.
   useEffect(() => {
@@ -158,6 +180,10 @@ export function useScenarios<I>(calculatorId: string, defaults: I, defaultName =
     scenarios,
     active,
     setInputs,
+    /** False when this browser is refusing to store data — the UI warns instead of losing work quietly. */
+    persisting: snapshot.persisting,
+    totalSaved: state.scenarios.length,
+    clearAll: () => store.clearAll(),
     select: (id: string) => store.setActive(calculatorId, id),
     create: (name: string, inputs: I, presetId: string | null = null) => store.create(calculatorId, name, inputs, presetId),
     rename: (id: string, name: string) => store.rename(id, name),

@@ -62,6 +62,17 @@ export function fmtPct(v: number, decimals = 1): string {
   return `${fmtNumber(v, decimals)}%`;
 }
 
+/** "1 year" / "10 years" — for whole-number horizons used in headlines and table captions. */
+export function yearsLabel(years: number): string {
+  const n = Math.round(years);
+  return `${fmtNumber(n, 0)} ${n === 1 ? 'year' : 'years'}`;
+}
+
+/** Generic pluralizer: plural(1, 'month') → "1 month". */
+export function plural(n: number, singular: string, pluralForm = `${singular}s`): string {
+  return `${fmtNumber(n, 0)} ${Math.abs(n) === 1 ? singular : pluralForm}`;
+}
+
 /** Years, with sensible pluralization and month handling for fractions. */
 export function fmtYears(years: number): string {
   if (!Number.isFinite(years)) return '—';

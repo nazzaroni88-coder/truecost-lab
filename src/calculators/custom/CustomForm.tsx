@@ -19,7 +19,7 @@ export function CustomForm({ inputs, onChange }: FormProps<CustomInputs>) {
         tabs={[
           { key: 'a', label: 'Option A', name: inputs.a.name || 'Option A', tone: 'a' },
           { key: 'b', label: 'Option B', name: inputs.b.name || 'Option B', tone: 'b' },
-          { key: 'shared', label: 'Shared', name: `${inputs.horizonYears} yrs · ${inputs.investmentReturn}% return`, tone: 'shared' },
+          { key: 'shared', label: 'Shared', name: `${inputs.horizonYears} yr · ${inputs.investmentReturn}% return`, tone: 'shared' },
         ]}
         value={tab}
         onChange={setTab}

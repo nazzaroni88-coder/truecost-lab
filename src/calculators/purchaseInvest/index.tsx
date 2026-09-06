@@ -4,7 +4,7 @@ import { calculatorById } from '../meta';
 import { computePurchaseInvest, type PurchaseInvestInputs, type PurchaseInvestResult } from '../../engine/calculators/purchaseInvest';
 import { PurchaseForm } from './PurchaseForm';
 import { PurchaseResults } from './PurchaseResults';
-import { purchaseAssumptions, purchaseInsights, purchaseMethodology, purchaseQuickAdjust, purchaseSummary } from './definition';
+import { purchaseAssumptions, purchaseInsights, purchaseMethodology, purchaseNameFor, purchaseQuickAdjust, purchaseSummary } from './definition';
 import { purchaseDefaults, purchasePresets } from './presets';
 
 function normalize(raw: unknown): PurchaseInvestInputs {
@@ -30,4 +30,5 @@ export const purchaseInvestCalculator: CalculatorDefinition<PurchaseInvestInputs
   insights: purchaseInsights,
   quickAdjust: purchaseQuickAdjust,
   assumptions: purchaseAssumptions,
+  nameFor: purchaseNameFor,
 };

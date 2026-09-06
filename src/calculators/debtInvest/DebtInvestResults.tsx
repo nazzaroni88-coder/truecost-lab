@@ -7,7 +7,7 @@ import { LineChart } from '../../components/charts/LineChart';
 import { Callout } from '../../components/ui/Controls';
 import { IconShield } from '../../components/ui/Icons';
 import { OPTION_COLORS } from '../../lib/colors';
-import { fmtMoney, fmtMoneyCompact, fmtMonthsLong, fmtNumber, fmtPct, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtMoneyCompact, fmtMonthsLong, fmtNumber, fmtPct, roundHeadline, yearsLabel } from '../../lib/format';
 import { debtInvestAssumptions, debtInvestInsights, debtInvestMethodology, debtInvestQuickAdjust, payoffLabel } from './definition';
 
 export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsProps<DebtInvestInputs, DebtInvestResult>) {
@@ -17,14 +17,14 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
 
   const headline =
     r.winner === 'tie' ? (
-      <>Paying the debt or investing the extra comes out about even after {years} years.</>
+      <>Paying the debt or investing the extra comes out about even after {yearsLabel(years)}.</>
     ) : r.winner === 'payDebt' ? (
       <>
-        <span className="text-a">Paying off the debt first</span> leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> ahead after {years} years.
+        <span className="text-a">Paying off the debt first</span> leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> ahead after {yearsLabel(years)}.
       </>
     ) : (
       <>
-        <span className="text-b">Investing the extra</span> leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> ahead after {years} years — if it really earns {fmtPct(i.investmentReturn, 1)}.
+        <span className="text-b">Investing the extra</span> leaves you about <span className="amt">{fmtMoney(roundHeadline(d))}</span> ahead after {yearsLabel(years)} — if it really earns {fmtPct(i.investmentReturn, 1)}.
       </>
     );
 
@@ -63,7 +63,7 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
           <table className="cmp-table">
             <thead>
               <tr>
-                <th>Over {years} years</th>
+                <th>Over {yearsLabel(years)}</th>
                 <th className="col-a">Pay debt first</th>
                 <th className="col-b">Invest the extra</th>
               </tr>
@@ -105,7 +105,7 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
                 <td>{fmtMoney(r.invest.remainingDebt)}</td>
               </tr>
               <tr className="total">
-                <td>Net worth after {years} years</td>
+                <td>Net worth after {yearsLabel(years)}</td>
                 <td>{fmtMoney(r.payDebt.netWorth)}</td>
                 <td>{fmtMoney(r.invest.netWorth)}</td>
               </tr>
@@ -113,7 +113,7 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
           </table>
         </div>
         <p className="micro muted" style={{ marginTop: 'var(--sp-3)' }}>
-          Paying only the minimum with no extra at all would take {r.minimumOnlyPayoffMonth === null ? `more than ${years} years` : fmtMonthsLong(r.minimumOnlyPayoffMonth)} and cost {fmtMoney(r.minimumOnlyInterest)} in interest.
+          Paying only the minimum with no extra at all would take {r.minimumOnlyPayoffMonth === null ? `more than ${yearsLabel(years)}` : fmtMonthsLong(r.minimumOnlyPayoffMonth)} and cost {fmtMoney(r.minimumOnlyInterest)} in interest.
         </p>
       </ResultSection>
 
@@ -127,7 +127,7 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
           xFormat={(v) => `yr ${fmtNumber(v, 0)}`}
           zeroLine
           markers={r.payDebt.payoffMonth !== null && r.payDebt.payoffMonth > 0 ? [{ x: r.payDebt.payoffMonth / 12, label: 'debt-free (pay first)' }] : []}
-          ariaLabel={`Net worth over ${years} years for paying the debt first versus investing the extra`}
+          ariaLabel={`Net worth over ${yearsLabel(years)} for paying the debt first versus investing the extra`}
           tooltip={(k) => ({ title: `Year ${fmtNumber(x[k], 1)}`, rows: [{ label: 'Pay debt first', value: fmtMoney(nwPay[k]), color: OPTION_COLORS.a }, { label: 'Invest the extra', value: fmtMoney(nwInv[k]), color: OPTION_COLORS.b }] })}
         />
         <div className="legend" style={{ marginTop: 8 }}>
@@ -171,7 +171,7 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
         <BreakEvenList
           items={[
             ...(r.breakEvenReturn !== null ? [{ key: 'return', label: 'Investment return', text: `The investments would need to return about ${fmtPct(r.breakEvenReturn, 1)} a year to match paying off this ${fmtPct(i.apr, 1)} debt. Anything less, and the debt wins.` }] : []),
-            { key: 'horizon', label: 'Debt-free date', text: r.payDebt.payoffMonth !== null ? `Paying extra clears the debt in ${fmtMonthsLong(r.payDebt.payoffMonth)}; minimums alone take ${r.invest.payoffMonth === null ? `more than ${years} years` : fmtMonthsLong(r.invest.payoffMonth)}. After the payoff, the "pay first" path invests the full ${fmtMoney(i.minimumPayment + i.extraMonthly)} every month.` : `Even with the extra payment the debt is not cleared within ${years} years — consider a longer horizon or a larger payment.` },
+            { key: 'horizon', label: 'Debt-free date', text: r.payDebt.payoffMonth !== null ? `Paying extra clears the debt in ${fmtMonthsLong(r.payDebt.payoffMonth)}; minimums alone take ${r.invest.payoffMonth === null ? `more than ${yearsLabel(years)}` : fmtMonthsLong(r.invest.payoffMonth)}. After the payoff, the "pay first" path invests the full ${fmtMoney(i.minimumPayment + i.extraMonthly)} every month.` : `Even with the extra payment the debt is not cleared within ${yearsLabel(years)} — consider a longer horizon or a larger payment.` },
           ]}
         />
       </ResultSection>

@@ -1,6 +1,6 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import type { RentBuyInputs, RentBuyResult } from '../../engine/calculators/rentBuy';
-import { fmtMoney, fmtNumber, fmtPct, roundHeadline } from '../../lib/format';
+import { fmtMoney, fmtMoneyCompact, fmtNumber, fmtPct, roundHeadline, yearsLabel } from '../../lib/format';
 
 export function rentBuyWinner(r: RentBuyResult): 'rent' | 'buy' | 'tie' {
   const d = r.comparison.wealthDifference;
@@ -11,7 +11,7 @@ export function rentBuySummary(i: RentBuyInputs, r: RentBuyResult): ShareSummary
   const w = rentBuyWinner(r);
   const years = Math.round(i.horizonYears);
   const d = Math.abs(r.comparison.wealthDifference);
-  const headline = w === 'tie' ? `Renting and buying come out about even after ${years} years.` : w === 'buy' ? `Buying leaves you about ${fmtMoney(roundHeadline(d))} wealthier after ${years} years.` : `Renting and investing leaves you about ${fmtMoney(roundHeadline(d))} ahead after ${years} years.`;
+  const headline = w === 'tie' ? `Renting and buying come out about even after ${yearsLabel(years)}.` : w === 'buy' ? `Buying leaves you about ${fmtMoney(roundHeadline(d))} wealthier after ${yearsLabel(years)}.` : `Renting and investing leaves you about ${fmtMoney(roundHeadline(d))} ahead after ${yearsLabel(years)}.`;
   const sub = `${fmtMoney(i.monthlyRent)}/mo rent vs a ${fmtMoney(i.homePrice)} home with ${fmtPct(i.downPaymentPct, 0)} down at ${fmtPct(i.mortgageApr, 2)}. Home equity at sale ${fmtMoney(r.buy.netEquityAtEnd)} vs renter's portfolio ${fmtMoney(r.rent.investedPortfolio)}.`;
   return {
     headline,
@@ -23,8 +23,8 @@ export function rentBuySummary(i: RentBuyInputs, r: RentBuyResult): ShareSummary
     keyMetricLabel: 'Buying advantage (wealth)',
     rows: [
       { label: 'Year-1 monthly: rent vs own', value: `${fmtMoney(r.rent.firstYearMonthly)} vs ${fmtMoney(r.buy.monthlyOwnerCostYear1)}` },
-      { label: `Home equity after ${years} yrs (net of selling)`, value: fmtMoney(r.buy.netEquityAtEnd), tone: 'b' },
-      { label: `Renter's investments after ${years} yrs`, value: fmtMoney(r.rent.investedPortfolio), tone: 'a' },
+      { label: `Home equity after ${years} yr (net of selling)`, value: fmtMoney(r.buy.netEquityAtEnd), tone: 'b' },
+      { label: `Renter's investments after ${years} yr`, value: fmtMoney(r.rent.investedPortfolio), tone: 'a' },
       { label: 'Unrecoverable owner costs', value: fmtMoney(r.buy.unrecoverableCosts) },
       { label: 'Break-even', value: r.breakEvenYear === null ? 'Renting stays ahead 40+ yrs' : r.breakEvenYear <= 1 ? 'Buying ahead from year 1' : `Buying wins after ~${r.breakEvenYear} yrs` },
     ],
@@ -66,7 +66,7 @@ export function rentBuyMethodology(i: RentBuyInputs, r: RentBuyResult): Methodol
     {
       title: 'Mortgage',
       body: `Level payment on a ${i.mortgageTermYears}-year fixed loan at ${fmtPct(i.mortgageApr, 2)} (monthly compounding). Each payment splits into interest (a cost) and principal (which builds equity).`,
-      formula: `loan     = ${fmtMoney(i.homePrice)} − ${fmtMoney(r.buy.downPayment)} = ${fmtMoney(r.buy.loanAmount)}\npayment  = L·r / (1 − (1+r)^−n), r = ${fmtPct(i.mortgageApr, 2)}/12, n = ${i.mortgageTermYears * 12} → ${fmtMoney(r.buy.monthlyPayment, 2)}/mo\ninterest over ${years} yrs = ${fmtMoney(r.buy.totalInterest)};  principal repaid = ${fmtMoney(r.buy.totalPrincipal)}`,
+      formula: `loan     = ${fmtMoney(i.homePrice)} − ${fmtMoney(r.buy.downPayment)} = ${fmtMoney(r.buy.loanAmount)}\npayment  = L·r / (1 − (1+r)^−n), r = ${fmtPct(i.mortgageApr, 2)}/12, n = ${i.mortgageTermYears * 12} → ${fmtMoney(r.buy.monthlyPayment, 2)}/mo\ninterest over ${years} yr = ${fmtMoney(r.buy.totalInterest)};  principal repaid = ${fmtMoney(r.buy.totalPrincipal)}`,
     },
     {
       title: 'Owner costs each month',
@@ -76,7 +76,7 @@ export function rentBuyMethodology(i: RentBuyInputs, r: RentBuyResult): Methodol
     {
       title: 'Rent',
       body: `Rent grows ${fmtPct(i.rentGrowth, 1)} once a year; renter's insurance grows with inflation.`,
-      formula: `rent(year y) = ${fmtMoney(i.monthlyRent)} × (1 + ${fmtPct(i.rentGrowth, 1)})^y;  total rent over ${years} yrs = ${fmtMoney(r.rent.totalRent)}`,
+      formula: `rent(year y) = ${fmtMoney(i.monthlyRent)} × (1 + ${fmtPct(i.rentGrowth, 1)})^y;  total rent over ${years} yr = ${fmtMoney(r.rent.totalRent)}`,
     },
     {
       title: 'Home value and selling',
@@ -113,7 +113,7 @@ export function rentBuyInsights(i: RentBuyInputs, r: RentBuyResult): Insight[] {
             In year one, owning costs about {fmtMoney(r.buy.monthlyOwnerCostYear1)} a month (mortgage, taxes, insurance, maintenance{i.hoaMonthly > 0 ? ', HOA' : ''}) versus {fmtMoney(r.rent.firstYearMonthly)} to rent — {gap > 0 ? `${fmtMoney(gap)} more` : `${fmtMoney(-gap)} less`} for the owner. But roughly {fmtMoney(r.buy.monthlyPayment - r.buy.totalInterest / (years * 12))} of the owner's monthly payment is principal, which is really savings, not cost.
           </p>
           <p>
-            After {years} years the owner walks away with {fmtMoney(r.buy.netEquityAtEnd)} of equity after selling costs. The renter, having invested the down payment, closing costs and every month's difference at {fmtPct(i.investmentReturn, 1)}, has {fmtMoney(r.rent.investedPortfolio)}.{' '}
+            After {yearsLabel(years)} the owner walks away with {fmtMoney(r.buy.netEquityAtEnd)} of equity after selling costs. The renter, having invested the down payment, closing costs and every month's difference at {fmtPct(i.investmentReturn, 1)}, has {fmtMoney(r.rent.investedPortfolio)}.{' '}
             {w === 'tie' ? 'The two are close enough to call it a tie — decide on lifestyle.' : w === 'buy' ? `Buying comes out ahead by ${fmtMoney(r.comparison.wealthDifference)}.` : `Renting comes out ahead by ${fmtMoney(-r.comparison.wealthDifference)}.`}
           </p>
         </>
@@ -166,4 +166,9 @@ export function rentBuyInsights(i: RentBuyInputs, r: RentBuyResult): Insight[] {
       ),
     },
   ];
+}
+
+/** Short, content-derived scenario name: "$2,500 rent vs $450k · 10 yr". */
+export function rentBuyNameFor(i: RentBuyInputs): string {
+  return `${fmtMoney(i.monthlyRent)}/mo vs ${fmtMoneyCompact(i.homePrice)} · ${Math.round(i.horizonYears)} yr`;
 }
