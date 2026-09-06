@@ -84,7 +84,7 @@ src/
 
 - Loan APRs compound monthly (APR/12). Investment returns are effective annual rates ((1+r)^(1/12) − 1 per month). Contributions land at month end; upfront amounts at time zero.
 - "Invest the difference" invests the month-by-month cash-flow difference between two options and adds the difference in exit values (resale / equity). Milestones inside the horizon mean "if you exited then"; beyond it the balance compounds with no new contributions.
-- Presets are illustrative, rounded estimates — labeled as such in the UI. No live data is fetched.
+- Presets are illustrative estimates, labeled as such in the UI. No live data is fetched. Each preset file carries a dated verification log naming what was checked and what changed; update it whenever you touch a figure. Depreciation rates are deliberately marked as modelled estimates rather than sourced values, because they are forecasts about future used-car prices.
 - Purchase incentives are cash at purchase; they do not reduce the sales-tax base or the resale value.
 - Incentive reference data lives in `src/data/incentives.ts`, which carries a dated verification log at the top and is the ONLY file to edit when programmes change. Update `DATA_REVIEWED` in the same commit — the UI shows that date, so a stale constant makes the app claim freshness it does not have. Every entry needs a source URL; the matcher rules a programme out only on checks it can actually perform (purchase type, price cap, income cap) and surfaces everything else as a caveat.
 - Loan APRs are nominal (APR/12 monthly) while investment returns are effective annual. A 6.9% APR costs 7.12% effective, so never compare the two headline numbers directly — the engine simulates both paths instead.
