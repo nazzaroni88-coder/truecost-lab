@@ -171,10 +171,18 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
    */
   const resetInputs = useCallback(() => {
     if (!active) return;
-    const nextName = nextScenarioName(active.name, describe, inputs, def.defaults);
-    if (nextName) rename(active.id, nextName);
+    const generated = nextScenarioName(active.name, describe, inputs, def.defaults);
+    /*
+     * A preset's name is normally left alone, because it records which example the scenario started
+     * from — but a reset discards exactly that. Without this, loading "10% down with PMI" and then
+     * resetting leaves a scenario named after an example whose numbers are gone, which is the same
+     * label-describing-absent-contents problem the naming rule exists to prevent.
+     */
+    const fromPreset = def.presets.some((p: Preset<unknown>) => p.name === active.name);
+    const nextName = generated ?? (fromPreset ? describe(def.defaults) : null);
+    if (nextName && nextName !== active.name) rename(active.id, nextName);
     reset(active.id);
-  }, [active, describe, inputs, def.defaults, rename, reset]);
+  }, [active, describe, inputs, def.defaults, def.presets, rename, reset]);
 
   /** True when the scenario still carries a name we generated, so renaming it won't lose the user's own label. */
   const isAutoNamed = (name: string) =>
