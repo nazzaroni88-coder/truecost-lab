@@ -582,17 +582,29 @@ function CompareModal({ open, onClose, def, scenarios, activeId, onSelect }: { o
             {labels.map((label, i) => (
               <tr key={label}>
                 <td>{label}</td>
-                {rows.map((r) => (
-                  <td key={r.id} style={{ textAlign: 'left' }}>
-                    {r.summary.rows[i]?.value ?? '—'}
-                  </td>
-                ))}
+                {rows.map((r) => {
+                  const cell = r.summary.rows[i];
+                  // Rows are matched by position, and the row heading is the FIRST scenario's label.
+                  // Where a scenario names that row differently — a different car, a different
+                  // horizon — the heading would be describing someone else's number, so the cell
+                  // states what it actually is. Same treatment the key metric above already gets.
+                  const differs = cell && cell.label !== label;
+                  return (
+                    <td key={r.id} style={{ textAlign: 'left' }}>
+                      {cell?.value ?? '—'}
+                      {differs && <div className="micro muted">{cell.label}</div>}
+                    </td>
+                  );
+                })}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="micro muted">Click a scenario name to open it. Row labels come from the first scenario; if scenarios use different option names, compare the totals rather than the labels.</p>
+      <p className="micro muted">
+        Click a scenario name to open it. Rows line up by position, and the heading is the first scenario's wording — where another scenario calls that row something
+        else, its own label is shown under the figure.
+      </p>
     </Modal>
   );
 }
