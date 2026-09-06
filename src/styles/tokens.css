@@ -1,0 +1,112 @@
+/* TrueCost Lab design tokens — light, clean, readable. */
+:root {
+  color-scheme: light;
+
+  /* Surfaces */
+  --tc-bg: #ffffff;
+  --tc-page: #f6f8fb;
+  --tc-surface: #ffffff;
+  --tc-surface-2: #f1f4f9;
+  --tc-surface-3: #e9edf4;
+  --tc-line: #e2e7ef;
+  --tc-line-strong: #cfd7e3;
+
+  /* Ink */
+  --tc-ink: #1a1f2b;
+  --tc-ink-2: #454d5c;
+  --tc-ink-3: #6b7484;
+  --tc-ink-4: #98a1b0;
+  --tc-on-primary: #ffffff;
+
+  /* Brand primary */
+  --tc-primary: #1b6ef3;
+  --tc-primary-strong: #1256c7;
+  --tc-primary-soft: #e8f0fe;
+  --tc-primary-soft-2: #d2e1fc;
+  --tc-primary-ring: rgba(27, 110, 243, 0.28);
+
+  /* Option colors — neutral in meaning, distinct in hue */
+  --tc-a: #1b6ef3;
+  --tc-a-strong: #1256c7;
+  --tc-a-soft: #e8f0fe;
+  --tc-b: #f0811f;
+  --tc-b-strong: #b85a08;
+  --tc-b-soft: #fff1e4;
+
+  /* Semantic */
+  --tc-positive: #167a4a;
+  --tc-positive-strong: #0f5f38;
+  --tc-positive-soft: #e5f5ec;
+  --tc-negative: #cf3a2e;
+  --tc-negative-soft: #fdecea;
+  --tc-warning: #a35f0c;
+  --tc-warning-soft: #fff6e5;
+  --tc-info-soft: #eef4ff;
+
+  /* Chart category palette */
+  --tc-cat-depreciation: #7a5af5;
+  --tc-cat-interest: #e4574b;
+  --tc-cat-taxes: #7d8a9c;
+  --tc-cat-fuel: #f2a33a;
+  --tc-cat-insurance: #23a99a;
+  --tc-cat-maintenance: #4a8ff5;
+  --tc-cat-repairs: #e06aa8;
+  --tc-cat-registration: #b0b9c6;
+  --tc-cat-contrib: #9fb8e6;
+  --tc-cat-growth: #1b6ef3;
+
+  /* Typography */
+  --tc-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --tc-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-micro: 0.75rem;
+  --fs-small: 0.875rem;
+  --fs-body: 1rem;
+  --fs-lead: 1.125rem;
+  --fs-h3: 1.125rem;
+  --fs-h2: 1.375rem;
+  --fs-h1: 1.875rem;
+  --fs-display: 2.5rem;
+  --lh-tight: 1.2;
+  --lh-body: 1.55;
+
+  /* Spacing (4px base) */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-7: 2rem;
+  --sp-8: 2.5rem;
+  --sp-9: 3rem;
+  --sp-10: 4rem;
+
+  /* Shape */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-pill: 999px;
+
+  /* Elevation */
+  --sh-1: 0 1px 2px rgba(20, 30, 50, 0.06), 0 1px 3px rgba(20, 30, 50, 0.04);
+  --sh-2: 0 4px 14px rgba(20, 30, 50, 0.08), 0 1px 3px rgba(20, 30, 50, 0.05);
+  --sh-3: 0 12px 32px rgba(20, 30, 50, 0.14), 0 2px 6px rgba(20, 30, 50, 0.06);
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur: 200ms;
+
+  /* Layout */
+  --content-max: 1180px;
+  --form-col: 400px;
+  --header-h: 60px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur: 0ms;
+  }
+}
