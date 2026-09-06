@@ -9,6 +9,17 @@
 html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /*
+   * Keep anchor targets clear of the sticky header.
+   *
+   * .site-header is `position: sticky; top: 0` at --header-h, so any jump to a fragment — the
+   * methodology TOC, "All assumptions", the footer's FAQ link, /calculators redirecting to
+   * #calculators — put the target's top at viewport 0, i.e. underneath the header, hiding the very
+   * heading the link promised to take you to. scroll-padding on the scroll container fixes it for
+   * native fragment navigation and scrollIntoView alike, which is why it belongs here rather than
+   * as scroll-margin on each target.
+   */
+  scroll-padding-top: calc(var(--header-h) + var(--sp-3));
 }
 @media (prefers-reduced-motion: reduce) {
   html {
