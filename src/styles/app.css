@@ -2559,3 +2559,12 @@ dialog.modal::backdrop {
 .incentive-notes li + li {
   margin-top: 4px;
 }
+
+.incentive-card.ended,
+.incentive-card.informational {
+  border-left-color: var(--tc-ink-4);
+  opacity: 0.9;
+}
+.incentive-card.ended strong {
+  color: var(--tc-ink-2);
+}

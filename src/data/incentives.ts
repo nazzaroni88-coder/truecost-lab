@@ -1,25 +1,36 @@
 /**
  * Vehicle purchase incentive reference data.
  *
- * WHAT THIS IS: a structured summary of the incentive programmes people most often qualify for,
- * used to help someone work out roughly what to enter in the "Tax credits & rebates" field.
+ * WHAT THIS IS: a structured summary of the incentive programmes people most often ask about,
+ * used to help someone work out what to enter in the "Tax credits & rebates" field — and, just as
+ * importantly, to stop them budgeting for money that no longer exists.
  *
- * WHAT THIS IS NOT: a live eligibility service. These programmes change with legislation, run out
- * of funding mid-year, and carry conditions (battery sourcing, dealer registration, residency,
- * vehicle lists) that no calculator can verify. Every entry therefore carries a source link and a
- * review date, nothing is applied to the model without the user explicitly choosing it, and the UI
- * states the review date wherever amounts appear.
+ * WHAT THIS IS NOT: a live eligibility service. Programmes change with legislation, run out of
+ * funding mid-year, and carry conditions no calculator can verify. Every entry carries a source
+ * link and a verification date; nothing is applied to the model unless the user chooses it.
  *
- * MAINTENANCE: this is the only file to edit when programmes change. Update `DATA_REVIEWED` at the
- * same time so the UI stops claiming freshness it does not have.
+ * MAINTENANCE: this is the only file to edit when programmes change. Update `DATA_REVIEWED` in the
+ * same commit — the UI displays it, so a stale constant makes the app claim freshness it lacks.
+ *
+ * VERIFICATION LOG
+ * 2026-09-06 — Full check against primary sources. Findings:
+ *   • All four federal clean-vehicle credits are terminated (see FEDERAL below). Confirmed
+ *     directly against irs.gov, not secondary coverage.
+ *   • The auto-loan interest deduction created by the same Act is live and is the only federal
+ *     vehicle benefit left, but it is a deduction spread over the loan, not cash at purchase.
+ *   • State amounts corrected: CO, CT, NJ, MA, CA all differed from the previous dataset.
+ *   • Every AFDC link was 404. The correct pattern is /laws/state_summary?state=XX.
  */
 
-/** When this dataset was last compiled. Surfaced in the UI — keep it truthful. */
-export const DATA_REVIEWED = 'mid-2026';
+/** When this dataset was last checked against primary sources. Surfaced in the UI — keep it truthful. */
+export const DATA_REVIEWED = 'September 2026';
 
-/** The authoritative aggregator to send people to; far more complete than anything we can embed. */
+/** The authoritative aggregator; far more complete than anything we can embed. */
 export const AFDC_URL = 'https://afdc.energy.gov/laws/state';
 export const AFDC_LABEL = 'US DOE Alternative Fuels Data Center';
+
+/** Correct per-state URL. The old /laws/state/XX form 404s — see the verification log. */
+export const afdcStateUrl = (code: string) => `https://afdc.energy.gov/laws/state_summary?state=${code}`;
 
 export type PurchaseType = 'new' | 'used' | 'lease';
 export type Authority = 'federal' | 'state' | 'utility';
@@ -33,142 +44,204 @@ export interface Incentive {
   /** 'US' for federal, otherwise a two-letter state code. */
   region: string;
   appliesTo: PurchaseType[];
-  /** Typical maximum award in dollars. */
+  /** Typical maximum award in dollars. Zero when we deliberately do not state a figure. */
   maxAmount: number;
   /** How the amount is actually determined, in plain words. */
   amountNote: string;
   /** Vehicle price ceiling, where the programme has one. */
   priceCap?: { car?: number; suv?: number };
-  /** Household income ceiling by filing status (modified AGI). */
+  /**
+   * An extra amount available only below a price threshold, on top of a base award that has no
+   * such limit. Colorado works this way: $750 for any qualifying EV, plus $2,500 more under
+   * $35,000. Modelling it as a flat maximum would overstate the credit on a pricier car.
+   */
+  bonusUnderPrice?: { amount: number; threshold: number };
+  /** Household income ceiling by filing status. */
   incomeCap?: { single: number; joint: number };
   timing: 'point-of-sale' | 'tax-return' | 'rebate-after-purchase' | 'varies';
   notes: string[];
   sourceUrl: string;
   sourceLabel: string;
   /**
-   * True for programmes whose existence — not just their amount — has been subject to active
-   * legislative change. These are shown with a stronger "confirm this still exists" warning.
+   * Set when the programme has ended. Ended programmes are still listed — many people are still
+   * budgeting for them — but they are shown separately and never counted toward any total.
    */
-  volatile?: boolean;
+  endedOn?: string;
+  /**
+   * True when the benefit is not cash at purchase (e.g. an income-tax deduction spread over a
+   * loan). These are explained but never offered as an amount to apply, because putting them in
+   * the incentive field would overstate the money you actually receive up front.
+   */
+  informational?: boolean;
+  /** True when a programme exists but we have not verified the current figure. Shown without an amount. */
+  amountUnverified?: boolean;
+  /**
+   * True when eligibility turns on an income test we cannot evaluate — typically a percentage of
+   * area median income, which varies by county. Distinct from `incomeCap`, which is a fixed dollar
+   * figure we can actually check against what the user tells us.
+   */
+  incomeQualifiedOnly?: boolean;
 }
 
 /**
- * Federal programmes. The clean-vehicle credits created by the Inflation Reduction Act have been
- * repeatedly amended and targeted for repeal, so they are all flagged volatile: confirm current
- * status before relying on any of them.
+ * Federal programmes.
+ *
+ * The One Big Beautiful Bill Act (Public Law 119-21, 4 July 2025) terminated every federal
+ * clean-vehicle purchase credit for vehicles acquired after 30 September 2025, and ended the home
+ * charger credit for property placed in service after 30 June 2026. As of this dataset's review
+ * date all four are gone. They remain listed because "where did my $7,500 go?" is the single most
+ * common question a US car buyer now has, and answering it is more useful than silence.
  */
 const FEDERAL: Incentive[] = [
   {
     id: 'us-30d',
-    name: 'Federal Clean Vehicle Credit (new)',
+    name: 'Federal Clean Vehicle Credit (new) — ENDED',
     authority: 'federal',
     region: 'US',
     appliesTo: ['new'],
-    maxAmount: 7500,
-    amountNote: 'Up to $7,500, awarded as two $3,750 halves — one for battery critical-minerals sourcing, one for battery components. Many models qualify for only one half, or none.',
-    priceCap: { car: 55000, suv: 80000 },
-    incomeCap: { single: 150000, joint: 300000 },
+    maxAmount: 0,
+    amountNote: 'Was worth up to $7,500. Terminated for vehicles acquired after 30 September 2025. If you are working from an article or a dealer quote written before then, this credit is the usual reason the numbers no longer add up.',
     timing: 'point-of-sale',
+    endedOn: '30 September 2025',
     notes: [
-      'Transferable to a registered dealer at the point of sale, which turns it into an immediate discount rather than a refund next spring.',
-      'Final assembly must be in North America, and the specific trim must appear on the current eligible-vehicle list.',
-      'Income is tested on the lower of this year and last year, so one high-income year need not disqualify you.',
+      'Narrow exception: buyers who entered a binding written contract and made a payment on or before 30 September 2025 may still claim it even if delivery came later.',
+      'Terminated by the One Big Beautiful Bill Act (Public Law 119-21), enacted 4 July 2025.',
     ],
-    sourceUrl: 'https://fueleconomy.gov/feg/tax2023.shtml',
-    sourceLabel: 'FuelEconomy.gov eligible vehicle list',
-    volatile: true,
+    sourceUrl: 'https://www.irs.gov/credits-deductions/credits-for-new-clean-vehicles-purchased-in-2023-or-after',
+    sourceLabel: 'IRS — new clean vehicle credit',
   },
   {
     id: 'us-25e',
-    name: 'Federal Used Clean Vehicle Credit',
+    name: 'Federal Used Clean Vehicle Credit — ENDED',
     authority: 'federal',
     region: 'US',
     appliesTo: ['used'],
-    maxAmount: 4000,
-    amountNote: '30% of the sale price, capped at $4,000. A $12,000 used EV yields $3,600; anything above $13,333 yields the full $4,000.',
-    priceCap: { car: 25000, suv: 25000 },
-    incomeCap: { single: 75000, joint: 150000 },
+    maxAmount: 0,
+    amountNote: 'Was 30% of the sale price up to $4,000, for vehicles under $25,000. Terminated for vehicles acquired after 30 September 2025.',
     timing: 'point-of-sale',
-    notes: [
-      'The car must be at least two model years older than the current year, and must be bought from a dealer — private sales do not qualify.',
-      'Once claimed on a given vehicle, the credit cannot be claimed again by a later buyer.',
-      'You can only claim this credit once every three years.',
-    ],
+    endedOn: '30 September 2025',
+    notes: ['Same binding-contract exception as the new-vehicle credit.'],
     sourceUrl: 'https://www.irs.gov/credits-deductions/used-clean-vehicle-credit',
-    sourceLabel: 'IRS used clean vehicle credit',
-    volatile: true,
+    sourceLabel: 'IRS — used clean vehicle credit',
   },
   {
     id: 'us-45w-lease',
-    name: 'Federal credit passed through on a lease',
+    name: 'Federal credit passed through on a lease — ENDED',
     authority: 'federal',
     region: 'US',
     appliesTo: ['lease'],
-    maxAmount: 7500,
-    amountNote: 'Up to $7,500 claimed by the leasing company, which may or may not pass it through as a capitalised-cost reduction. Ask for it explicitly and check the lease paperwork.',
+    maxAmount: 0,
+    amountNote: 'The commercial-vehicle credit that lessors used to pass through as a capitalised-cost reduction, worth up to $7,500. Terminated for vehicles acquired after 30 September 2025, which closed the so-called lease loophole.',
     timing: 'varies',
-    notes: [
-      'Leases are claimed under the commercial clean vehicle credit, which has historically had no income or price caps — this is why a lease sometimes qualifies when a purchase does not.',
-      'The lessor is not obliged to pass any of it to you. Compare the capitalised cost with and without it.',
-      'TrueCost models purchases, not leases, so use this figure only if you are converting a lease deal into an equivalent purchase.',
-    ],
+    endedOn: '30 September 2025',
+    notes: ['If a lease quote still shows an "EV credit" line, ask the dealer to show you where it comes from.'],
     sourceUrl: 'https://www.irs.gov/credits-deductions/commercial-clean-vehicle-credit',
-    sourceLabel: 'IRS commercial clean vehicle credit',
-    volatile: true,
+    sourceLabel: 'IRS — commercial clean vehicle credit',
   },
   {
     id: 'us-30c-charger',
-    name: 'Federal home charger credit',
+    name: 'Federal home charger credit — ENDED',
     authority: 'federal',
     region: 'US',
     appliesTo: ['new', 'used', 'lease'],
-    maxAmount: 1000,
-    amountNote: '30% of the cost of buying and installing a home charger, capped at $1,000 — only for homes in eligible low-income or non-urban census tracts.',
+    maxAmount: 0,
+    amountNote: 'Was 30% of a home charger and its installation, up to $1,000, for homes in eligible census tracts. Ended for property placed in service after 30 June 2026.',
     timing: 'tax-return',
+    endedOn: '30 June 2026',
+    notes: ['State and utility charger rebates still exist in many areas and are now the main source of charger money.'],
+    sourceUrl: 'https://www.irs.gov/credits-deductions/alternative-fuel-vehicle-refueling-property-credit-for-individuals',
+    sourceLabel: 'IRS — refuelling property credit',
+  },
+  {
+    id: 'us-auto-loan-interest',
+    name: 'Federal auto loan interest deduction',
+    authority: 'federal',
+    region: 'US',
+    appliesTo: ['new'],
+    maxAmount: 0,
+    amountNote: 'Deducts up to $10,000 of car-loan interest per year from taxable income, for a new vehicle with final assembly in the United States. Because it is a deduction, it is worth your marginal tax rate times the interest — not the full amount — and it arrives at tax time each year rather than as cash at purchase.',
+    incomeCap: { single: 100000, joint: 200000 },
+    timing: 'tax-return',
+    informational: true,
     notes: [
-      'Eligibility is decided by the census tract of the address, not by your income. Check yours before counting on it.',
-      'If it applies, enter it here rather than reducing the charger cost, so the breakdown still shows what the charger really cost.',
+      'Do not enter this in the incentive field: TrueCost treats that as cash received at purchase, which would overstate it.',
+      'To model it, lower the loan APR slightly. If you pay 24% marginal tax, a 7% APR behaves roughly like 5.3% for the deductible portion.',
+      'New purchases only. Used vehicles and leases do not qualify, and the loan must be secured by a first lien on the vehicle.',
+      'Phases out above $100,000 income (single) or $200,000 (joint), and requires US final assembly — check the VIN with the NHTSA decoder.',
     ],
-    sourceUrl: 'https://afdc.energy.gov/laws/10513',
-    sourceLabel: 'AFDC refuelling property credit',
-    volatile: true,
+    sourceUrl: 'https://www.irs.gov/newsroom/faqs-for-modification-of-sections-25c-25d-25e-30c-30d-45l-45w-and-179d-under-public-law-119-21-139-stat-72-july-4-2025-commonly-known-as-the-one-big-beautiful-bill-obbb',
+    sourceLabel: 'IRS — OBBB modifications FAQ',
   },
 ];
 
 /**
- * State programmes. This is a representative set of the larger and most frequently-claimed ones,
- * not an exhaustive list — every state entry points at the AFDC database for the full picture, and
- * the UI tells users with unlisted states to look there.
+ * State programmes.
+ *
+ * Amounts marked verified were checked against the source on the review date. Where a state runs a
+ * programme whose current figure was not verified, it is listed with `amountUnverified` and no
+ * number: pointing someone at the right programme is useful, inventing its size is not.
  */
 const STATE: Incentive[] = [
   {
-    id: 'co-ev',
-    name: 'Colorado EV tax credit',
+    id: 'co-imvc',
+    name: 'Colorado Innovative Motor Vehicle Credit',
     authority: 'state',
     region: 'CO',
     appliesTo: ['new', 'lease'],
-    maxAmount: 5000,
-    amountNote: 'One of the largest state credits in the country, with an extra amount for vehicles under a lower price cap. The headline figure steps down on a published schedule.',
-    priceCap: { car: 35000, suv: 35000 },
+    maxAmount: 750,
+    bonusUnderPrice: { amount: 2500, threshold: 35000 },
+    amountNote: 'From 1 January 2026 the base credit is $750, plus a $2,500 addition for vehicles with an MSRP under $35,000 — up to $3,250. The base amount steps down further on a published schedule, so the year of purchase matters.',
     timing: 'tax-return',
-    notes: ['The step-down schedule reduces the amount over time, so the year of purchase matters.', 'Leases of at least two years generally qualify.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/CO',
+    notes: [
+      'The $35,000 cap applies to the $2,500 addition, not to the $750 base — a pricier EV still gets the base credit.',
+      'Leases of at least two years generally qualify.',
+      'Stepped down sharply from $3,500 in 2025, so older articles overstate it badly.',
+    ],
+    sourceUrl: afdcStateUrl('CO'),
     sourceLabel: 'AFDC Colorado',
   },
   {
-    id: 'nj-salestax',
-    name: 'New Jersey EV sales-tax exemption',
+    id: 'co-vxc',
+    incomeQualifiedOnly: true,
+    name: 'Vehicle Exchange Colorado (income-qualified)',
     authority: 'state',
-    region: 'NJ',
+    region: 'CO',
     appliesTo: ['new', 'used'],
-    maxAmount: 0,
-    amountNote: 'Historically a full exemption from state sales tax on zero-emission vehicles, since being phased in to a partial rate. Worth roughly the sales tax on the purchase.',
+    maxAmount: 9000,
+    amountNote: 'A point-of-sale rebate of up to $9,000 toward a new EV or $6,000 toward a used one, for income-qualified residents trading in an old or high-emitting vehicle.',
     timing: 'point-of-sale',
     notes: [
-      'This is a tax exemption, not a rebate. The cleanest way to model it is to lower the sales-tax rate on the vehicle rather than entering an incentive amount.',
-      'Check the current phase-in rate — it has been rising from zero toward the standard rate.',
+      'Requires household income at or below 80% of area median income, or enrolment in a qualifying programme such as SNAP or Medicaid.',
+      'Requires trading in an eligible older vehicle.',
     ],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/NJ',
+    sourceUrl: afdcStateUrl('CO'),
+    sourceLabel: 'AFDC Colorado',
+  },
+  {
+    id: 'ct-cheapr',
+    name: 'Connecticut CHEAPR',
+    authority: 'state',
+    region: 'CT',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 4000,
+    amountNote: 'A $1,000 standard rebate on a new battery-electric vehicle. Income-qualified buyers under Rebate+ can reach $4,000 in total on a new vehicle, or up to $5,000 on a used one.',
+    timing: 'point-of-sale',
+    notes: ['Applied by participating dealers at purchase.', 'The used-vehicle route can be worth more than the new-vehicle route for income-qualified buyers.'],
+    sourceUrl: afdcStateUrl('CT'),
+    sourceLabel: 'AFDC Connecticut',
+  },
+  {
+    id: 'nj-chargeup',
+    name: 'Charge Up New Jersey',
+    authority: 'state',
+    region: 'NJ',
+    appliesTo: ['new', 'lease'],
+    maxAmount: 4000,
+    amountNote: 'A $1,500 point-of-sale incentive on an eligible new battery-electric vehicle with an MSRP under $55,000, plus $2,500 more for income-prequalified buyers under Charge Up+ — up to $4,000.',
+    priceCap: { car: 55000, suv: 55000 },
+    timing: 'point-of-sale',
+    notes: ['Applied at the dealer, so it reduces what you finance.', 'A separate rebate of up to $250 is available toward a home charger.'],
+    sourceUrl: afdcStateUrl('NJ'),
     sourceLabel: 'AFDC New Jersey',
   },
   {
@@ -176,14 +249,13 @@ const STATE: Incentive[] = [
     name: 'New York Drive Clean Rebate',
     authority: 'state',
     region: 'NY',
-    appliesTo: ['new'],
+    appliesTo: ['new', 'lease'],
     maxAmount: 2000,
-    amountNote: 'Tiered by electric range: the full amount for longer-range EVs, less for short-range and plug-in hybrids.',
-    priceCap: { car: 42000, suv: 42000 },
+    amountNote: 'Between $500 and $2,000 depending on the model\'s electric range and MSRP. The largest amounts go to longer-range vehicles below the MSRP threshold.',
     timing: 'point-of-sale',
-    notes: ['Applied by the dealer at purchase, so you see it on the paperwork.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/NY',
-    sourceLabel: 'AFDC New York',
+    notes: ['Applied by the dealer at purchase, so it appears on the paperwork.', 'Check the NYSERDA eligible-models list for your exact trim — the amount is set per model.'],
+    sourceUrl: 'https://www.nyserda.ny.gov/All-Programs/Drive-Clean-Rebate-For-Electric-Cars-Program',
+    sourceLabel: 'NYSERDA Drive Clean Rebate',
   },
   {
     id: 'ma-morev',
@@ -192,83 +264,77 @@ const STATE: Incentive[] = [
     region: 'MA',
     appliesTo: ['new', 'used', 'lease'],
     maxAmount: 3500,
-    amountNote: 'A rebate for new EVs, with a smaller amount for used, and an additional award for income-qualified applicants trading in an older vehicle.',
+    amountNote: '$3,500 for a new EV under a $55,000 MSRP cap, or $3,500 for a used EV under $40,000. Income-qualified buyers can add $1,500, and trading in a combustion vehicle can add $1,000.',
     priceCap: { car: 55000, suv: 55000 },
     timing: 'rebate-after-purchase',
-    notes: ['Claimed after purchase within a deadline — missing the window forfeits it.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/MA',
-    sourceLabel: 'AFDC Massachusetts',
+    notes: ['Claimed after purchase within a deadline — missing the window forfeits it.', 'The adders can take a qualifying buyer to $6,000.'],
+    sourceUrl: 'https://www.mass.gov/info-details/mor-ev-rebate-program',
+    sourceLabel: 'Mass.gov MOR-EV',
   },
+  {
+    id: 'or-cvrp',
+    incomeQualifiedOnly: true,
+    name: 'Oregon Clean Vehicle Rebate',
+    authority: 'state',
+    region: 'OR',
+    appliesTo: ['new', 'used', 'lease'],
+    maxAmount: 7500,
+    amountNote: 'The income-qualified Charge Ahead rebate is worth up to $7,500 toward a new or used vehicle (used vehicles are capped at 30% of the price, up to $4,000). A smaller standard rebate is available to all buyers.',
+    timing: 'rebate-after-purchase',
+    notes: [
+      'The programme runs in windows rather than continuously. It reopened on 25 August 2026 and is scheduled to close on 4 November 2026 — confirm the current window before counting on it.',
+      'The vehicle must be on the Oregon DEQ eligible list.',
+    ],
+    sourceUrl: 'https://evrebate.oregon.gov/',
+    sourceLabel: 'Oregon CVRP',
+  },
+  {
+    id: 'ca-cc4a',
+    incomeQualifiedOnly: true,
+    name: 'California Clean Cars 4 All / Driving Clean Assistance',
+    authority: 'state',
+    region: 'CA',
+    appliesTo: ['new', 'used'],
+    maxAmount: 12000,
+    amountNote: 'California has no broad statewide purchase rebate: the Clean Vehicle Rebate Project closed to new applications in November 2023. What remains is income-qualified scrap-and-replace — up to $12,000 toward a replacement vehicle, plus up to $2,000 of charging assistance.',
+    timing: 'rebate-after-purchase',
+    notes: [
+      'Administered by regional air districts, so both the amount and the rules depend on your county.',
+      'Requires retiring an eligible older vehicle and meeting an income test.',
+      'District funding is finite and published balances change frequently; an application does not guarantee payment.',
+    ],
+    sourceUrl: afdcStateUrl('CA'),
+    sourceLabel: 'AFDC California',
+  },
+  // Programmes that exist but whose current figure was not verified on the review date.
+  // Listed without an amount so the user is pointed at the right place without being given a number.
   {
     id: 'il-rebate',
     name: 'Illinois EV rebate',
     authority: 'state',
     region: 'IL',
     appliesTo: ['new', 'used'],
-    maxAmount: 4000,
-    amountNote: 'A flat rebate awarded in funding rounds. Applications open for limited windows and close when the round is exhausted.',
+    maxAmount: 0,
+    amountNote: 'Illinois runs a rebate in funded application rounds. The current amount and whether a round is open were not verified for this dataset — check the source.',
     timing: 'rebate-after-purchase',
-    notes: ['Round-based: if no round is open when you buy, you may get nothing. Check the current cycle before counting on it.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/IL',
+    amountUnverified: true,
+    notes: ['Round-based: if no round is open when you buy, you may get nothing.'],
+    sourceUrl: afdcStateUrl('IL'),
     sourceLabel: 'AFDC Illinois',
   },
   {
-    id: 'or-rebate',
-    name: 'Oregon Clean Vehicle Rebate',
+    id: 'vt-rebate',
+    name: 'Vermont EV incentives',
     authority: 'state',
-    region: 'OR',
-    appliesTo: ['new', 'used', 'lease'],
-    maxAmount: 2500,
-    amountNote: 'A standard rebate for new EVs, plus a substantially larger income-qualified "Charge Ahead" rebate that can be combined with it.',
-    priceCap: { car: 50000, suv: 50000 },
-    timing: 'rebate-after-purchase',
-    notes: ['The programme pauses when funding runs out and reopens later — check whether it is currently accepting applications.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/OR',
-    sourceLabel: 'AFDC Oregon',
-  },
-  {
-    id: 'ct-cheapr',
-    name: 'Connecticut CHEAPR',
-    authority: 'state',
-    region: 'CT',
-    appliesTo: ['new', 'lease'],
-    maxAmount: 2250,
-    amountNote: 'A standard rebate with additional amounts for income-qualified buyers under the Rebate+ programmes.',
-    priceCap: { car: 50000, suv: 50000 },
-    timing: 'point-of-sale',
-    notes: ['Applied by participating dealers at purchase.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/CT',
-    sourceLabel: 'AFDC Connecticut',
-  },
-  {
-    id: 'ca-ccfa',
-    name: 'California Clean Cars 4 All / regional programmes',
-    authority: 'state',
-    region: 'CA',
+    region: 'VT',
     appliesTo: ['new', 'used'],
-    maxAmount: 9500,
-    amountNote: 'California\'s broad statewide rebate (CVRP) stopped accepting applications; what remains is income-qualified scrap-and-replace and regional air-district programmes, which can be large but have tight eligibility.',
-    incomeCap: { single: 50000, joint: 100000 },
+    maxAmount: 0,
+    amountNote: 'Vermont offers state rebates scaled by income, and its utility incentives are unusually generous and stack on top. Amounts were not verified for this dataset.',
     timing: 'rebate-after-purchase',
-    notes: [
-      'Administered by regional air districts, so both the amount and the rules depend on your county.',
-      'Usually requires scrapping an older vehicle and meeting an income test.',
-    ],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/CA',
-    sourceLabel: 'AFDC California',
-  },
-  {
-    id: 'tx-rebate',
-    name: 'Texas light-duty vehicle rebate',
-    authority: 'state',
-    region: 'TX',
-    appliesTo: ['new', 'lease'],
-    maxAmount: 2500,
-    amountNote: 'A flat rebate issued in limited funding rounds, first-come first-served.',
-    timing: 'rebate-after-purchase',
-    notes: ['Funding is capped per round and is often exhausted quickly.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/TX',
-    sourceLabel: 'AFDC Texas',
+    amountUnverified: true,
+    notes: ['Check your utility as well as the state — in Vermont the utility award often exceeds the state one.'],
+    sourceUrl: afdcStateUrl('VT'),
+    sourceLabel: 'AFDC Vermont',
   },
   {
     id: 'me-rebate',
@@ -276,26 +342,13 @@ const STATE: Incentive[] = [
     authority: 'state',
     region: 'ME',
     appliesTo: ['new', 'used'],
-    maxAmount: 2000,
-    amountNote: 'A rebate that scales with income band, with the largest amounts for low-income applicants.',
+    maxAmount: 0,
+    amountNote: 'Maine offers rebates scaled by income band through Efficiency Maine. Current amounts were not verified for this dataset.',
     timing: 'point-of-sale',
+    amountUnverified: true,
     notes: ['Handled through participating dealers.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/ME',
+    sourceUrl: afdcStateUrl('ME'),
     sourceLabel: 'AFDC Maine',
-  },
-  {
-    id: 'vt-rebate',
-    name: 'Vermont EV incentive',
-    authority: 'state',
-    region: 'VT',
-    appliesTo: ['new', 'used'],
-    maxAmount: 5000,
-    amountNote: 'State rebates scaled by income, plus separate utility incentives that stack on top and are unusually generous in Vermont.',
-    incomeCap: { single: 100000, joint: 125000 },
-    timing: 'rebate-after-purchase',
-    notes: ['Vermont utility incentives often exceed the state rebate — check your utility as well.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/VT',
-    sourceLabel: 'AFDC Vermont',
   },
   {
     id: 'ri-drive',
@@ -303,11 +356,12 @@ const STATE: Incentive[] = [
     authority: 'state',
     region: 'RI',
     appliesTo: ['new', 'used'],
-    maxAmount: 2500,
-    amountNote: 'A rebate for new EVs with a smaller used-vehicle amount, plus an income-qualified top-up.',
+    maxAmount: 0,
+    amountNote: 'Rhode Island runs a rebate with an income-qualified top-up. Current amounts were not verified for this dataset.',
     timing: 'rebate-after-purchase',
+    amountUnverified: true,
     notes: ['Subject to annual funding.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/RI',
+    sourceUrl: afdcStateUrl('RI'),
     sourceLabel: 'AFDC Rhode Island',
   },
   {
@@ -316,26 +370,13 @@ const STATE: Incentive[] = [
     authority: 'state',
     region: 'NM',
     appliesTo: ['new', 'used'],
-    maxAmount: 3000,
-    amountNote: 'A state income-tax credit for new EVs with a smaller amount for used vehicles.',
+    maxAmount: 0,
+    amountNote: 'New Mexico offers a state income-tax credit for clean vehicles. The current amount was not verified for this dataset.',
     timing: 'tax-return',
+    amountUnverified: true,
     notes: ['Claimed on your state return, so the benefit arrives the following spring.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/NM',
+    sourceUrl: afdcStateUrl('NM'),
     sourceLabel: 'AFDC New Mexico',
-  },
-  {
-    id: 'de-rebate',
-    name: 'Delaware Clean Vehicle Rebate',
-    authority: 'state',
-    region: 'DE',
-    appliesTo: ['new'],
-    maxAmount: 2500,
-    amountNote: 'A flat rebate for new battery-electric vehicles, with a smaller amount for plug-in hybrids.',
-    priceCap: { car: 60000, suv: 60000 },
-    timing: 'rebate-after-purchase',
-    notes: ['Applied for after purchase within a deadline.'],
-    sourceUrl: 'https://afdc.energy.gov/laws/state/DE',
-    sourceLabel: 'AFDC Delaware',
   },
 ];
 
@@ -346,9 +387,10 @@ export const UTILITY_HINT: Incentive = {
   authority: 'utility',
   region: '*',
   appliesTo: ['new', 'used', 'lease'],
-  maxAmount: 1500,
-  amountNote: 'Most utilities offer something: a charger rebate (commonly $250–$1,000), a vehicle rebate, or a discounted overnight charging rate. These stack with federal and state programmes.',
+  maxAmount: 0,
+  amountNote: 'Most utilities offer something: a charger rebate (commonly $250–$1,000), a vehicle rebate, or a discounted overnight charging rate. With the federal charger credit gone, this is now the main source of charger money.',
   timing: 'rebate-after-purchase',
+  amountUnverified: true,
   notes: [
     'Search your utility name plus "EV rebate" — this is the most commonly missed money in the whole list.',
     'A cheaper overnight charging rate is worth modelling in the electricity rate field instead of here.',
@@ -359,7 +401,7 @@ export const UTILITY_HINT: Incentive = {
 
 export const ALL_INCENTIVES: Incentive[] = [...FEDERAL, ...STATE];
 
-/** States with a programme in this dataset, for the picker. */
+/** States with an entry in this dataset, for the picker. */
 export const STATES_WITH_DATA = [...new Set(STATE.map((s) => s.region))].sort();
 
 export const US_STATES: { code: string; name: string }[] = [
@@ -389,12 +431,12 @@ export interface IncentiveQuery {
   filingStatus: FilingStatus;
 }
 
-export type MatchStatus = 'likely' | 'check' | 'ruled-out';
+export type MatchStatus = 'likely' | 'check' | 'ruled-out' | 'ended' | 'informational';
 
 export interface IncentiveMatch {
   incentive: Incentive;
   status: MatchStatus;
-  /** Estimated amount for this query. Zero when ruled out. */
+  /** Estimated amount for this query. Zero when ended, informational, unverified or ruled out. */
   amount: number;
   /** Why it is ruled out, or what still needs checking. */
   reasons: string[];
@@ -405,24 +447,23 @@ function priceCapFor(inc: Incentive, body: BodyStyle): number | undefined {
   return body === 'suv' ? (inc.priceCap.suv ?? inc.priceCap.car) : (inc.priceCap.car ?? inc.priceCap.suv);
 }
 
-/** The used federal credit is 30% of the price, capped — everything else is a flat maximum. */
-function amountFor(inc: Incentive, q: IncentiveQuery): number {
-  if (inc.id === 'us-25e') return Math.min(inc.maxAmount, Math.round(q.vehiclePrice * 0.3));
-  return inc.maxAmount;
-}
-
 /**
- * Works out which programmes plausibly apply. Deliberately conservative: anything that depends on
- * a fact we cannot see (funding rounds, vehicle eligibility lists, census tracts) comes back as
- * "check" rather than "likely", so the total we suggest is the part we can actually stand behind.
+ * Works out which programmes plausibly apply.
+ *
+ * Ended and informational programmes short-circuit before any eligibility test: whether you would
+ * have qualified for a credit that no longer exists is not a useful thing to compute.
  */
 export function matchIncentives(q: IncentiveQuery): IncentiveMatch[] {
   const pool = ALL_INCENTIVES.filter((inc) => inc.region === 'US' || inc.region === q.state);
   const matches: IncentiveMatch[] = [];
 
   for (const inc of pool) {
+    if (inc.endedOn) {
+      matches.push({ incentive: inc, status: 'ended', amount: 0, reasons: [`Ended ${inc.endedOn}.`] });
+      continue;
+    }
+
     const reasons: string[] = [];
-    let status: MatchStatus = 'likely';
 
     if (!inc.appliesTo.includes(q.purchaseType)) {
       matches.push({ incentive: inc, status: 'ruled-out', amount: 0, reasons: [`Only applies to ${inc.appliesTo.join(' or ')} purchases.`] });
@@ -431,9 +472,11 @@ export function matchIncentives(q: IncentiveQuery): IncentiveMatch[] {
 
     const cap = priceCapFor(inc, q.bodyStyle);
     if (cap !== undefined && q.vehiclePrice > cap) {
-      matches.push({ incentive: inc, status: 'ruled-out', amount: 0, reasons: [`Vehicle price cap is $${cap.toLocaleString('en-US')} for this body style; yours is $${Math.round(q.vehiclePrice).toLocaleString('en-US')}.`] });
+      matches.push({ incentive: inc, status: 'ruled-out', amount: 0, reasons: [`Vehicle price cap is $${cap.toLocaleString('en-US')}; yours is $${Math.round(q.vehiclePrice).toLocaleString('en-US')}.`] });
       continue;
     }
+
+    let status: MatchStatus = 'likely';
 
     if (inc.incomeCap) {
       const limit = q.filingStatus === 'joint' ? inc.incomeCap.joint : inc.incomeCap.single;
@@ -446,42 +489,56 @@ export function matchIncentives(q: IncentiveQuery): IncentiveMatch[] {
       }
     }
 
-    // Programmes whose availability we genuinely cannot determine from these inputs.
-    if (inc.volatile) {
+    if (inc.informational) {
+      matches.push({ incentive: inc, status: 'informational', amount: 0, reasons });
+      continue;
+    }
+
+    if (inc.amountUnverified) {
+      matches.push({ incentive: inc, status: 'check', amount: 0, reasons: [...reasons, 'We have not verified the current amount — follow the source link for the figure.'] });
+      continue;
+    }
+
+    if (inc.incomeQualifiedOnly) {
       status = 'check';
-      reasons.push('This programme has been subject to legislative change — confirm it still exists and that your vehicle is on the current eligible list.');
+      reasons.push('Income-qualified only, usually against area median income, which varies by county — confirm you qualify.');
     }
     if (inc.timing === 'rebate-after-purchase') {
       if (status === 'likely') status = 'check';
       reasons.push('Funded in rounds that can close — confirm applications are open.');
     }
-    if (inc.id === 'us-30c-charger') reasons.push('Only for addresses in eligible census tracts.');
-    if (inc.id === 'nj-salestax') reasons.push('Model this by lowering the sales-tax rate rather than as a rebate amount.');
 
-    matches.push({ incentive: inc, status, amount: amountFor(inc, q), reasons });
+    let amount = inc.maxAmount;
+    if (inc.bonusUnderPrice) {
+      if (q.vehiclePrice <= inc.bonusUnderPrice.threshold) {
+        amount += inc.bonusUnderPrice.amount;
+      } else {
+        reasons.push(`The extra $${inc.bonusUnderPrice.amount.toLocaleString('en-US')} only applies under $${inc.bonusUnderPrice.threshold.toLocaleString('en-US')}; at $${Math.round(q.vehiclePrice).toLocaleString('en-US')} you get the base amount only.`);
+      }
+    }
+
+    matches.push({ incentive: inc, status, amount, reasons });
   }
 
-  const rank: Record<MatchStatus, number> = { likely: 0, check: 1, 'ruled-out': 2 };
+  const rank: Record<MatchStatus, number> = { likely: 0, check: 1, informational: 2, ended: 3, 'ruled-out': 4 };
   return matches.sort((a, b) => rank[a.status] - rank[b.status] || b.amount - a.amount);
 }
 
-/** Modelled as a sales-tax rate rather than a rebate, so it must never enter a cash total. */
-const EXCLUDED_FROM_TOTALS = new Set(['nj-salestax']);
+/** Statuses that can contribute money to a total. */
+const COUNTABLE: MatchStatus[] = ['likely', 'check'];
 
 /**
  * The headline suggestion: everything the answers did not rule out.
  *
- * This deliberately includes programmes marked "check". Almost every incentive depends on something
- * a calculator cannot see — a funding round, an eligible-vehicle list, a census tract — so excluding
- * all of them would suggest $0 to nearly everyone and make the helper useless. The honesty lives in
- * the per-programme caveats and the review-date banner, which stay visible, not in a number quietly
- * rounded down to nothing.
+ * Includes programmes marked "check", because almost every live incentive depends on something a
+ * calculator cannot see and excluding them all would suggest nothing to nearly everyone. The
+ * honesty lives in the per-programme caveats, not in a number quietly rounded to zero.
  */
 export function suggestedTotal(matches: IncentiveMatch[]): number {
-  return matches.filter((m) => m.status !== 'ruled-out' && !EXCLUDED_FROM_TOTALS.has(m.incentive.id)).reduce((sum, m) => sum + m.amount, 0);
+  return matches.filter((m) => COUNTABLE.includes(m.status)).reduce((sum, m) => sum + m.amount, 0);
 }
 
 /** The subset with no outstanding question at all. Offered as a cautious alternative when it differs. */
 export function confirmedTotal(matches: IncentiveMatch[]): number {
-  return matches.filter((m) => m.status === 'likely' && !EXCLUDED_FROM_TOTALS.has(m.incentive.id)).reduce((sum, m) => sum + m.amount, 0);
+  return matches.filter((m) => m.status === 'likely').reduce((sum, m) => sum + m.amount, 0);
 }

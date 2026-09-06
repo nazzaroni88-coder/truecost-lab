@@ -54,6 +54,8 @@ export function IncentiveHelper({ open, onClose, vehiclePrice, currentAmount, on
 
   const likely = matches.filter((m) => m.status === 'likely');
   const check = matches.filter((m) => m.status === 'check');
+  const informational = matches.filter((m) => m.status === 'informational');
+  const ended = matches.filter((m) => m.status === 'ended');
   const ruledOut = matches.filter((m) => m.status === 'ruled-out');
   const confirmed = confirmedTotal(matches);
   const suggested = suggestedTotal(matches);
@@ -78,9 +80,12 @@ export function IncentiveHelper({ open, onClose, vehiclePrice, currentAmount, on
       <div className="callout callout-warning">
         <IconWarning />
         <div>
-          These programmes change often and run out of funding mid-year. This list reflects rules as of <strong>{DATA_REVIEWED}</strong> and is a starting point for your own research, not a verification of what you qualify for. Confirm every figure with the linked source before relying on it.
+          <strong>The federal EV credits have ended.</strong> The $7,500 new, $4,000 used and lease pass-through credits were terminated for vehicles acquired after 30 September 2025, and the home charger credit ended on 30 June 2026. What is left is state, local and utility money.
         </div>
       </div>
+      <p className="micro muted">
+        Checked against primary sources in <strong>{DATA_REVIEWED}</strong>. These programmes change often and run out of funding mid-year, so treat this as a starting point for your own research, not a verification of what you qualify for.
+      </p>
 
       <div className="field-group">
         <div className="grid-2 collapse-xs">
@@ -182,8 +187,27 @@ export function IncentiveHelper({ open, onClose, vehiclePrice, currentAmount, on
         )}
         <section>
           <h3 className="incentive-group">Almost always worth a search</h3>
-          <IncentiveCard match={{ incentive: UTILITY_HINT, status: 'check', amount: UTILITY_HINT.maxAmount, reasons: ['Amounts are set by your specific utility, so we cannot estimate one for you.'] }} onApply={() => apply(currentAmount + UTILITY_HINT.maxAmount)} />
+          <IncentiveCard match={{ incentive: UTILITY_HINT, status: 'check', amount: 0, reasons: ['Amounts are set by your specific utility, so we do not estimate one for you.'] }} onApply={() => apply(currentAmount)} />
         </section>
+        {informational.length > 0 && (
+          <section>
+            <h3 className="incentive-group">Worth knowing, but not cash at purchase</h3>
+            {informational.map((m) => (
+              <IncentiveCard key={m.incentive.id} match={m} onApply={() => apply(currentAmount)} />
+            ))}
+          </section>
+        )}
+        {ended.length > 0 && (
+          <section>
+            <h3 className="incentive-group">No longer available</h3>
+            <p className="micro muted" style={{ marginBottom: 8 }}>
+              Listed because plenty of guides, dealer quotes and calculators still assume these exist. If a number you read elsewhere does not match TrueCost, this is usually why.
+            </p>
+            {ended.map((m) => (
+              <IncentiveCard key={m.incentive.id} match={m} onApply={() => apply(currentAmount)} />
+            ))}
+          </section>
+        )}
         {ruledOut.length > 0 && (
           <details className="disclosure">
             <summary>
