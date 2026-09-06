@@ -24,10 +24,13 @@ export function SensitivitySection<I>({ rows, positiveLabel, negativeLabel, inpu
     <ResultSection id={id} kicker="What matters most" title="Which assumptions drive this result" sub={intro ?? 'We re-ran the model with each assumption nudged to a plausible low and high value. Longer bars matter more. A bar crossing the dashed line means that assumption alone could flip the answer.'}>
       {top.length > 0 && (
         <p className="small" style={{ marginBottom: 'var(--sp-3)' }}>
+          {/* Labels are already sentence-cased and carry proper nouns and initialisms — lowercasing
+              them printed "tesla model 3: depreciation rate", "pmi" and "hoa". Bold does the work
+              of marking them as named terms inside the sentence. */}
           Your result is most sensitive to:{' '}
           {top.map((r, i) => (
             <span key={r.key}>
-              <strong>{r.label.toLowerCase()}</strong>
+              <strong>{r.label}</strong>
               {i < top.length - 1 ? (i === top.length - 2 ? ', and ' : ', ') : '.'}
             </span>
           ))}{' '}
@@ -35,7 +38,7 @@ export function SensitivitySection<I>({ rows, positiveLabel, negativeLabel, inpu
             <span className="text-positive">None of the tested ranges flips the answer on its own — this is a fairly robust result.</span>
           ) : (
             <span>
-              {flippers.length === 1 ? 'One assumption' : `${flippers.length} assumptions`} could flip the answer within a plausible range: {flippers.map((f) => f.label.toLowerCase()).join(', ')}.
+              {flippers.length === 1 ? 'One assumption' : `${flippers.length} assumptions`} could flip the answer within a plausible range: {flippers.map((f) => f.label).join(', ')}.
             </span>
           )}
         </p>

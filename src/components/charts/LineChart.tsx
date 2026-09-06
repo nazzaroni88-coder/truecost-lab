@@ -102,16 +102,33 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
 
   const tip = hover !== null && tooltip ? tooltip(hover) : null;
 
-  // Screen readers get nothing useful from an SVG path, so we also render the underlying numbers
-  // as a real (visually hidden) table at a handful of evenly spaced points.
+  /*
+   * Screen readers get nothing useful from an SVG path, so the underlying numbers are also rendered
+   * as a real (visually hidden) table.
+   *
+   * Sampling by even index spacing was wrong twice over: with 61 monthly points and yearly labels
+   * it emitted two rows both headed "yr 4", and it filed month 10's value under "yr 1". Group the
+   * points by the label they actually format to, and within each group take the point sitting
+   * closest to a whole unit — which is the one the rounded label names. Where a format is not
+   * lossy every group is a single point and the rule does nothing. Then thin if there are too many.
+   */
   const summaryIdx = useMemo(() => {
     const n = x.length;
     if (n <= 1) return [0];
-    const wanted = Math.min(n, 7);
-    const picks = new Set<number>();
-    for (let k = 0; k < wanted; k++) picks.add(Math.round((k * (n - 1)) / (wanted - 1)));
-    return [...picks].sort((p, q) => p - q);
-  }, [x.length]);
+    const groups = new Map<string, number[]>();
+    for (let i = 0; i < n; i++) {
+      const label = xFormat(x[i]);
+      const g = groups.get(label);
+      if (g) g.push(i);
+      else groups.set(label, [i]);
+    }
+    const off = (i: number) => Math.abs(x[i] - Math.round(x[i]));
+    const mids = [...groups.values()].map((g) => g.reduce((best, i) => (off(i) < off(best) ? i : best), g[0]));
+    if (mids.length <= 7) return mids;
+    const thinned = new Set<number>();
+    for (let k = 0; k < 7; k++) thinned.add(mids[Math.round((k * (mids.length - 1)) / 6)]);
+    return [...thinned].sort((p, q) => p - q);
+  }, [x, xFormat]);
 
   return (
     <div className="chart" ref={ref}>
