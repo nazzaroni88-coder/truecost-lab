@@ -75,7 +75,11 @@ export function HomePage() {
                   the winner's colour in Featured comparisons below and on every calculator page —
                   three conventions for one figure was two too many. */}
               <span className={`text-${demo.comparison.cheaper}`}>{demoWin.name}</span> is estimated to cost{' '}
-              <span className={`amt text-${demo.comparison.cheaper}`}>{fmtMoney(Math.abs(demo.comparison.nominalDifference), 0)}</span> less than{' '}
+              {/* Deliberately NOT `.amt`: that rule resolves --hero-accent-text, which only exists
+                  inside an .answer-hero.winner-* and otherwise falls back to the primary blue —
+                  and it outranks .text-b, so the amount came out blue beside an orange name.
+                  The headline already supplies tabular figures. */}
+              <span className={`text-${demo.comparison.cheaper}`}>{fmtMoney(Math.abs(demo.comparison.nominalDifference), 0)}</span> less than{' '}
               {demo.comparison.cheaper === 'b' ? demoA.name : demoB.name} over 5 years.
             </div>
             <div className="answer-stats" style={{ marginTop: 'var(--sp-4)' }}>
