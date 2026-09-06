@@ -3031,3 +3031,59 @@ dialog.modal::backdrop {
   align-items: center;
   min-height: 24px;
 }
+
+/* ---------- Share format picker ---------- */
+/* The shape decides where the image can be posted, so it is the first choice in the dialog, shown
+   as the actual proportions rather than a dropdown of names. */
+.share-formats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-3);
+}
+.share-format {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: transparent;
+  border: 1px solid var(--tc-line);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  color: var(--tc-ink-3);
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+.share-format .glyph {
+  width: 22px;
+  border: 1.5px solid currentColor;
+  border-radius: var(--r-xs);
+  display: block;
+}
+.share-format .lab {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  color: var(--tc-ink-2);
+}
+.share-format .hint {
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+}
+.share-format:hover {
+  border-color: var(--tc-ink-4);
+  color: var(--tc-ink-2);
+}
+.share-format.active {
+  border-color: var(--tc-primary);
+  color: var(--tc-primary-strong);
+}
+.share-format.active .lab {
+  color: var(--tc-ink);
+}
+@media (max-width: 460px) {
+  .share-formats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

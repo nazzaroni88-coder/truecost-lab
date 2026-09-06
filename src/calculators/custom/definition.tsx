@@ -1,6 +1,7 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import type { CustomInputs, CustomOptionResult, CustomResult } from '../../engine/calculators/custom';
 import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
+import { summaryDrivers } from '../drivers';
 
 export function customSummary(i: CustomInputs, r: CustomResult): ShareSummary {
   const { a, b, comparison: c } = r;
@@ -22,6 +23,11 @@ export function customSummary(i: CustomInputs, r: CustomResult): ShareSummary {
       { label: 'Crossover', value: c.crossover.year === null ? 'none' : `after ${fmtYears(c.crossover.year)}` },
       { label: `Invest the difference, ${years} yr @ ${fmtPct(i.investmentReturn, 1)}`, value: c.invest.saver === 'tie' ? '—' : fmtMoney(c.invest.balanceAtHorizon), tone: 'positive' },
     ],
+    drivers: summaryDrivers(a.categories, b.categories, a.name, b.name, diff),
+    investLine:
+      c.invest.saver === 'tie'
+        ? undefined
+        : `Invest the difference at ${fmtPct(i.investmentReturn, 1)} and it could be worth ${fmtMoney(roundHeadline(c.invest.balanceAtHorizon))} after ${yearsLabel(years)}.`,
   };
 }
 

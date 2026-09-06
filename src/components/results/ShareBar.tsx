@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ShareSummary } from '../../calculators/types';
 import { buildShareUrl } from '../../scenarios/urlCodec';
-import { canvasToBlob, renderShareCard } from '../../share/shareCard';
+import { canvasToBlob, renderShareCard, SHARE_FORMATS, type ShareFormat } from '../../share/shareCard';
 import { buildSummaryText } from '../../share/summaryText';
 import { Button } from '../ui/Button';
 import { IconCopy, IconDownload, IconLink, IconPrint, IconShare } from '../ui/Icons';
@@ -76,12 +76,15 @@ function ShareModal({ open, onClose, calculatorName, scenarioName, summary, url,
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);
+  // Portrait first: 4:5 is the shape that fills a phone feed, and this brand's readers are on one.
+  const [format, setFormat] = useState<ShareFormat>('portrait');
+  const spec = SHARE_FORMATS.find((f) => f.id === format) ?? SHARE_FORMATS[0];
 
   useEffect(() => {
     if (!open) return;
     const c = canvasRef.current;
     if (c) {
-      const render = () => renderShareCard(c, { calculatorName, scenarioName, summary });
+      const render = () => renderShareCard(c, { calculatorName, scenarioName, summary }, format);
       render();
       // Re-render once web fonts are available so the card uses Inter instead of the fallback.
       if (typeof document !== 'undefined' && 'fonts' in document) {
@@ -91,7 +94,7 @@ function ShareModal({ open, onClose, calculatorName, scenarioName, summary, url,
       }
     }
     setCanShareFiles(typeof navigator !== 'undefined' && 'canShare' in navigator && typeof navigator.share === 'function');
-  }, [open, calculatorName, scenarioName, summary]);
+  }, [open, calculatorName, scenarioName, summary, format]);
 
   const download = useCallback(async () => {
     const c = canvasRef.current;
@@ -100,13 +103,13 @@ function ShareModal({ open, onClose, calculatorName, scenarioName, summary, url,
     if (!blob) return toast('Could not create the image');
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `truecost-${calculatorName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`;
+    a.download = `truecost-${calculatorName.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${format}.png`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     toast('Image downloaded');
-  }, [calculatorName, toast]);
+  }, [calculatorName, format, toast]);
 
   const nativeShare = useCallback(async () => {
     const c = canvasRef.current;
@@ -142,8 +145,18 @@ function ShareModal({ open, onClose, calculatorName, scenarioName, summary, url,
 
   return (
     <Modal open={open} onClose={onClose} title="Share this result" icon={<IconShare />}>
-      <div className="share-preview">
-        <canvas ref={canvasRef} style={{ aspectRatio: '1200 / 630' }} aria-label="Preview of the shareable result card" role="img" />
+      {/* Shape first: it decides where the image can go, so it is chosen before anything is saved. */}
+      <div className="share-formats" role="radiogroup" aria-label="Image shape">
+        {SHARE_FORMATS.map((f) => (
+          <button key={f.id} type="button" role="radio" aria-checked={f.id === format} className={`share-format ${f.id === format ? 'active' : ''}`} onClick={() => setFormat(f.id)}>
+            <span className="glyph" aria-hidden="true" style={{ aspectRatio: `${f.w} / ${f.h}` }} />
+            <span className="lab">{f.label}</span>
+            <span className="hint">{f.hint}</span>
+          </button>
+        ))}
+      </div>
+      <div className="share-preview" style={{ maxWidth: format === 'landscape' ? '100%' : format === 'story' ? 260 : 380, marginInline: 'auto' }}>
+        <canvas ref={canvasRef} style={{ aspectRatio: `${spec.w} / ${spec.h}` }} aria-label={`Preview of the shareable result card, ${spec.label} shape`} role="img" />
       </div>
       <div className="share-actions">
         <Button variant="primary" icon={<IconDownload />} onClick={download}>

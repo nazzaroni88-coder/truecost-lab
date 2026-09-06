@@ -3,6 +3,7 @@ import type { VehicleInputs, VehicleResult } from '../../engine/calculators/vehi
 import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
 import { markUserEdited, stateNameOf, VEHICLE_FIELD_IDS as ID, type VehicleFormInputs } from './inputs';
 import { STATE_DATA_REVIEWED, STATE_SOURCES } from '../../data/stateDefaults';
+import { summaryDrivers } from '../drivers';
 
 export function vehicleSummary(inputs: VehicleInputs, r: VehicleResult): ShareSummary {
   const { a, b, comparison: c } = r;
@@ -26,6 +27,11 @@ export function vehicleSummary(inputs: VehicleInputs, r: VehicleResult): ShareSu
       { label: 'Depreciation', value: `${fmtMoney(a.depreciation)} vs ${fmtMoney(b.depreciation)}` },
       { label: `Invest the difference, ${years} yr @ ${fmtPct(inputs.shared.investmentReturn, 1)}`, value: c.invest.saver === 'tie' ? '—' : fmtMoney(c.invest.balanceAtHorizon), tone: 'positive' },
     ],
+    drivers: summaryDrivers(a.categories, b.categories, a.name, b.name, diff),
+    investLine:
+      c.invest.saver === 'tie'
+        ? undefined
+        : `Invest the difference at ${fmtPct(inputs.shared.investmentReturn, 1)} and it could be worth ${fmtMoney(roundHeadline(c.invest.balanceAtHorizon))} after ${yearsLabel(years)}.`,
   };
 }
 

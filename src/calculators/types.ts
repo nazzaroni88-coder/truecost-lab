@@ -17,6 +17,25 @@ export interface SummaryRow {
 }
 
 /** Compact, calculator-agnostic description of a result — used by the share card, copy summary, and scenario compare. */
+/**
+ * A category that actually creates the gap between the two options.
+ *
+ * Two absolute figures ("$23,506 vs $14,709") make the reader do the subtraction and then work out
+ * which way it cuts. A driver states the difference, who pays it, and how much of the answer it
+ * accounts for — which is the difference between a number and an insight.
+ */
+export interface SummaryDriver {
+  label: string;
+  /** How much more this category costs for `costlierFor`, always positive. */
+  amount: number;
+  /** The option this category is worse for. */
+  costlierFor: 'a' | 'b';
+  /** Name of that option, so a share card needs no other context. */
+  costlierName: string;
+  /** Fraction of the total gap this category accounts for, 0–1. */
+  shareOfGap: number;
+}
+
 export interface ShareSummary {
   headline: string;
   sub: string;
@@ -27,6 +46,10 @@ export interface ShareSummary {
   /** The single number most worth comparing across scenarios (signed, positive favors B / the recommendation). */
   keyMetric: number;
   keyMetricLabel: string;
+  /** Biggest first. Optional: only two-option calculators have meaningful category drivers. */
+  drivers?: SummaryDriver[];
+  /** "Invest the difference" outcome, when the calculator projects one. */
+  investLine?: string;
 }
 
 export interface Insight {
