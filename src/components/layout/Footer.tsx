@@ -47,6 +47,9 @@ export function Footer() {
           <p style={{ marginTop: 14 }} className="micro">
             Your scenarios are saved only in this browser. Nothing is sent to a server.
           </p>
+          <p className="micro" style={{ marginTop: 6 }}>
+            TrueCost Lab v0.1 · Example values last reviewed September 2026
+          </p>
         </div>
       </div>
     </footer>

@@ -43,6 +43,24 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
     { key: 'buy', label: 'Buying: unrecoverable costs', tone: 'b', total: r.buy.unrecoverableCosts, segments: buyerSegments },
   ];
 
+  // Monthly cash flow in the first month of each year.
+  const cashX: number[] = [];
+  const cashOwn: number[] = [];
+  const cashRent: number[] = [];
+  for (let y = 1; y <= years; y++) {
+    const t = (y - 1) * 12 + 1;
+    cashX.push(y);
+    cashOwn.push(r.buy.series.outflows[t] ?? 0);
+    cashRent.push(r.rent.series.outflows[t] ?? 0);
+  }
+  let crossYear: number | null = null;
+  for (let k = 1; k < cashX.length; k++) {
+    if (cashRent[k - 1] < cashOwn[k - 1] && cashRent[k] >= cashOwn[k]) {
+      crossYear = cashX[k];
+      break;
+    }
+  }
+
   const wealthX = r.wealthByYear.filter((p) => p.year <= Math.max(years, Math.min(40, Math.max(15, years + 5)))).map((p) => p.year);
   const wealthBuy = r.wealthByYear.slice(0, wealthX.length).map((p) => p.buy);
   const wealthRent = r.wealthByYear.slice(0, wealthX.length).map((p) => p.rent);
@@ -140,6 +158,30 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
         <p className="micro muted" style={{ marginTop: 'var(--sp-3)' }}>
           The renter's portfolio is built from the down payment and closing costs ({fmtMoney(r.buy.downPayment + r.buy.closingCosts)}) plus every month the owner spends more than the renter, invested at {fmtPct(i.investmentReturn, 1)}. In months where renting costs more, the renter draws down the same account.
         </p>
+      </ResultSection>
+
+      <ResultSection id="cash-flow" kicker="Month to month" title="What leaves your pocket each month" sub={`Rent rises ${fmtPct(i.rentGrowth, 1)} a year while the mortgage payment stays fixed; taxes, insurance and upkeep drift up with value and inflation.${i.mortgageTermYears <= years ? ' The owner’s payment drops off once the mortgage is paid.' : ''}`}>
+        <LineChart
+          x={cashX}
+          series={[
+            { key: 'own', label: 'Owning', color: OPTION_COLORS.b, values: cashOwn },
+            { key: 'rent', label: 'Renting', color: OPTION_COLORS.a, values: cashRent },
+          ]}
+          height={200}
+          xFormat={(v) => `yr ${fmtNumber(v, 0)}`}
+          yFormat={(v) => fmtMoneyCompact(v)}
+          markers={crossYear !== null ? [{ x: crossYear, label: `rent passes owning · yr ${crossYear}` }] : []}
+          ariaLabel={`Monthly cost of renting versus owning over ${years} years`}
+          tooltip={(k) => ({ title: `Year ${cashX[k]}`, rows: [{ label: 'Owning', value: `${fmtMoney(cashOwn[k])}/mo`, color: OPTION_COLORS.b }, { label: 'Renting', value: `${fmtMoney(cashRent[k])}/mo`, color: OPTION_COLORS.a }] })}
+        />
+        <div className="legend" style={{ marginTop: 8 }}>
+          <span className="item">
+            <span className="sw" style={{ background: OPTION_COLORS.b }} /> Owning (all costs)
+          </span>
+          <span className="item">
+            <span className="sw" style={{ background: OPTION_COLORS.a }} /> Renting
+          </span>
+        </div>
       </ResultSection>
 
       <ResultSection id="over-time" kicker="Over time" title="Net worth from each path, year by year" sub="Owner: home value minus selling costs and remaining mortgage. Renter: the invested difference. Where the lines cross is the break-even.">
