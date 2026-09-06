@@ -797,18 +797,28 @@ table,
   position: relative;
   display: inline-flex;
 }
+/*
+ * The glyph stays 18px, but the thing you tap is 24px.
+ *
+ * There are dozens of these — one per field — and at 18x18 they were under the WCAG 2.5.8 minimum
+ * target size and genuinely fiddly on a phone. A transparent border grows the hit area without
+ * moving the glyph or changing the label's line height, so nothing reflows.
+ */
 .tip-btn {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  border: 0;
+  border: 3px solid transparent;
   background: var(--tc-surface-3);
+  background-clip: padding-box;
   color: var(--tc-ink-3);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   padding: 0;
+  box-sizing: content-box;
+  margin: -3px;
 }
 .tip-btn:hover,
 .tip-btn[aria-expanded='true'] {
@@ -1301,10 +1311,16 @@ table,
   overflow: hidden;
   text-overflow: ellipsis;
 }
+/*
+ * Selection by weight and edge, not by inverting the whole chip. The inverse fill painted a solid
+ * near-white slab in dark mode, which on a phone made the scenario switcher the loudest thing on
+ * screen — louder than the answer it belongs to.
+ */
 .scenario-tab[aria-selected='true'] {
-  background: var(--tc-inverse-surface);
-  color: var(--tc-inverse-ink);
-  border-color: var(--tc-ink);
+  background: var(--tc-surface-3);
+  color: var(--tc-ink);
+  border-color: var(--tc-ink-4);
+  font-weight: 600;
 }
 .scenario-actions {
   display: flex;
@@ -2867,6 +2883,17 @@ dialog.modal::backdrop {
   color: var(--tc-ink-3);
   white-space: nowrap;
 }
+/*
+ * A margin annotation needs a margin. Below this width there is none: the note wraps the row's
+ * label onto a second line and orphans its category dot, which costs more than it explains. The
+ * same fact is already stated in the answer stats ("Biggest gap — Depreciation"), so nothing is
+ * lost by dropping it here; the row keeps its rule marker.
+ */
+@media (max-width: 560px) {
+  .row-note {
+    display: none;
+  }
+}
 .cmp-table tr.driver td:first-child {
   box-shadow: inset 2px 0 0 var(--tc-line-strong);
   padding-left: 10px;
@@ -2875,4 +2902,12 @@ dialog.modal::backdrop {
 /* A driver row's label carries the marker; its figures stay in their columns unshaded. */
 .cmp-table tr.driver td {
   color: var(--tc-ink);
+}
+
+/* Text links sitting in a row of chips align to the same 24px tap target as the chips do. */
+.chips a,
+.chips-scroll a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 }
