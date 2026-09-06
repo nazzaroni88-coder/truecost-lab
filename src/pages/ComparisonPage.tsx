@@ -4,6 +4,8 @@ import type { Preset } from '../calculators/types';
 import { getCalculatorById } from '../calculators/registry';
 import { comparisonBySlug, relatedComparisons, type Comparison } from '../content/comparisons';
 import { LinkButton } from '../components/ui/Button';
+import { RobustnessNote } from '../components/results/Robustness';
+import type { SensitivityRow } from '../engine/core/sensitivity';
 import { IconArrowRight } from '../components/ui/Icons';
 import { NotFoundPage } from './NotFoundPage';
 
@@ -19,9 +21,16 @@ export function useComparisonResult(c: Comparison) {
     const preset = def?.presets.find((p: Preset<unknown>) => p.id === c.presetId);
     if (!def || !preset) return null;
     const inputs = def.normalize(preset.inputs);
-    const summary = def.summary(inputs, def.compute(inputs));
-    return { def, preset, inputs, summary };
+    const result = def.compute(inputs);
+    const summary = def.summary(inputs, result);
+    return { def, preset, inputs, summary, result };
   }, [c]);
+}
+
+/** Not every calculator runs a tornado — Purchase vs Invest shows a return range instead. */
+function sensitivityOf(result: unknown): SensitivityRow[] | null {
+  const rows = (result as { sensitivity?: unknown } | null)?.sensitivity;
+  return Array.isArray(rows) && rows.length > 0 ? (rows as SensitivityRow[]) : null;
 }
 
 export default function ComparisonPage() {
@@ -40,7 +49,7 @@ export default function ComparisonPage() {
   const computed = useComparisonResult(comparison ?? { slug: '', calculatorId: '', presetId: '', question: '', intro: '' });
 
   if (!comparison || !computed) return <NotFoundPage />;
-  const { def, preset, inputs, summary } = computed;
+  const { def, preset, inputs, summary, result } = computed;
   const related = relatedComparisons(comparison);
   const drivers = summary.drivers ?? [];
   const rows = drivers.length ? [] : summary.rows.filter((r) => r.value && r.value !== '—');
@@ -63,6 +72,9 @@ export default function ComparisonPage() {
           {summary.headline}
         </h2>
         <p className="answer-sub">{summary.sub}</p>
+        {/* A page that publishes a verdict owes the reader whether the verdict survives its own
+            assumptions. There is no tornado on this page, so the note does not link to one. */}
+        {sensitivityOf(result) && <RobustnessNote rows={sensitivityOf(result)!} link={false} />}
       </section>
 
       {(drivers.length > 0 || rows.length > 0) && (

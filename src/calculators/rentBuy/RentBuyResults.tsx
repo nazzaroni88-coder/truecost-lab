@@ -67,7 +67,7 @@ export function RentBuyResults({ inputs: i, result: r, onChange }: ResultsProps<
 
   return (
     <>
-      <AnswerHero winner={winnerTone} headline={headline} sub={sub} stats={stats} warnings={r.warnings} />
+      <AnswerHero winner={winnerTone} headline={headline} sub={sub} sensitivity={r.sensitivity} stats={stats} warnings={r.warnings} />
 
       <ResultSection id="why" kicker="Why?" title="Cash flow is not the same as wealth" sub="Rent is gone for good. Part of an owner's payment is gone too (interest, taxes, insurance, upkeep, transaction costs) — but part comes back as equity, plus any appreciation.">
         <StackedBars rows={rows} ariaLabel="Unrecoverable costs of renting versus buying" />

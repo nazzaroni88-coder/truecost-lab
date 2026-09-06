@@ -53,7 +53,7 @@ export function DebtInvestResults({ inputs: i, result: r, onChange }: ResultsPro
 
   return (
     <>
-      <AnswerHero winner={winnerTone} headline={headline} sub={sub} stats={stats} warnings={r.warnings} />
+      <AnswerHero winner={winnerTone} headline={headline} sub={sub} sensitivity={r.sensitivity} stats={stats} warnings={r.warnings} />
 
       <ResultSection id="why" kicker="Why?" title="Guaranteed interest vs. an uncertain return">
         <Callout tone="info" icon={<IconShield />}>

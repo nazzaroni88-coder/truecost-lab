@@ -73,7 +73,7 @@ export function CustomResults({ inputs, result, onChange }: ResultsProps<CustomI
 
   return (
     <>
-      <AnswerHero winner={empty ? 'none' : winner} headline={headline} sub={sub} stats={stats} warnings={result.warnings} />
+      <AnswerHero winner={empty ? 'none' : winner} headline={headline} sub={sub} sensitivity={empty ? undefined : result.sensitivity} stats={stats} warnings={result.warnings} />
 
       {!empty && (
         <>

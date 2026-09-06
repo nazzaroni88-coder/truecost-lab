@@ -105,7 +105,7 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
 
   return (
     <>
-      <AnswerHero winner={winner} headline={headline} sub={sub} stats={stats} warnings={result.warnings} />
+      <AnswerHero winner={winner} headline={headline} sub={sub} sensitivity={result.sensitivity} stats={stats} warnings={result.warnings} />
 
       <ResultSection id="why" kicker="Why?" title="Where the money goes" sub={`Sticker prices: ${fmtMoney(inputs.a.price)} vs ${fmtMoney(inputs.b.price)}. True ${years}-year cost after resale: ${fmtMoney(a.totalCost)} vs ${fmtMoney(b.totalCost)}.`}>
         <StackedBars rows={rows} ariaLabel={`Cost breakdown for ${a.name} and ${b.name}`} />

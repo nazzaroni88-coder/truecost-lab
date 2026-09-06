@@ -2,6 +2,8 @@ import type { ReactNode } from 'react';
 import { InfoTip } from '../ui/InfoTip';
 import { IconWarning } from '../ui/Icons';
 import { SharePrompt } from './SharePrompt';
+import { RobustnessNote } from './Robustness';
+import type { SensitivityRow } from '../../engine/core/sensitivity';
 
 export interface HeroStat {
   label: string;
@@ -11,7 +13,7 @@ export interface HeroStat {
   help?: string;
 }
 
-export function AnswerHero({ winner, kicker = 'The answer', headline, sub, stats, warnings, children }: { winner: 'a' | 'b' | 'tie' | 'none'; kicker?: string; headline: ReactNode; sub?: ReactNode; stats?: HeroStat[]; warnings?: string[]; children?: ReactNode }) {
+export function AnswerHero({ winner, kicker = 'The answer', headline, sub, sensitivity, stats, warnings, children }: { winner: 'a' | 'b' | 'tie' | 'none'; kicker?: string; headline: ReactNode; sub?: ReactNode; sensitivity?: SensitivityRow[]; stats?: HeroStat[]; warnings?: string[]; children?: ReactNode }) {
   return (
     <>
     <section className={`answer-hero winner-${winner === 'none' ? 'tie' : winner}`} aria-labelledby="answer-heading">
@@ -20,6 +22,9 @@ export function AnswerHero({ winner, kicker = 'The answer', headline, sub, stats
         {headline}
       </h2>
       {sub && <p className="answer-sub">{sub}</p>}
+      {/* Whether the answer survives the inputs being wrong belongs with the answer, not four
+          sections below it. */}
+      {sensitivity && <RobustnessNote rows={sensitivity} />}
       {stats && stats.length > 0 && (
         <div className="answer-stats">
           {stats.map((s) => (

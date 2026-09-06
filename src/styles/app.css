@@ -3254,3 +3254,32 @@ dialog.modal::backdrop {
     padding-left: calc(var(--sp-3) + 3px);
   }
 }
+
+/*
+ * The robustness verdict: whether the answer survives the inputs being wrong.
+ *
+ * It qualifies the headline, so it sits with it — a ruled line rather than a callout box, because
+ * a coloured panel here would read as a warning about the result rather than a property of it.
+ */
+.robustness {
+  margin: var(--sp-3) 0 0;
+  padding-left: var(--sp-3);
+  border-left: 3px solid var(--robust-tone, var(--tc-line-strong));
+  font-size: var(--fs-small);
+  color: var(--tc-ink-2);
+  max-width: 68ch;
+}
+.robustness.solid {
+  --robust-tone: var(--tc-positive);
+}
+.robustness.fragile {
+  --robust-tone: var(--tc-b);
+}
+.robustness strong {
+  color: var(--tc-ink);
+  font-weight: 600;
+}
+.robustness a {
+  white-space: nowrap;
+  font-weight: 600;
+}
