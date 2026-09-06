@@ -74,43 +74,57 @@
   --tc-warning-line: #f4dfb8;
   --tc-info-soft: #eef4ff;
 
-  /* Chart category palette */
-  --tc-cat-depreciation: #7a5af5;
-  --tc-cat-interest: #e4574b;
-  --tc-cat-taxes: #7d8a9c;
-  --tc-cat-fuel: #f2a33a;
-  --tc-cat-insurance: #23a99a;
-  --tc-cat-maintenance: #4a8ff5;
-  --tc-cat-repairs: #e06aa8;
-  --tc-cat-registration: #b0b9c6;
-  --tc-cat-charger: #5bc0be;
-  --tc-cat-incentives: #2f9e63;
-  --tc-cat-rent: #f2a33a;
-  --tc-cat-propertyTax: #7d8a9c;
-  --tc-cat-hoa: #b0b9c6;
-  --tc-cat-pmi: #c98bd8;
-  --tc-cat-closing: #9aa5b5;
-  --tc-cat-selling: #6b7484;
-  --tc-cat-upfront: #7a5af5;
-  --tc-cat-replacements: #a58bf7;
-  --tc-cat-monthly: #f2a33a;
-  --tc-cat-annual: #4a8ff5;
-  --tc-cat-oneTime: #e06aa8;
-  --tc-cat-savings: #23a99a;
-  --tc-cat-resale: #167a4a;
-  --tc-cat-appreciation: #167a4a;
-  --tc-cat-contrib: #9fb8e6;
-  --tc-cat-growth: #1b6ef3;
-  /* Fallback rotation for categories with no dedicated colour */
-  --tc-cat-1: #1b6ef3;
-  --tc-cat-2: #f2a33a;
-  --tc-cat-3: #7a5af5;
-  --tc-cat-4: #23a99a;
-  --tc-cat-5: #e06aa8;
-  --tc-cat-6: #4a8ff5;
-  --tc-cat-7: #7d8a9c;
-  --tc-cat-8: #e4574b;
-  --tc-cat-9: #b0b9c6;
+  /*
+   * Chart categories — an ordered slate ramp with two semantic accents, replacing nine competing
+   * fully-saturated hues (violet, red, orange, teal, blue, pink...). A cost breakdown is not nine
+   * unrelated things: it is one total, divided. So the ramp carries the meaning:
+   *
+   *   DEPTH   = size. The categories that are typically largest are darkest, so a stacked bar
+   *             reads dark-to-light left to right and the shape of the spend is legible before
+   *             you read a single label.
+   *   RUST    = money that buys you nothing. Interest and PMI only. This is the whole point of
+   *             the product, so it gets the one attention-grabbing colour in the chart.
+   *   GREEN   = money you get back. Resale, equity, appreciation, incentives, growth.
+   *
+   * Everything else is graduated slate, distinguished by lightness rather than by hue, which is
+   * how a printed cost chart does it. Hue is reserved for meaning.
+   */
+  --tc-cat-depreciation: #2c3844;
+  --tc-cat-interest: #a05a34;
+  --tc-cat-taxes: #415262;
+  --tc-cat-fuel: #586b7e;
+  --tc-cat-charger: #6f909b;
+  --tc-cat-insurance: #6f859b;
+  --tc-cat-maintenance: #8b9eb1;
+  --tc-cat-repairs: #a8b8c7;
+  --tc-cat-registration: #c6d1dc;
+  --tc-cat-incentives: #2f7d55;
+  --tc-cat-rent: #415262;
+  --tc-cat-propertyTax: #586b7e;
+  --tc-cat-hoa: #8b9eb1;
+  --tc-cat-pmi: #a05a34;
+  --tc-cat-closing: #a8b8c7;
+  --tc-cat-selling: #c6d1dc;
+  --tc-cat-upfront: #2c3844;
+  --tc-cat-replacements: #a8b8c7;
+  --tc-cat-monthly: #586b7e;
+  --tc-cat-annual: #6f859b;
+  --tc-cat-oneTime: #8b9eb1;
+  --tc-cat-savings: #2f7d55;
+  --tc-cat-resale: #2f7d55;
+  --tc-cat-appreciation: #2f7d55;
+  --tc-cat-contrib: #6f859b;
+  --tc-cat-growth: #2f7d55;
+  /* Fallback rotation for categories with no dedicated colour — the same ramp, well spaced. */
+  --tc-cat-1: #2c3844;
+  --tc-cat-2: #586b7e;
+  --tc-cat-3: #8b9eb1;
+  --tc-cat-4: #415262;
+  --tc-cat-5: #a8b8c7;
+  --tc-cat-6: #6f859b;
+  --tc-cat-7: #c6d1dc;
+  --tc-cat-8: #a05a34;
+  --tc-cat-9: #6f909b;
 
   /*
    * Elevation. --sh-1 is gone to `none`: it used to sit under every card, and a shadow on every
@@ -187,42 +201,47 @@
   --tc-warning-line: rgba(240, 180, 85, 0.35);
   --tc-info-soft: rgba(91, 155, 255, 0.12);
 
-  /* Chart categories — lightened so every series stays legible on a dark ground */
-  --tc-cat-depreciation: #a189ff;
-  --tc-cat-interest: #ff8b7e;
-  --tc-cat-taxes: #9aa5b8;
-  --tc-cat-fuel: #f7b95e;
-  --tc-cat-insurance: #45c9b8;
-  --tc-cat-maintenance: #6fa8ff;
-  --tc-cat-repairs: #ef8dc0;
-  --tc-cat-registration: #7d8798;
-  --tc-cat-charger: #6fd6d3;
-  --tc-cat-incentives: #59c98d;
-  --tc-cat-rent: #f7b95e;
-  --tc-cat-propertyTax: #9aa5b8;
-  --tc-cat-hoa: #7d8798;
-  --tc-cat-pmi: #d7a4e4;
-  --tc-cat-closing: #98a4b6;
-  --tc-cat-selling: #7d8798;
-  --tc-cat-upfront: #a189ff;
-  --tc-cat-replacements: #bda6ff;
-  --tc-cat-monthly: #f7b95e;
-  --tc-cat-annual: #6fa8ff;
-  --tc-cat-oneTime: #ef8dc0;
-  --tc-cat-savings: #45c9b8;
-  --tc-cat-resale: #59c98d;
-  --tc-cat-appreciation: #59c98d;
-  --tc-cat-contrib: #52627f;
-  --tc-cat-growth: #5b9bff;
-  --tc-cat-1: #5b9bff;
-  --tc-cat-2: #f7b95e;
-  --tc-cat-3: #a189ff;
-  --tc-cat-4: #45c9b8;
-  --tc-cat-5: #ef8dc0;
-  --tc-cat-6: #6fa8ff;
-  --tc-cat-7: #9aa5b8;
-  --tc-cat-8: #ff8b7e;
-  --tc-cat-9: #7d8798;
+  /*
+   * The same ordered ramp, inverted for a dark ground: on paper the biggest cost is the darkest
+   * mark, on a dark screen it is the brightest. Depth still means size, rust still means money that
+   * buys nothing, green still means money you get back. The dimmest step stays clearly separated
+   * from the bar track (--tc-surface-2) so a small segment is never lost in it.
+   */
+  --tc-cat-depreciation: #d4dbe2;
+  --tc-cat-interest: #e08b57;
+  --tc-cat-taxes: #b4bfcb;
+  --tc-cat-fuel: #95a3b2;
+  --tc-cat-charger: #91acb6;
+  --tc-cat-insurance: #798a9a;
+  --tc-cat-maintenance: #607080;
+  --tc-cat-repairs: #4f5c69;
+  --tc-cat-registration: #424d57;
+  --tc-cat-incentives: #57b98a;
+  --tc-cat-rent: #b4bfcb;
+  --tc-cat-propertyTax: #95a3b2;
+  --tc-cat-hoa: #607080;
+  --tc-cat-pmi: #e08b57;
+  --tc-cat-closing: #4f5c69;
+  --tc-cat-selling: #424d57;
+  --tc-cat-upfront: #d4dbe2;
+  --tc-cat-replacements: #4f5c69;
+  --tc-cat-monthly: #95a3b2;
+  --tc-cat-annual: #798a9a;
+  --tc-cat-oneTime: #607080;
+  --tc-cat-savings: #57b98a;
+  --tc-cat-resale: #57b98a;
+  --tc-cat-appreciation: #57b98a;
+  --tc-cat-contrib: #798a9a;
+  --tc-cat-growth: #57b98a;
+  --tc-cat-1: #d4dbe2;
+  --tc-cat-2: #95a3b2;
+  --tc-cat-3: #607080;
+  --tc-cat-4: #b4bfcb;
+  --tc-cat-5: #4f5c69;
+  --tc-cat-6: #798a9a;
+  --tc-cat-7: #424d57;
+  --tc-cat-8: #e08b57;
+  --tc-cat-9: #91acb6;
 
   /* Shadows read as depth only if they are darker than the surface. --sh-1 is none in both themes. */
   --sh-1: none;

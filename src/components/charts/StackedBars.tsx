@@ -42,7 +42,9 @@ export function StackedBars({ rows, ariaLabel }: { rows: StackRow[]; ariaLabel: 
                 <strong>{fmtMoney(r.total)}</strong>
               </span>
             </div>
-            <div style={{ display: 'flex', height: 28, borderRadius: 8, overflow: 'hidden', background: 'var(--tc-surface-2)', position: 'relative' }}>
+            {/* Square ends: a rounded capsule reads as a progress pill, but this is a ruled bar of
+                account totals sharing one scale with the bar above it. */}
+            <div style={{ display: 'flex', height: 26, borderRadius: 'var(--r-xs)', overflow: 'hidden', background: 'var(--tc-surface-2)', position: 'relative' }}>
               {r.segments
                 .filter((s) => s.value > 0)
                 .map((s) => {
@@ -58,7 +60,23 @@ export function StackedBars({ rows, ariaLabel }: { rows: StackRow[]; ariaLabel: 
                       onMouseLeave={() => setTip(null)}
                       onFocus={() => setTip({ row: r.key, seg: s.key })}
                       onBlur={() => setTip(null)}
-                      style={{ width: `${w}%`, background: s.color, opacity: tip && !active ? 0.55 : 1, transition: 'opacity 120ms', position: 'relative', outline: 'none', boxShadow: active ? 'inset 0 0 0 2px var(--tc-surface)' : undefined }}
+                      style={{
+                        width: `${w}%`,
+                        background: s.color,
+                        opacity: tip && !active ? 0.55 : 1,
+                        transition: 'opacity 120ms',
+                        position: 'relative',
+                        outline: 'none',
+                        /*
+                         * A hairline divides each segment from the next. On an ordered tonal ramp
+                         * adjacent steps sit around 1.3-1.5:1 against each other — enough to read as
+                         * a gradient, not enough to count reliably by eye. The rule makes every
+                         * segment countable regardless of how close two tones are, which is also how
+                         * a ruled column of figures separates its entries. Inset shadow rather than a
+                         * border so it costs no layout width.
+                         */
+                        boxShadow: active ? 'inset 0 0 0 2px var(--tc-page)' : 'inset -1px 0 0 var(--tc-page)',
+                      }}
                     >
                       {active && (
                         <div className="chart-tip" style={{ left: '50%', top: 0 }}>
