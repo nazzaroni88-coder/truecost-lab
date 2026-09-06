@@ -70,7 +70,13 @@ export function HomePage() {
               <span className="micro muted">5 years · 12,000 mi/yr</span>
             </div>
             <div className="answer-headline" style={{ fontSize: '1.35rem', marginTop: 10 }}>
-              <span className={`text-${demo.comparison.cheaper}`}>{demoWin.name}</span> is estimated to cost <span className="text-positive">{fmtMoney(Math.abs(demo.comparison.nominalDifference), 0)}</span> less than {demo.comparison.cheaper === 'b' ? demoA.name : demoB.name} over 5 years.
+              {/* The amount takes the winner's colour, not green. Green means "money you get back"
+                  in the charts (resale, equity, incentives), and the same sentence is rendered in
+                  the winner's colour in Featured comparisons below and on every calculator page —
+                  three conventions for one figure was two too many. */}
+              <span className={`text-${demo.comparison.cheaper}`}>{demoWin.name}</span> is estimated to cost{' '}
+              <span className={`amt text-${demo.comparison.cheaper}`}>{fmtMoney(Math.abs(demo.comparison.nominalDifference), 0)}</span> less than{' '}
+              {demo.comparison.cheaper === 'b' ? demoA.name : demoB.name} over 5 years.
             </div>
             <div className="answer-stats" style={{ marginTop: 'var(--sp-4)' }}>
               <div className="stat a">

@@ -2349,20 +2349,31 @@ dialog.modal::backdrop {
   font-size: var(--fs-small);
   color: var(--tc-ink-2);
 }
+/*
+ * The homepage FAQ, as a ruled accordion.
+ *
+ * This was a third disclosure class alongside .insight and .disclosure, and the only one still
+ * drawing a bordered rounded box per item — eight of them stacked down the page, which put the
+ * boxed-in look back on the last screen of the homepage after it had been removed everywhere else.
+ */
 .faq {
   display: grid;
-  gap: 8px;
+  gap: 0;
   max-width: 800px;
 }
 .faq details {
-  border: 1px solid var(--tc-line);
-  border-radius: var(--r-md);
-  background: var(--tc-surface);
+  border: 0;
+  border-top: 1px solid var(--tc-rule);
+  border-radius: 0;
+  background: transparent;
+}
+.faq details:first-child {
+  border-top: 0;
 }
 .faq summary {
   list-style: none;
   cursor: pointer;
-  padding: 14px 16px;
+  padding: 14px 0;
   font-weight: 500;
   display: flex;
   align-items: center;
@@ -2380,7 +2391,7 @@ dialog.modal::backdrop {
   transform: rotate(180deg);
 }
 .faq .body {
-  padding: 0 16px 16px;
+  padding: 0 0 16px;
   color: var(--tc-ink-2);
   font-size: var(--fs-small);
 }
@@ -2394,12 +2405,14 @@ dialog.modal::backdrop {
   gap: 12px;
   align-items: flex-start;
 }
+/* A glyph in the margin, not a tinted chip — same treatment as the break-even and Q&A icons. */
 .trust .ico {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: var(--tc-positive-soft);
-  color: var(--tc-positive);
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  border-radius: 0;
+  background: none;
+  color: var(--tc-ink-4);
   display: grid;
   place-items: center;
   flex: none;
@@ -2568,8 +2581,13 @@ dialog.modal::backdrop {
 }
 
 /* ---------- Calculator glyph chips ---------- */
+/*
+ * Calculator marks keep their tint — colour-coding the five engines is real wayfinding, and it is
+ * the same mark in the page header — but not the 28% squircle, which is an app-icon shape and the
+ * last one on the page. Sharp corners, like everything else.
+ */
 .calc-ico {
-  border-radius: 28%;
+  border-radius: var(--r-lg);
   background: var(--ico-bg);
   color: var(--ico-fg);
   flex: none;
@@ -2590,9 +2608,14 @@ dialog.modal::backdrop {
   --ico-bg: var(--tc-b-soft);
   --ico-fg: var(--tc-b-strong);
 }
+/*
+ * This referenced a --tc-cat-depreciation-soft token that has never existed, so it always fell back
+ * to the hardcoded violet of the OLD chart palette — a colour no longer used anywhere in the app
+ * once the categories moved to the slate ramp. Uses real tokens now.
+ */
 .calc-ico-custom {
-  --ico-bg: var(--tc-cat-depreciation-soft, rgba(122, 90, 245, 0.14));
-  --ico-fg: var(--tc-cat-depreciation);
+  --ico-bg: var(--tc-surface-3);
+  --ico-fg: var(--tc-ink-2);
 }
 
 /* ---------- Shared-input strip (always-visible inputs that apply to both options) ---------- */
