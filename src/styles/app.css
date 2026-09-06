@@ -2078,14 +2078,23 @@ dialog.modal::backdrop {
   display: grid;
   gap: var(--sp-4);
 }
+/*
+ * The preview holds a canvas whose bitmap is 2400px wide, and .modal-body is a grid. Grid items
+ * default to `min-width: auto`, which resolves to min-content — and a replaced element with a
+ * percentage width contributes its INTRINSIC width there. So the preview refused to shrink below
+ * the bitmap, blew the modal out to thousands of pixels, and showed a zoomed corner of the card
+ * instead of the card. min-width: 0 opts out of that floor; max-width belts it.
+ */
 .share-preview {
   border-radius: var(--r-md);
   overflow: hidden;
   border: 1px solid var(--tc-line);
   background: var(--tc-surface-2);
+  min-width: 0;
 }
 .share-preview canvas {
   width: 100%;
+  max-width: 100%;
   height: auto;
   display: block;
 }
