@@ -14,7 +14,9 @@ Live dev: `npm run dev` → http://localhost:5173
 | Purchase vs Invest | `/calculators/purchase-vs-invest` | Long-term opportunity cost of a one-time or recurring purchase |
 | Custom Comparison | `/calculators/custom-comparison` | Any Option A vs Option B with upfront, ongoing, future costs, savings, resale, lifespan |
 
-Every calculator delivers the same results hierarchy: **The answer → Why → What matters most (sensitivity) → Break-even → If you invested the difference → Plain-English Q&A → Show me the math**.
+Every calculator presents the same results hierarchy: **The answer → Why → What matters most (sensitivity) → Break-even → If you invested the difference → Plain-English Q&A → Show me the math**.
+
+Underneath there are two shapes. **Vehicle, Rent vs Buy and Custom** are two-option calculators built on the shared `CashflowSeries` + `compareCashflows` engine, which supplies the crossover chart, break-even search and invest-the-difference projection. **Debt vs Invest and Purchase vs Invest** compare two strategies for the same money, so they simulate net worth directly and share the compounding and sensitivity code but not the cash-flow comparison. Both are documented on the Methodology page.
 
 ## Stack
 
@@ -83,6 +85,9 @@ src/
 - Loan APRs compound monthly (APR/12). Investment returns are effective annual rates ((1+r)^(1/12) − 1 per month). Contributions land at month end; upfront amounts at time zero.
 - "Invest the difference" invests the month-by-month cash-flow difference between two options and adds the difference in exit values (resale / equity). Milestones inside the horizon mean "if you exited then"; beyond it the balance compounds with no new contributions.
 - Presets are illustrative, rounded estimates — labeled as such in the UI. No live data is fetched.
+- Purchase incentives are cash at purchase; they do not reduce the sales-tax base or the resale value.
+- Loan APRs are nominal (APR/12 monthly) while investment returns are effective annual. A 6.9% APR costs 7.12% effective, so never compare the two headline numbers directly — the engine simulates both paths instead.
+- Theme tokens live in `src/styles/tokens.css`, declared once for light and once for dark. Components never hardcode a colour. The one exception is `src/share/shareCard.ts`, which paints to a canvas (no CSS variables) and deliberately stays light so a shared image looks the same for everyone.
 - Full methodology: `/methodology` in the app.
 
 ## Roadmap ideas

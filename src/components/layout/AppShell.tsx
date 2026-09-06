@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { ToastProvider } from '../ui/Toast';
+import { ThemeProvider } from '../ui/Theme';
 import { Footer } from './Footer';
 import { Header } from './Header';
 
@@ -21,7 +22,8 @@ function ScrollManager() {
 
 export function AppShell() {
   return (
-    <ToastProvider>
+    <ThemeProvider>
+      <ToastProvider>
       <div className="app-shell">
         <a href="#main" className="skip-link">
           Skip to content
@@ -33,6 +35,7 @@ export function AppShell() {
         </main>
         <Footer />
       </div>
-    </ToastProvider>
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

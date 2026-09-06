@@ -24,6 +24,8 @@ const gasCar: VehicleOption = {
   firstYearDepreciation: 20,
   annualDepreciation: 12,
   resaleOverride: null,
+  purchaseIncentive: 0,
+  chargerCost: 0,
 };
 
 const ev: VehicleOption = {

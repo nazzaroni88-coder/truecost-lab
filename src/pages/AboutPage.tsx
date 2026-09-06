@@ -34,7 +34,7 @@ export function AboutPage() {
 
         <h2>Cents of Adventure</h2>
         <p>
-          Cents of Adventure is about getting more adventure per dollar — practical money and travel guidance without the hype. TrueCost Lab is the tool we reach for whenever someone asks “is it worth it?”. Visit <a href="https://centsofadventure.com" target="_blank" rel="noopener noreferrer">centsofadventure.com</a>.
+          Cents of Adventure is about getting more adventure per dollar — practical money and travel guidance without the hype. TrueCost Lab is the tool we reach for whenever someone asks “is it worth it?”. Visit <a href="https://www.centsofadventure.me" target="_blank" rel="noopener noreferrer">centsofadventure.me</a>.
         </p>
       </div>
     </div>

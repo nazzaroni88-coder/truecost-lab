@@ -183,8 +183,8 @@ strong {
   position: absolute;
   left: var(--sp-3);
   top: -100px;
-  background: var(--tc-ink);
-  color: #fff;
+  background: var(--tc-inverse-surface);
+  color: var(--tc-inverse-ink);
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   z-index: 100;
@@ -198,7 +198,7 @@ strong {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--tc-surface-blur);
   backdrop-filter: saturate(160%) blur(10px);
   border-bottom: 1px solid var(--tc-line);
 }
@@ -556,7 +556,7 @@ strong {
 .callout-warning {
   background: var(--tc-warning-soft);
   color: var(--tc-warning);
-  border-color: #f4dfb8;
+  border-color: var(--tc-warning-line);
 }
 .callout-neutral {
   background: var(--tc-surface-2);
@@ -762,8 +762,8 @@ strong {
   left: 50%;
   transform: translateX(-50%);
   width: min(300px, 80vw);
-  background: var(--tc-ink);
-  color: #fff;
+  background: var(--tc-inverse-surface);
+  color: var(--tc-inverse-ink);
   padding: 10px 12px;
   border-radius: var(--r-md);
   font-size: var(--fs-micro);
@@ -874,7 +874,7 @@ strong {
   height: 20px;
   margin-top: -7px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--tc-surface);
   border: 2px solid var(--tc-primary);
   box-shadow: var(--sh-2);
 }
@@ -882,7 +882,7 @@ strong {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--tc-surface);
   border: 2px solid var(--tc-primary);
   box-shadow: var(--sh-2);
 }
@@ -919,7 +919,7 @@ strong {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--tc-surface);
   box-shadow: var(--sh-1);
   transition: transform var(--dur-fast) var(--ease);
 }
@@ -1166,8 +1166,8 @@ strong {
   text-overflow: ellipsis;
 }
 .scenario-tab[aria-selected='true'] {
-  background: var(--tc-ink);
-  color: #fff;
+  background: var(--tc-inverse-surface);
+  color: var(--tc-inverse-ink);
   border-color: var(--tc-ink);
 }
 .scenario-actions {
@@ -1412,8 +1412,8 @@ strong {
 .chart-tip {
   position: absolute;
   pointer-events: none;
-  background: var(--tc-ink);
-  color: #fff;
+  background: var(--tc-inverse-surface);
+  color: var(--tc-inverse-ink);
   padding: 8px 10px;
   border-radius: 8px;
   font-size: var(--fs-micro);
@@ -1755,7 +1755,7 @@ strong {
     right: 0;
     bottom: 0;
     z-index: 30;
-    background: rgba(255, 255, 255, 0.96);
+    background: var(--tc-surface-blur-strong);
     backdrop-filter: blur(10px);
     border-top: 1px solid var(--tc-line);
     padding: 10px var(--sp-4) calc(10px + env(safe-area-inset-bottom));
@@ -1768,17 +1768,28 @@ strong {
     font-size: var(--fs-small);
     line-height: 1.3;
   }
+  /* The verdict is the whole point of the bar, so let it wrap to two lines and clamp there rather
+     than truncating a sentence like "Toyota Camry is estimated to cost $11,…" on one line. */
   .answer-bar .txt strong {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-weight: 600;
+  }
+  .answer-bar .txt .muted {
     display: block;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* Reserve enough room that the bar never sits on top of the last section. Two lines of verdict
+     plus a caption plus padding is ~104px; the safe-area inset covers home-indicator devices. */
   .has-answer-bar {
-    padding-bottom: 80px;
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
   }
   .app-shell:has(.has-answer-bar) .site-footer {
-    padding-bottom: calc(var(--sp-8) + 80px);
+    padding-bottom: calc(var(--sp-8) + 112px + env(safe-area-inset-bottom));
   }
 }
 
@@ -1794,7 +1805,7 @@ dialog.modal {
   color: var(--tc-ink);
 }
 dialog.modal::backdrop {
-  background: rgba(20, 28, 42, 0.45);
+  background: var(--tc-backdrop);
   backdrop-filter: blur(2px);
 }
 .modal-head {
@@ -1852,8 +1863,8 @@ dialog.modal::backdrop {
   pointer-events: none;
 }
 .toast {
-  background: var(--tc-ink);
-  color: #fff;
+  background: var(--tc-inverse-surface);
+  color: var(--tc-inverse-ink);
   padding: 10px 16px;
   border-radius: var(--r-pill);
   font-size: var(--fs-small);
@@ -2230,8 +2241,42 @@ dialog.modal::backdrop {
 
 /* ---------- Print ---------- */
 @media print {
-  :root {
+  /* Force the light palette on paper whatever theme is on screen: dark surfaces waste ink and
+     print as muddy grey. Redeclaring the tokens keeps every component consistent for free. */
+  :root,
+  :root[data-theme='dark'],
+  :root[data-theme='light'] {
+    color-scheme: light;
     --tc-page: #fff;
+    --tc-bg: #fff;
+    --tc-surface: #fff;
+    --tc-surface-2: #f4f6fa;
+    --tc-surface-3: #e9edf4;
+    --tc-line: #d4dae4;
+    --tc-line-strong: #b9c2d0;
+    --tc-surface-blur: #fff;
+    --tc-surface-blur-strong: #fff;
+    --tc-ink: #101317;
+    --tc-ink-2: #33383f;
+    --tc-ink-3: #5b636e;
+    --tc-ink-4: #8a919c;
+    --tc-inverse-surface: #101317;
+    --tc-inverse-ink: #fff;
+    --tc-primary: #1256c7;
+    --tc-primary-strong: #0e4299;
+    --tc-primary-soft: #eaf1fe;
+    --tc-a: #1256c7;
+    --tc-a-strong: #0e4299;
+    --tc-b: #b85a08;
+    --tc-b-strong: #8f4506;
+    --tc-positive: #0f5f38;
+    --tc-negative: #b3261e;
+    --tc-warning: #8a4f08;
+    --tc-warning-soft: #fff6e5;
+    --tc-warning-line: #e5d2a8;
+    --sh-1: none;
+    --sh-2: none;
+    --sh-3: none;
   }
   body {
     background: #fff;
@@ -2281,4 +2326,143 @@ dialog.modal::backdrop {
 }
 .print-only {
   display: none;
+}
+
+/* ---------- Calculator glyph chips ---------- */
+.calc-ico {
+  border-radius: 28%;
+  background: var(--ico-bg);
+  color: var(--ico-fg);
+  flex: none;
+}
+.calc-ico-vehicle {
+  --ico-bg: var(--tc-a-soft);
+  --ico-fg: var(--tc-a-strong);
+}
+.calc-ico-home {
+  --ico-bg: var(--tc-positive-soft);
+  --ico-fg: var(--tc-positive);
+}
+.calc-ico-debt {
+  --ico-bg: var(--tc-negative-soft);
+  --ico-fg: var(--tc-negative);
+}
+.calc-ico-purchase {
+  --ico-bg: var(--tc-b-soft);
+  --ico-fg: var(--tc-b-strong);
+}
+.calc-ico-custom {
+  --ico-bg: var(--tc-cat-depreciation-soft, rgba(122, 90, 245, 0.14));
+  --ico-fg: var(--tc-cat-depreciation);
+}
+
+/* ---------- Shared-input strip (always-visible inputs that apply to both options) ---------- */
+.shared-strip {
+  padding: var(--sp-3) 0 var(--sp-1);
+  border-bottom: 1px solid var(--tc-line);
+  margin-bottom: var(--sp-1);
+}
+.shared-strip-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-bottom: var(--sp-2);
+}
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle {
+  flex: none;
+}
+.theme-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Scroll affordance for the sticky form pane ---------- */
+.calc-form-wrap {
+  position: relative;
+  min-width: 0;
+}
+.calc-form-wrap::after {
+  content: '';
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  height: 48px;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  background: var(--tc-fade-down);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+}
+.calc-form-wrap[data-more='true']::after {
+  opacity: 1;
+}
+.form-scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--tc-surface-2);
+  border: 1px solid var(--tc-line);
+  color: var(--tc-ink-2);
+  border-radius: var(--r-pill);
+  padding: 4px 12px;
+  font-size: var(--fs-micro);
+  font-weight: 500;
+  box-shadow: var(--sh-1);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.calc-form-wrap[data-more='true'] .form-scroll-hint {
+  opacity: 1;
+}
+@media (max-width: 960px) {
+  .calc-form-wrap::after,
+  .form-scroll-hint {
+    display: none;
+  }
+}
+
+/* ---------- Blocked / invalid results state ---------- */
+.results-blocked {
+  border-color: var(--tc-warning-line);
+}
+.answer-hero.blocked::before {
+  background: var(--tc-warning);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+/* The nav already pushes itself right on desktop, so the actions sit next to it, not after a gap. */
+.site-nav.desktop + .header-actions {
+  margin-left: 0;
+}
+@media (max-width: 860px) {
+  .header-actions {
+    margin-left: auto;
+  }
+}
+
+/* `.btn` and `.menu-btn` have equal specificity and `.btn` is declared later, so the plain
+   `.menu-btn { display: none }` above never won and the hamburger leaked onto desktop.
+   These two rules are specific enough to settle it. */
+.btn.menu-btn {
+  display: none;
+}
+@media (max-width: 860px) {
+  .btn.menu-btn {
+    display: inline-flex;
+  }
 }

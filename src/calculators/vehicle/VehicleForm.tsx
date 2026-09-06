@@ -5,7 +5,7 @@ import { vehicleValueAtMonth } from '../../engine/calculators/vehicle';
 import { NumberField } from '../../components/ui/NumberField';
 import { OptionTabs } from '../../components/forms/OptionTabs';
 import { Disclosure, FormSection, SegmentedField, SelectField, Switch, TextField } from '../../components/ui/Controls';
-import { fmtMoney, fmtPct, yearsLabel } from '../../lib/format';
+import { effectiveAnnual, fmtMoney, fmtPct, yearsLabel } from '../../lib/format';
 import { TERM_OPTIONS } from './presets';
 
 type Tab = 'a' | 'b' | 'shared';
@@ -15,13 +15,30 @@ export function VehicleForm({ inputs, onChange }: FormProps<VehicleInputs>) {
   const setOpt = (side: 'a' | 'b', patch: Partial<VehicleOption>) => onChange({ ...inputs, [side]: { ...inputs[side], ...patch } });
   const setShared = (patch: Partial<VehicleShared>) => onChange({ ...inputs, shared: { ...inputs.shared, ...patch } });
 
+  const anyGas = inputs.a.fuelType === 'gas' || inputs.b.fuelType === 'gas';
+  const anyEv = inputs.a.fuelType === 'electric' || inputs.b.fuelType === 'electric';
+
   return (
     <div>
+      {/* These two drive the answer more than anything else and apply to both cars, so they stay
+          visible instead of hiding behind a tab the user may never open. */}
+      <div className="shared-strip">
+        <div className="shared-strip-head">
+          <span className="eyebrow">Applies to both cars</span>
+          <button type="button" className="link-btn micro" onClick={() => setTab('shared')}>
+            More shared settings
+          </button>
+        </div>
+        <div className="grid-2">
+          <NumberField label="Years you'll own it" suffix="yr" value={inputs.shared.ownershipYears} onChange={(v) => setShared({ ownershipYears: Math.round(v) })} min={1} max={20} decimals={0} step={1} help="How long until you sell or trade in. Longer ownership spreads out the early depreciation hit, so this usually moves the answer more than any other input." />
+          <NumberField label="Miles per year" suffix="mi" value={inputs.shared.annualMiles} onChange={(v) => setShared({ annualMiles: v })} min={0} max={100000} decimals={0} help="The U.S. average is about 13,500 miles a year. Check your last two odometer readings." />
+        </div>
+      </div>
       <OptionTabs<Tab>
         tabs={[
           { key: 'a', label: 'Option A', name: inputs.a.name || 'Car A', tone: 'a' },
           { key: 'b', label: 'Option B', name: inputs.b.name || 'Car B', tone: 'b' },
-          { key: 'shared', label: 'Shared', name: 'Miles, prices, years', tone: 'shared' },
+          { key: 'shared', label: 'Shared', name: anyGas && anyEv ? 'Gas, power, economics' : anyEv ? 'Power, economics' : 'Gas, economics', tone: 'shared' },
         ]}
         value={tab}
         onChange={setTab}
@@ -64,11 +81,31 @@ function OptionFields({ side, option: o, shared, onPatch }: { side: 'a' | 'b'; o
           <>
             <NumberField label="Down payment" format="currency" value={o.downPayment} onChange={(v) => onPatch({ downPayment: v })} min={0} max={1_000_000} />
             <div className="grid-2">
-              <NumberField label="Loan APR" format="percent" value={o.apr} onChange={(v) => onPatch({ apr: v })} min={0} max={40} step={0.25} help="Annual percentage rate on the loan. Rates are usually higher for used cars and lower credit scores." />
+              <NumberField
+                label="Loan APR"
+                format="percent"
+                value={o.apr}
+                onChange={(v) => onPatch({ apr: v })}
+                min={0}
+                max={40}
+                step={0.25}
+                hint={o.apr > 0 ? `Costs ${fmtPct(effectiveAnnual(o.apr), 2)} a year in practice` : undefined}
+                help="Annual percentage rate on the loan, quoted the U.S. way: nominal, charged as APR ÷ 12 each month. Because it compounds monthly it costs slightly more per year than the headline number, which matters when you compare it against an expected investment return."
+              />
               <SelectField label="Loan term" value={o.termMonths} onChange={(v) => onPatch({ termMonths: v })} options={TERM_OPTIONS} />
             </div>
           </>
         )}
+        <NumberField
+          label="Tax credits & rebates"
+          format="currency"
+          value={o.purchaseIncentive}
+          onChange={(v) => onPatch({ purchaseIncentive: v })}
+          min={0}
+          max={100000}
+          hint="EV and plug-in incentives can be worth thousands"
+          help="Federal or state tax credits, manufacturer rebates and utility incentives. We treat this as cash received at purchase and it does not reduce sales tax or the car's resale value. Eligibility rules change often and depend on the vehicle, your income and whether you buy or lease — check what you actually qualify for and enter that amount."
+        />
       </FormSection>
 
       <FormSection title="Fuel or charging">
@@ -76,7 +113,10 @@ function OptionFields({ side, option: o, shared, onPatch }: { side: 'a' | 'b'; o
         {o.fuelType === 'gas' ? (
           <NumberField label="Fuel economy" suffix="mpg" value={o.mpg} onChange={(v) => onPatch({ mpg: v })} min={1} max={150} help="Combined city/highway miles per gallon. Use the real-world number you expect, not the sticker's best case. Hybrids go here too." />
         ) : (
-          <NumberField label="Efficiency" suffix="mi / kWh" value={o.milesPerKwh} onChange={(v) => onPatch({ milesPerKwh: v })} min={0.5} max={10} decimals={2} step={0.1} help="Miles per kilowatt-hour including charging losses. Most EVs get 3–4.5 mi/kWh in mixed driving; large trucks and SUVs less." />
+          <>
+            <NumberField label="Efficiency" suffix="mi / kWh" value={o.milesPerKwh} onChange={(v) => onPatch({ milesPerKwh: v })} min={0.5} max={10} decimals={2} step={0.1} help="Miles per kilowatt-hour including charging losses. Most EVs get 3–4.5 mi/kWh in mixed driving; large trucks and SUVs less." />
+            <NumberField label="Home charger install" format="currency" value={o.chargerCost} onChange={(v) => onPatch({ chargerCost: v })} min={0} max={50000} hint="One-time. Typically $500–$2,000 installed" help="Cost of buying and installing a Level 2 home charger, paid once at purchase. Leave at 0 if you already have one or will rely on public charging — but note the electricity rate below assumes home charging." />
+          </>
         )}
       </FormSection>
 

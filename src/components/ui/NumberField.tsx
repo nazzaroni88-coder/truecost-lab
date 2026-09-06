@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { InfoTip } from './InfoTip';
+import { useInvalidFields } from '../forms/InvalidFields';
 
 export type NumberFormat = 'currency' | 'percent' | 'number';
 
@@ -63,11 +64,22 @@ export function NumberField({ label, value, onChange, format = 'number', prefix,
 
   const parsed = parseLoose(text);
   const outOfRange = parsed !== null && ((min !== undefined && parsed < min) || (max !== undefined && parsed > max));
-  const invalid = focused ? false : parsed === null || outOfRange;
+  // Out-of-range values are flagged immediately, even while typing: the field is showing a number
+  // the results were NOT computed from, and staying silent until blur hides that mismatch.
+  const invalid = outOfRange || (!focused && parsed === null);
+  const usedValue = formatForDisplay(value, format, dec);
   let error: string | null = null;
   if (!focused && parsed === null) error = 'Enter a number';
-  else if (outOfRange && min !== undefined && parsed! < min) error = `Minimum is ${formatForDisplay(min, format, dec)}`;
-  else if (outOfRange && max !== undefined && parsed! > max) error = `Maximum is ${formatForDisplay(max, format, dec)}`;
+  else if (outOfRange && min !== undefined && parsed! < min) error = `Minimum is ${formatForDisplay(min, format, dec)} — still using ${usedValue}`;
+  else if (outOfRange && max !== undefined && parsed! > max) error = `Maximum is ${formatForDisplay(max, format, dec)} — still using ${usedValue}`;
+
+  // Report to the calculator shell so the results can show a "check your inputs" state.
+  const fields = useInvalidFields();
+  const setInvalid = fields?.setInvalid;
+  useEffect(() => {
+    setInvalid?.(inputId, invalid ? label : null);
+  }, [setInvalid, inputId, invalid, label]);
+  useEffect(() => () => setInvalid?.(inputId, null), [setInvalid, inputId]);
 
   const commit = (n: number) => {
     let v = n;

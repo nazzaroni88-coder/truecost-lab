@@ -70,7 +70,7 @@ export function HomePage() {
               <span className="micro muted">5 years · 12,000 mi/yr</span>
             </div>
             <div className="answer-headline" style={{ fontSize: '1.35rem', marginTop: 10 }}>
-              <span className={`text-${demo.comparison.cheaper}`}>{demoWin.name}</span> costs about <span className="text-positive">{fmtMoney(Math.abs(demo.comparison.nominalDifference), 0)}</span> less than {demo.comparison.cheaper === 'b' ? demoA.name : demoB.name} over 5 years.
+              <span className={`text-${demo.comparison.cheaper}`}>{demoWin.name}</span> is estimated to cost <span className="text-positive">{fmtMoney(Math.abs(demo.comparison.nominalDifference), 0)}</span> less than {demo.comparison.cheaper === 'b' ? demoA.name : demoB.name} over 5 years.
             </div>
             <div className="answer-stats" style={{ marginTop: 'var(--sp-4)' }}>
               <div className="stat a">
@@ -269,8 +269,8 @@ export function HomePage() {
               Practical money and travel guidance for people who want more adventure per dollar. TrueCost Lab is our decision engine — the tool we wished existed every time someone asked “is it worth it?”
             </p>
           </div>
-          <a className="btn" href="https://centsofadventure.com" target="_blank" rel="noopener noreferrer">
-            Visit centsofadventure.com
+          <a className="btn" href="https://www.centsofadventure.me" target="_blank" rel="noopener noreferrer">
+            Visit centsofadventure.me
           </a>
         </div>
       </section>

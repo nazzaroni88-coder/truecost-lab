@@ -28,6 +28,8 @@ const baseOption: VehicleOption = {
   firstYearDepreciation: 18,
   annualDepreciation: 11,
   resaleOverride: null,
+  purchaseIncentive: 0,
+  chargerCost: 0,
 };
 
 const baseShared: VehicleShared = {

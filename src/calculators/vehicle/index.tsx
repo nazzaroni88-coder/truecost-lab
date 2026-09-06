@@ -15,6 +15,10 @@ function normalize(raw: unknown): VehicleInputs {
     if (o.fuelType !== 'gas' && o.fuelType !== 'electric') o.fuelType = 'gas';
     if (!Number.isFinite(o.termMonths) || o.termMonths < 1) o.termMonths = 60;
     if (o.resaleOverride !== null && !(typeof o.resaleOverride === 'number' && Number.isFinite(o.resaleOverride))) o.resaleOverride = null;
+    // Fields added after launch: share links and saved scenarios from before then have no value here,
+    // and mergeWithDefaults already supplied 0. Clamping keeps hand-edited links sane.
+    o.purchaseIncentive = Math.max(0, Math.min(o.purchaseIncentive, 1_000_000));
+    o.chargerCost = Math.max(0, Math.min(o.chargerCost, 100_000));
   }
   merged.shared.ownershipYears = Math.min(20, Math.max(1, Math.round(merged.shared.ownershipYears)));
   return merged;

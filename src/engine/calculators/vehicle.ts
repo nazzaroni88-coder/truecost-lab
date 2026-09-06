@@ -17,7 +17,7 @@
 
 import type { CashflowSeries, CategoryTotal } from '../core/cashflow';
 import { compareCashflows, type ComparisonResult, yearIndexOfMonth } from '../core/cashflow';
-import { amortizationSchedule, inflate, paymentForLoan, pct } from '../core/money';
+import { amortizationSchedule, EPS, inflate, paymentForLoan, pct } from '../core/money';
 import { findBreakEven, runSensitivity, type SensitivityRow, type SensitivityVariable } from '../core/sensitivity';
 import { fmtMoney, fmtNumber, fmtPct } from '../../lib/format';
 
@@ -45,8 +45,16 @@ export interface VehicleOption {
   tireIntervalMiles: number;
   firstYearDepreciation: number; // percent
   annualDepreciation: number; // percent, years 2+
-  /** If set (> 0), overrides the curve so the value at the end of ownership equals this. */
+  /** If set, pins the value at the end of ownership to this amount (0 = scrap). */
   resaleOverride: number | null;
+  /**
+   * Purchase incentives: federal/state tax credits, manufacturer or utility rebates.
+   * Modelled as cash received at purchase. Does not reduce the sales-tax base (most states tax the
+   * full sale price) and does not change the car's resale value.
+   */
+  purchaseIncentive: number;
+  /** One-time setup cost, e.g. installing a home charger for an EV. */
+  chargerCost: number;
 }
 
 export interface VehicleShared {
@@ -71,6 +79,11 @@ export interface VehicleOptionResult {
   categories: CategoryTotal[];
   cashAtSigning: number;
   initialOutlay: number; // cash + the part of the trade-in actually used on this car
+  /** Incentives actually applied (clamped to the price you pay). */
+  purchaseIncentive: number;
+  chargerCost: number;
+  /** What leaves your pocket at purchase: initial outlay + charger − incentives. */
+  netUpfront: number;
   /** Trade-in value beyond what the purchase absorbs — the dealer hands this back to you. */
   tradeInSurplus: number;
   loanAmount: number;
@@ -122,24 +135,59 @@ export interface VehicleBreakEven {
   value: number | null;
 }
 
-export function vehicleValueAtMonth(o: VehicleOption, ownershipYears: number, t: number): number {
-  const d1 = pct(o.firstYearDepreciation);
-  let d = pct(o.annualDepreciation);
-  const price = o.price;
-  if (o.resaleOverride !== null && o.resaleOverride > 0 && ownershipYears > 0) {
-    const target = Math.min(o.resaleOverride, price);
-    if (ownershipYears <= 1) {
-      const dEff = 1 - target / price;
-      return price * Math.pow(1 - dEff, t / 12);
-    }
-    const afterFirst = price * (1 - d1);
-    const ratio = target / afterFirst;
-    d = ratio >= 1 ? 0 : 1 - Math.pow(ratio, 1 / (ownershipYears - 1));
-  }
+/** The plain depreciation curve: a first-year drop, then a steady annual rate. */
+function naturalValue(price: number, d1: number, d: number, t: number): number {
   if (t <= 0) return price;
   if (t <= 12) return price * Math.pow(1 - d1, t / 12);
-  const yearsAfterFirst = (t - 12) / 12;
-  return price * (1 - d1) * Math.pow(1 - d, yearsAfterFirst);
+  return price * (1 - d1) * Math.pow(1 - d, (t - 12) / 12);
+}
+
+/**
+ * Vehicle value at month `t`.
+ *
+ * When the user states an expected resale value, that number must be honoured exactly at the end of
+ * the ownership period — it is their own estimate, and quietly ignoring it would be worse than not
+ * offering the field. Two ways to land on it:
+ *
+ *  1. Preferred: keep the stated first-year drop and solve for the annual rate that reaches the
+ *     target over the remaining years. Only possible when the target is at or below the value after
+ *     the first year (cars do not appreciate back).
+ *  2. Otherwise (target above the after-first-year value, or a scrap value of zero): scale the whole
+ *     curve toward the target. value(t) = price + (natural(t) − price) × k, with k chosen so the end
+ *     lands exactly on the target. This keeps the curve's shape and monotonicity while pinning both
+ *     ends, and correctly implies a gentler first year when you expect a high resale.
+ */
+export function vehicleValueAtMonth(o: VehicleOption, ownershipYears: number, t: number): number {
+  const d1 = pct(o.firstYearDepreciation);
+  const d = pct(o.annualDepreciation);
+  const price = o.price;
+  if (price <= 0) return 0;
+  if (t <= 0) return price;
+
+  const override = o.resaleOverride;
+  if (override === null || !Number.isFinite(override) || ownershipYears <= 0) {
+    return naturalValue(price, d1, d, t);
+  }
+
+  const target = Math.min(Math.max(0, override), price);
+  const months = ownershipYears * 12;
+  const afterFirst = price * (1 - d1);
+
+  // 1. Keep the first-year drop and re-solve the later years.
+  if (ownershipYears > 1 && target > 0 && target <= afterFirst && afterFirst > 0) {
+    const solved = 1 - Math.pow(target / afterFirst, 1 / (ownershipYears - 1));
+    return naturalValue(price, d1, solved, t);
+  }
+
+  // 2. Scale the natural curve so it lands exactly on the target.
+  const natEnd = naturalValue(price, d1, d, months);
+  const drop = price - natEnd;
+  if (drop <= EPS) {
+    // A flat natural curve gives nothing to scale, so fall back to a straight line.
+    return price - (price - target) * Math.min(1, t / months);
+  }
+  const k = (price - target) / drop;
+  return price + (naturalValue(price, d1, d, t) - price) * k;
 }
 
 export function computeVehicleOption(o: VehicleOption, s: VehicleShared): VehicleOptionResult {
@@ -175,9 +223,15 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
   }
   const initialOutlay = cashAtSigning + tradeInApplied;
 
+  // Incentives are cash back at purchase; a rebate larger than the car itself is not meaningful.
+  const purchaseIncentive = Math.min(Math.max(0, o.purchaseIncentive), gross);
+  if (o.purchaseIncentive > gross + 0.5) warnings.push(`${o.name}: the incentive of ${fmtMoney(o.purchaseIncentive)} is more than the ${fmtMoney(gross)} price with tax and fees, so we capped it.`);
+  const chargerCost = Math.max(0, o.chargerCost);
+
   const outflows: number[] = new Array(months + 1).fill(0);
   const exitValue: number[] = new Array(months + 1).fill(0);
-  outflows[0] = initialOutlay;
+  const netUpfront = initialOutlay + chargerCost - purchaseIncentive;
+  outflows[0] = netUpfront;
 
   const tiresPerYear = o.tireIntervalMiles > 0 ? (s.annualMiles / o.tireIntervalMiles) * o.tireSetCost : 0;
   const monthlyMiles = s.annualMiles / 12;
@@ -255,6 +309,9 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
     { key: 'depreciation', label: 'Depreciation', amount: depreciation },
     { key: 'interest', label: 'Loan interest', amount: totalInterest },
     { key: 'taxesFees', label: 'Sales tax & fees', amount: salesTax + fees },
+    // Only shown when used, so a normal gas-vs-gas comparison keeps a clean breakdown.
+    ...(chargerCost > 0.5 ? [{ key: 'charger', label: 'Home charger install', amount: chargerCost }] : []),
+    ...(purchaseIncentive > 0.5 ? [{ key: 'incentives', label: 'Tax credits & rebates', amount: -purchaseIncentive, kind: 'recovered' as const }] : []),
     { key: 'fuel', label: o.fuelType === 'electric' ? 'Electricity' : 'Fuel', amount: fuel },
     { key: 'insurance', label: 'Insurance', amount: insurance },
     { key: 'maintenance', label: 'Maintenance & tires', amount: maintenance + tires },
@@ -274,6 +331,9 @@ export function computeVehicleOption(o: VehicleOption, s: VehicleShared): Vehicl
     categories,
     cashAtSigning,
     initialOutlay,
+    purchaseIncentive,
+    chargerCost,
+    netUpfront,
     tradeInSurplus,
     loanAmount,
     monthlyPayment,

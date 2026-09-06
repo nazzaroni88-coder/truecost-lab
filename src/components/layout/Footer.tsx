@@ -12,7 +12,7 @@ export function Footer() {
             <Wordmark withBy={false} />
           </Link>
           <p>
-            A <a href="https://centsofadventure.com" target="_blank" rel="noopener noreferrer">Cents of Adventure</a> tool for understanding what big decisions actually cost.
+            A <a href="https://www.centsofadventure.me" target="_blank" rel="noopener noreferrer">Cents of Adventure</a> tool for understanding what big decisions actually cost.
           </p>
           <p className="footer-disclaimer">TrueCost Lab is educational. Results are estimates based on the assumptions you enter. Projected investment returns are illustrative and never guaranteed. Nothing here is personalized financial, tax, or legal advice.</p>
         </div>
@@ -39,8 +39,8 @@ export function Footer() {
               <Link to="/#faq">FAQ</Link>
             </li>
             <li>
-              <a href="https://centsofadventure.com" target="_blank" rel="noopener noreferrer">
-                centsofadventure.com
+              <a href="https://www.centsofadventure.me" target="_blank" rel="noopener noreferrer">
+                centsofadventure.me
               </a>
             </li>
           </ul>

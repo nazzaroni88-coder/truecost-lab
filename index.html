@@ -3,7 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" content="#0f131a" />
+    <script>
+      // Stamp the theme before the stylesheet paints so there is no flash of the wrong background.
+      // Dark is the default; only an explicit stored choice switches to light.
+      (function () {
+        try {
+          var t = localStorage.getItem('truecost-theme');
+          document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      })();
+    </script>
     <meta name="description" content="TrueCost Lab helps you understand what big decisions really cost — cars, homes, debt, and purchases — including depreciation, interest, and what happens if you invest the difference. A Cents of Adventure tool." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="TrueCost Lab" />

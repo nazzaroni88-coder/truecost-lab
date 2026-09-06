@@ -14,13 +14,49 @@ import { fmtMoney } from '../lib/format';
 import { useToast } from '../components/ui/Toast';
 import { ShareBar } from '../components/results/ShareBar';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
+import { InvalidFieldsProvider, useInvalidFields } from '../components/forms/InvalidFields';
 import { NotFoundPage } from './NotFoundPage';
 
 export function CalculatorPage() {
   const { slug } = useParams();
   const def = slug ? getCalculatorBySlug(slug) : undefined;
   if (!def) return <NotFoundPage />;
-  return <CalculatorShell key={def.id} def={def} />;
+  return (
+    <InvalidFieldsProvider>
+      <CalculatorShell key={def.id} def={def} />
+    </InvalidFieldsProvider>
+  );
+}
+
+/**
+ * Adds a fade and a "scroll for more" pill to the sticky inputs pane so it is obvious the pane has
+ * its own scroll and how much of the form is left. Without it the pane silently cuts off.
+ */
+function useScrollAffordance() {
+  const scrollRef = useRef<HTMLElement>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    const wrap = wrapRef.current;
+    if (!el || !wrap) return;
+    const update = () => {
+      const more = el.scrollHeight - el.clientHeight - el.scrollTop > 24;
+      wrap.setAttribute('data-more', more ? 'true' : 'false');
+    };
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+    ro?.observe(el);
+    // The form's height changes as tabs and disclosures open, so watch its contents too.
+    const mo = new MutationObserver(update);
+    mo.observe(el, { childList: true, subtree: true });
+    return () => {
+      el.removeEventListener('scroll', update);
+      ro?.disconnect();
+      mo.disconnect();
+    };
+  }, []);
+  return { scrollRef, wrapRef };
 }
 
 function deepEqual(a: unknown, b: unknown): boolean {
@@ -42,6 +78,8 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   const [mobileView, setMobileView] = useState<'inputs' | 'results'>('inputs');
   const isMobile = useMediaQuery('(max-width: 960px)');
   const menuRef = useRef<HTMLDivElement>(null);
+  const { scrollRef, wrapRef } = useScrollAffordance();
+  const invalidFields = useInvalidFields()?.invalid ?? [];
   const resultsRef = useRef<HTMLDivElement>(null);
   const importedHash = useRef<string | null>(null);
 
@@ -265,7 +303,8 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
           />
         </div>
         <div className="calc-layout">
-          <aside className="calc-form card" aria-label="Inputs" hidden={isMobile && mobileView !== 'inputs'}>
+          <div className="calc-form-wrap" ref={wrapRef} hidden={isMobile && mobileView !== 'inputs'}>
+            <aside className="calc-form card" aria-label="Inputs" ref={scrollRef}>
             <div className="card-pad">
               <div style={{ paddingTop: 'var(--sp-3)' }}>
                 <div className="row-between" style={{ marginBottom: 8 }}>
@@ -287,8 +326,12 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                 )}
               </div>
               <Form inputs={inputs} onChange={onChange} />
-            </div>
-          </aside>
+              </div>
+            </aside>
+            <span className="form-scroll-hint" aria-hidden="true">
+              Scroll for more inputs
+            </span>
+          </div>
           <div className="calc-results" ref={resultsRef} id="results" hidden={isMobile && mobileView !== 'results'}>
             <div className="row-between no-print">
               <span className="small muted">
@@ -324,6 +367,15 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                 </div>
               </div>
             )}
+            {invalidFields.length > 0 && (
+              <div className="callout callout-warning no-print" role="alert">
+                <IconWarning />
+                <div>
+                  <strong>Check {invalidFields.length === 1 ? 'one input' : `${invalidFields.length} inputs`} before trusting this answer.</strong>{' '}
+                  {invalidFields.join(', ')} {invalidFields.length === 1 ? 'is' : 'are'} outside the range this model accepts, so the results below still use the last valid value instead of what the form shows.
+                </div>
+              </div>
+            )}
             <ErrorBoundary label="the results" onReset={() => reset(active.id)}>
               <Results inputs={deferredInputs} result={result} onChange={onChange} />
             </ErrorBoundary>
@@ -334,8 +386,18 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
 
       <div className="answer-bar no-print" role="region" aria-label="Result summary">
         <div className="txt">
-          <strong>{summary.headline}</strong>
-          <span className="muted micro">{mobileView === 'inputs' ? 'Updates as you type · tap for the full breakdown' : 'Tap to change the assumptions'}</span>
+          {invalidFields.length > 0 ? (
+            // Never show a confident verdict while a field holds a value the model rejected.
+            <>
+              <strong className="text-negative">Check your inputs — {invalidFields.join(', ')} {invalidFields.length === 1 ? 'is' : 'are'} out of range.</strong>
+              <span className="muted micro">The result below still uses the last valid value</span>
+            </>
+          ) : (
+            <>
+              <strong>{summary.headline}</strong>
+              <span className="muted micro">{mobileView === 'inputs' ? 'Updates as you type · tap for the full breakdown' : 'Tap to change the assumptions'}</span>
+            </>
+          )}
         </div>
         {mobileView === 'inputs' ? (
           <Button

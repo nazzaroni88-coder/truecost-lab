@@ -124,3 +124,13 @@ export function addMonths(d: Date, months: number): Date {
   out.setMonth(out.getMonth() + Math.round(months));
   return out;
 }
+
+/**
+ * Nominal APR (as a percentage, e.g. 6.9) → the effective annual rate it actually costs when
+ * charged monthly. Used to make loan rates comparable with investment returns, which TrueCost
+ * quotes as effective annual rates.
+ */
+export function effectiveAnnual(aprPercent: number): number {
+  if (!Number.isFinite(aprPercent)) return 0;
+  return (Math.pow(1 + aprPercent / 100 / 12, 12) - 1) * 100;
+}

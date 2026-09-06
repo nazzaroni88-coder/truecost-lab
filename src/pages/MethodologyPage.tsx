@@ -55,6 +55,12 @@ export function MethodologyPage() {
             <strong>Investment returns</strong> are effective annual rates. The monthly rate is (1 + r)<sup>1/12</sup> − 1, so “7% a year” grows a lump sum by exactly 7% each year. Contributions are added at the end of each month after growth; upfront amounts are invested immediately.
           </li>
           <li>
+            <strong>Comparing a loan rate with a return.</strong> These two conventions are not the same scale, and the difference is big enough to change an answer. A 6.9% APR charged monthly costs 6.9%/12 each month, which compounds to <strong>7.12%</strong> over a year — more than a 7% expected return. So “finance whenever the APR is below the return” is wrong at the margin: compare the APR's <em>effective</em> rate, which the loan field shows underneath the APR you type. TrueCost never applies that rule of thumb anyway — it simulates both cash-flow paths and compares the wealth each leaves you with.
+          </li>
+          <li>
+            <strong>Purchase incentives</strong> (EV tax credits, rebates) are treated as cash received at the time of purchase. They do not reduce the sales-tax base, because most states tax the full sale price, and they do not change the car's resale value, because the used market prices the car, not your paperwork. If you claim a credit on a tax return rather than at the dealer, you receive it up to a year later, which is slightly worse than modeled.
+          </li>
+          <li>
             <strong>Inflation</strong> is applied year by year to recurring costs where a calculator says so (insurance, maintenance, rent, HOA…). Totals are nominal dollars — what you would actually pay — unless labeled “today's dollars”.
           </li>
           <li>
@@ -66,7 +72,10 @@ export function MethodologyPage() {
         </ul>
 
         <h2 id="engine">The cash-flow engine</h2>
-        <p>Every option becomes three arrays over the horizon:</p>
+        <p>
+          TrueCost has two calculator shapes, not one. <strong>Vehicle</strong>, <strong>Rent vs Buy</strong> and <strong>Custom Comparison</strong> are “two options” calculators: each option becomes a cash-flow series and they run through the shared comparison engine below, which is where the crossover chart, sensitivity ranking, break-even search and invest-the-difference projection all come from. <strong>Debt vs Invest</strong> and <strong>Purchase vs Invest</strong> are “two strategies for the same money” calculators: they simulate net worth directly rather than comparing two purchases, so they share the compounding and sensitivity code but not the cash-flow comparison. Both shapes present the same results hierarchy — answer, why, what matters, break-even, what if you invested — but only the first shape uses the machinery described here.
+        </p>
+        <p>In a two-option calculator, every option becomes three arrays over the horizon:</p>
         <ul>
           <li>
             <code>outflows[t]</code> — money leaving your pocket at month t (t = 0 is the upfront amount).
@@ -163,7 +172,7 @@ true cost    = Σ outflows − exitValue(N)`}</pre>
           <li>All examples are illustrative estimates, not live data. Replace them with current figures.</li>
         </ul>
         <p style={{ marginTop: 'var(--sp-6)' }}>
-          Questions or corrections? TrueCost Lab is a <a href="https://centsofadventure.com" target="_blank" rel="noopener noreferrer">Cents of Adventure</a> project. See also the <Link to="/about">About page</Link>.
+          Questions or corrections? TrueCost Lab is a <a href="https://www.centsofadventure.me" target="_blank" rel="noopener noreferrer">Cents of Adventure</a> project. See also the <Link to="/about">About page</Link>.
         </p>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { LogoMark, Wordmark } from '../../brand/Logo';
 import { CALCULATORS } from '../../calculators/meta';
 import { IconButton } from '../ui/Button';
 import { CalcIcon, IconChevron, IconClose, IconMenu } from '../ui/Icons';
+import { ThemeToggle } from '../ui/Theme';
 
 export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -78,7 +79,10 @@ export function Header() {
             About
           </NavLink>
         </nav>
-        <IconButton label={mobileOpen ? 'Close menu' : 'Open menu'} className="menu-btn" variant="ghost" onClick={() => setMobileOpen((o) => !o)} icon={mobileOpen ? <IconClose /> : <IconMenu />} aria-expanded={mobileOpen} aria-controls="mobile-nav" />
+        <div className="header-actions">
+          <ThemeToggle />
+          <IconButton label={mobileOpen ? 'Close menu' : 'Open menu'} className="menu-btn" variant="ghost" onClick={() => setMobileOpen((o) => !o)} icon={mobileOpen ? <IconClose /> : <IconMenu />} aria-expanded={mobileOpen} aria-controls="mobile-nav" />
+        </div>
       </div>
       {mobileOpen && (
         <nav className="mobile-nav" id="mobile-nav" aria-label="Mobile">

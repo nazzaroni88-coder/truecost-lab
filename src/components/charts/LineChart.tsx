@@ -150,7 +150,7 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
         {hover !== null && (
           <g>
             <line x1={sx(x[hover])} x2={sx(x[hover])} y1={pad.t} y2={pad.t + innerH} stroke="var(--tc-ink-3)" strokeWidth={1} />
-            {series.map((s) => Number.isFinite(s.values[hover]) && <circle key={s.key} cx={sx(x[hover])} cy={sy(s.values[hover])} r={4} fill="#fff" stroke={s.color} strokeWidth={2} />)}
+            {series.map((s) => Number.isFinite(s.values[hover]) && <circle key={s.key} cx={sx(x[hover])} cy={sy(s.values[hover])} r={4} fill="var(--tc-surface)" stroke={s.color} strokeWidth={2} />)}
           </g>
         )}
       </svg>
@@ -186,7 +186,7 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
           <div style={{ fontWeight: 600, marginBottom: 2 }}>{tip.title}</div>
           {tip.rows.map((r) => (
             <div key={r.label} style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
-              <span style={{ color: r.color ?? '#cbd5e1' }}>{r.label}</span>
+              <span style={{ color: r.color ?? 'var(--tc-inverse-ink-2)' }}>{r.label}</span>
               <span className="num">{r.value}</span>
             </div>
           ))}

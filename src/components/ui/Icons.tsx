@@ -213,19 +213,23 @@ const glyphs: Record<CalcIconKind, JSX.Element> = {
   ),
 };
 
-const tones: Record<CalcIconKind, { bg: string; fg: string }> = {
-  vehicle: { bg: '#e8f0fe', fg: '#1256c7' },
-  home: { bg: '#e5f5ec', fg: '#0f5f38' },
-  debt: { bg: '#fdecea', fg: '#b3261e' },
-  purchase: { bg: '#fff1e4', fg: '#b85a08' },
-  custom: { bg: '#efe9fe', fg: '#5b3fd6' },
-};
-
+/** Tinted glyph chips. Colours come from tokens so they re-theme with the rest of the app. */
 export function CalcIcon({ kind, size = 40, className }: { kind: CalcIconKind; size?: number; className?: string }) {
-  const t = tones[kind];
   return (
-    <svg className={`calc-ico ${className ?? ''}`} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" style={{ borderRadius: '28%', background: t.bg, color: t.fg, padding: 0 }}>
+    <svg className={`calc-ico calc-ico-${kind} ${className ?? ''}`} width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
       {glyphs[kind]}
     </svg>
   );
 }
+
+export const IconSun = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+);
+export const IconMoon = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z" />
+  </svg>
+);

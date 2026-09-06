@@ -58,7 +58,7 @@ export function StackedBars({ rows, ariaLabel }: { rows: StackRow[]; ariaLabel: 
                       onMouseLeave={() => setTip(null)}
                       onFocus={() => setTip({ row: r.key, seg: s.key })}
                       onBlur={() => setTip(null)}
-                      style={{ width: `${w}%`, background: s.color, opacity: tip && !active ? 0.55 : 1, transition: 'opacity 120ms', position: 'relative', outline: 'none', boxShadow: active ? 'inset 0 0 0 2px rgba(255,255,255,0.8)' : undefined }}
+                      style={{ width: `${w}%`, background: s.color, opacity: tip && !active ? 0.55 : 1, transition: 'opacity 120ms', position: 'relative', outline: 'none', boxShadow: active ? 'inset 0 0 0 2px var(--tc-surface)' : undefined }}
                     >
                       {active && (
                         <div className="chart-tip" style={{ left: '50%', top: 0 }}>
@@ -77,8 +77,8 @@ export function StackedBars({ rows, ariaLabel }: { rows: StackRow[]; ariaLabel: 
                     bottom: 0,
                     left: `${Math.max(0, ((gross - r.recovered) / max) * 100)}%`,
                     width: `${(Math.min(r.recovered, gross) / max) * 100}%`,
-                    background: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.55) 0 4px, transparent 4px 8px)',
-                    borderLeft: '2px solid #fff',
+                    background: 'repeating-linear-gradient(135deg, var(--tc-recovered-hatch) 0 4px, transparent 4px 8px)',
+                    borderLeft: '2px solid var(--tc-surface)',
                     pointerEvents: 'none',
                   }}
                 />
@@ -96,7 +96,7 @@ export function StackedBars({ rows, ariaLabel }: { rows: StackRow[]; ariaLabel: 
         ))}
         {rows.some((r) => r.recovered && r.recovered > 0) && (
           <span className="item">
-            <span className="sw" style={{ background: 'repeating-linear-gradient(135deg, #b0b9c6 0 2px, #fff 2px 4px)', border: '1px solid var(--tc-line-strong)' }} />
+            <span className="sw" style={{ background: 'repeating-linear-gradient(135deg, var(--tc-ink-4) 0 2px, var(--tc-surface) 2px 4px)', border: '1px solid var(--tc-line-strong)' }} />
             Recovered at the end (resale / equity)
           </span>
         )}
