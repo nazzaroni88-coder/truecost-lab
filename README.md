@@ -21,7 +21,7 @@ Underneath there are two shapes. **Vehicle, Rent vs Buy and Custom** are two-opt
 ## Stack
 
 - Vite + React 18 + TypeScript, no UI framework — a small custom design system in `src/styles`.
-- Pure, unit-tested financial engine in `src/engine` (Vitest: 181 tests across the engine, incentive data, persistence, formatting, and an integration suite that runs every preset of every calculator through normalize → compute → summary → share-link round trip, plus zero and extreme inputs).
+- Pure, unit-tested financial engine in `src/engine` (Vitest: 214 tests across the engine, incentive data, persistence, formatting, and an integration suite that runs every preset of every calculator through normalize → compute → summary → share-link round trip, plus zero and extreme inputs).
 - Custom SVG/CSS charts (`src/components/charts`) — no chart library.
 - Scenarios persist to `localStorage` through a `StorageAdapter` interface (`src/scenarios/storage.ts`) so cloud/account saving can be added later.
 - Shareable links encode the scenario in the URL hash (no backend). Result cards render to a canvas PNG.
@@ -90,6 +90,9 @@ src/
     charts/          LineChart, StackedBars, Tornado, MilestoneBars
     results/         AnswerHero, SensitivitySection, InvestDifference, ShareBar, Sections
     layout/          Header, Footer, AppShell
+  data/              static reference tables: incentives.ts (federal/state EV programmes),
+                     stateDefaults.ts (per-state tax, fuel, electricity, EV fee). Each carries a
+                     dated verification log and is the only file to edit when the figures change
   scenarios/         store (useSyncExternalStore), storage adapters, URL codec
   share/             canvas result card, text summary
   pages/             Home, CalculatorPage (generic shell), Methodology, About, NotFound
@@ -109,6 +112,8 @@ src/
 - "Invest the difference" invests the month-by-month cash-flow difference between two options and adds the difference in exit values (resale / equity). Milestones inside the horizon mean "if you exited then"; beyond it the balance compounds with no new contributions.
 - Presets are illustrative estimates, labeled as such in the UI. No live data is fetched. Each preset file carries a dated verification log naming what was checked and what changed; update it whenever you touch a figure. Depreciation rates are deliberately marked as modelled estimates rather than sourced values, because they are forecasts about future used-car prices.
 - Purchase incentives are cash at purchase; they do not reduce the sales-tax base or the resale value.
+- Per-state starting numbers live in `src/data/stateDefaults.ts` (combined sales tax, gas, residential electricity, EV registration surcharge — 50 states plus DC), with a dated verification log naming the source of each column. Picking a state fills those fields in and labels them; it never overwrites a value the user edited, and applying is idempotent so switching states cannot compound. There is no IP geolocation, no ZIP lookup and no live fetch anywhere in this path — the user tells us the state or we say nothing. Insurance is deliberately not suggested: published state averages disagree by hundreds of dollars a year and an individual premium varies more by driver than by state. Update `STATE_DATA_REVIEWED` in the same commit as any value.
+- Field provenance (`Example` / `CA avg` / `Yours` / `Estimate`) lives in the inputs object, not component state, so it survives saved scenarios and share links. `SUGGESTIBLE_PATHS` in `src/calculators/vehicle/inputs.ts` is the whitelist: it bounds what a suggestion may write and what an untrusted share link may claim.
 - Incentive reference data lives in `src/data/incentives.ts`, which carries a dated verification log at the top and is the ONLY file to edit when programmes change. Update `DATA_REVIEWED` in the same commit — the UI shows that date, so a stale constant makes the app claim freshness it does not have. Every entry needs a source URL; the matcher rules a programme out only on checks it can actually perform (purchase type, price cap, income cap) and surfaces everything else as a caveat.
 - Loan APRs are nominal (APR/12 monthly) while investment returns are effective annual. A 6.9% APR costs 7.12% effective, so never compare the two headline numbers directly — the engine simulates both paths instead.
 - Theme tokens live in `src/styles/tokens.css`, declared once for light and once for dark. Components never hardcode a colour. The one exception is `src/share/shareCard.ts`, which paints to a canvas (no CSS variables) and deliberately stays light so a shared image looks the same for everyone.

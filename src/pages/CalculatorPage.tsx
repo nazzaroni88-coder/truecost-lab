@@ -10,6 +10,7 @@ import { CalcIcon, IconCheck, IconCompare, IconDuplicate, IconMore, IconPlus, Ic
 import { Modal } from '../components/ui/Modal';
 import { Segmented, TextField } from '../components/ui/Controls';
 import { useMediaQuery } from '../lib/useMeasure';
+import { requestFieldFocus } from '../lib/focusField';
 import { fmtMoney } from '../lib/format';
 import { useToast } from '../components/ui/Toast';
 import { ShareBar } from '../components/results/ShareBar';
@@ -128,7 +129,17 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   const deferredInputs = useDeferredValue(inputs);
   const result = useMemo(() => def.compute(deferredInputs), [def, deferredInputs]);
   const summary: ShareSummary = useMemo(() => def.summary(deferredInputs, result), [def, deferredInputs, result]);
-  const activePreset = useMemo(() => def.presets.find((p: Preset<unknown>) => deepEqual(def.normalize(p.inputs), inputs)) ?? null, [def, inputs]);
+  // A preset is "still loaded" if the inputs match it as it would look in the situation the user has
+  // described. Without contextualizePreset, picking a state would instantly un-match every preset
+  // and the chip would go dark even though nothing personal had been entered yet.
+  const contextualize = useCallback(
+    (presetInputs: unknown) => (def.contextualizePreset ? def.contextualizePreset(def.normalize(presetInputs), inputs) : def.normalize(presetInputs)),
+    [def, inputs],
+  );
+  const activePreset = useMemo(() => def.presets.find((p: Preset<unknown>) => deepEqual(contextualize(p.inputs), inputs)) ?? null, [def, inputs, contextualize]);
+  // Computed whether or not a preset still matches: once the user has personalised things, this is
+  // what replaces the "illustrative example" banner rather than leaving the results unlabelled.
+  const presetNote = def.presetNote ? def.presetNote(inputs) : null;
 
   const onChange = useCallback((next: unknown) => setInputs(next), [setInputs]);
   /** True when the scenario still carries a name we generated, so renaming it won't lose the user's own label. */
@@ -136,7 +147,9 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
     name === `${def.shortName} scenario` || name === describe(inputs) || def.presets.some((p: Preset<unknown>) => p.name === name) || scenarios.some((s) => name === describe(s.inputs));
 
   const loadPreset = (p: Preset<unknown>) => {
-    setInputs(def.normalize(p.inputs), p.id);
+    // Loading an example must not throw away what the user already told us about their situation,
+    // so the preset is adapted to it first rather than replacing it wholesale.
+    setInputs(contextualize(p.inputs), p.id);
     if (active && isAutoNamed(active.name)) rename(active.id, p.name);
     toast(`Loaded example: ${p.name}. Values are illustrative — edit anything.`);
   };
@@ -346,21 +359,43 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                 </span>
                 {def.assumptions(deferredInputs)
                   .slice(0, 4)
-                  .map((a: { label: string; value: string }) => (
-                    <span key={a.label} className="chip" style={{ cursor: 'default' }} title={a.label}>
-                      {a.value}
-                    </span>
-                  ))}
+                  .map((a: { label: string; value: string; fieldId?: string }) =>
+                    a.fieldId ? (
+                      // Clicking the assumption takes you to the input behind it. On mobile the form
+                      // is a separate view, so switch to it first or the focus lands off-screen.
+                      <button
+                        key={a.label}
+                        type="button"
+                        className="chip chip-jump"
+                        title={`${a.label} — click to edit`}
+                        onClick={() => {
+                          if (isMobile) setMobileView('inputs');
+                          requestFieldFocus(a.fieldId!);
+                        }}
+                      >
+                        {a.value}
+                      </button>
+                    ) : (
+                      <span key={a.label} className="chip" style={{ cursor: 'default' }} title={a.label}>
+                        {a.value}
+                      </span>
+                    ),
+                  )}
                 <a href="#method" className="micro" style={{ fontWeight: 600 }}>
                   All assumptions
                 </a>
               </div>
             )}
-            {activePreset && (
+            {(activePreset || presetNote) && (
               <div className="callout callout-neutral no-print" style={{ padding: '8px 12px' }}>
                 <IconWarning />
                 <div>
-                  Showing the <strong>{activePreset.name}</strong> example with illustrative numbers. Edit any input to make it yours.
+                  {activePreset && (
+                    <>
+                      Showing the <strong>{activePreset.name}</strong> example with illustrative numbers.{' '}
+                    </>
+                  )}
+                  {presetNote ?? 'Edit any input to make it yours.'}
                 </div>
               </div>
             )}

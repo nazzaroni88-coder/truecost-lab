@@ -4,6 +4,18 @@ import { useInvalidFields } from '../forms/InvalidFields';
 
 export type NumberFormat = 'currency' | 'percent' | 'number';
 
+/**
+ * Where the value in a field came from, shown as a small badge beside the label.
+ *
+ * The point is that a form full of plausible numbers is otherwise indistinguishable from a form
+ * full of the user's own numbers, and only one of those is worth trusting a decision to.
+ */
+export interface FieldOriginBadge {
+  tone: 'user' | 'suggested' | 'example' | 'estimate';
+  label: string;
+  title?: string;
+}
+
 export interface NumberFieldProps {
   label: string;
   value: number;
@@ -22,6 +34,8 @@ export interface NumberFieldProps {
   placeholder?: string;
   disabled?: boolean;
   id?: string;
+  /** Where this value came from: the user's own entry, a state suggestion, an example, a forecast. */
+  origin?: FieldOriginBadge;
   /** Compact label for narrow layouts. */
   className?: string;
   autoComplete?: string;
@@ -43,7 +57,7 @@ function formatForDisplay(v: number, format: NumberFormat, decimals: number): st
   return new Intl.NumberFormat('en-US', { minimumFractionDigits: 0, maximumFractionDigits: decimals }).format(v);
 }
 
-export function NumberField({ label, value, onChange, format = 'number', prefix, suffix, min, max, step, decimals, help, hint, placeholder, disabled, id, className, autoComplete = 'off' }: NumberFieldProps) {
+export function NumberField({ label, value, onChange, format = 'number', prefix, suffix, min, max, step, decimals, help, hint, placeholder, disabled, id, origin, className, autoComplete = 'off' }: NumberFieldProps) {
   const autoId = useId();
   const inputId = id ?? autoId;
   const dec = decimals ?? (format === 'percent' ? 2 : format === 'currency' ? 0 : 2);
@@ -139,6 +153,11 @@ export function NumberField({ label, value, onChange, format = 'number', prefix,
       <label className="field-label" htmlFor={inputId}>
         <span>{label}</span>
         {help && <InfoTip text={help} label={`About ${label}`} />}
+        {origin && (
+          <span className={`origin-badge origin-${origin.tone}`} title={origin.title}>
+            {origin.label}
+          </span>
+        )}
       </label>
       <div className={`field-control ${invalid ? 'invalid' : ''}`}>
         {pre && (

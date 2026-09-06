@@ -1,5 +1,6 @@
 import type { Preset } from '../types';
-import type { VehicleInputs, VehicleOption, VehicleShared } from '../../engine/calculators/vehicle';
+import { withLocation, type VehicleFormInputs } from './inputs';
+import type { VehicleOption, VehicleShared } from '../../engine/calculators/vehicle';
 
 /**
  * Illustrative vehicle presets.
@@ -98,13 +99,13 @@ export const camry: VehicleOption = {
   annualDepreciation: 11,
 };
 
-export const vehicleDefaults: VehicleInputs = {
+export const vehicleDefaults: VehicleFormInputs = withLocation({
   a: modelThree,
   b: camry,
   shared: baseShared,
-};
+});
 
-export const vehiclePresets: Preset<VehicleInputs>[] = [
+export const vehiclePresets: Preset<VehicleFormInputs>[] = [
   {
     id: 'model3-vs-camry',
     name: 'Tesla Model 3 vs Toyota Camry Hybrid',
@@ -117,44 +118,44 @@ export const vehiclePresets: Preset<VehicleInputs>[] = [
     name: 'Electric sedan vs gasoline sedan',
     chip: 'EV vs gas',
     description: 'A $45k EV against a comparable $32k petrol sedan that is not a hybrid. Fuel and maintenance savings versus a higher price and faster depreciation.',
-    inputs: {
+    inputs: withLocation({
       a: { ...baseOption, name: 'Electric sedan', price: 45000, fuelType: 'electric', milesPerKwh: 3.7, insuranceAnnual: 2600, maintenanceAnnual: 400, repairsAnnual: 200, tireSetCost: 950, tireIntervalMiles: 40000, firstYearDepreciation: 26, annualDepreciation: 15 },
       b: { ...baseOption, name: 'Gasoline sedan', price: 32000, fuelType: 'gas', mpg: 30, insuranceAnnual: 2200, maintenanceAnnual: 600, repairsAnnual: 300, firstYearDepreciation: 19, annualDepreciation: 12 },
       shared: { ...baseShared, ownershipYears: 6 },
-    },
+    }),
   },
   {
     id: 'hybrid-vs-gas',
     name: 'Hybrid vs the gasoline version of the same car',
     chip: 'Hybrid vs gas',
     description: 'Pay about $3,000 more for a hybrid that returns 50 mpg instead of 32. At $4.14 a gallon, does the fuel saving cover the premium?',
-    inputs: {
+    inputs: withLocation({
       a: { ...baseOption, name: 'Hybrid sedan', price: 33000, fuelType: 'gas', mpg: 50, insuranceAnnual: 2250, maintenanceAnnual: 550, repairsAnnual: 250, firstYearDepreciation: 17, annualDepreciation: 11 },
       b: { ...baseOption, name: 'Gas sedan', price: 30000, fuelType: 'gas', mpg: 32, insuranceAnnual: 2200, maintenanceAnnual: 550, repairsAnnual: 250, firstYearDepreciation: 18, annualDepreciation: 11 },
       shared: { ...baseShared, ownershipYears: 6 },
-    },
+    }),
   },
   {
     id: 'new-vs-used',
     name: 'New vs 3-year-old used',
     chip: 'New vs used',
     description: 'A $36k new compact SUV versus the same model at 3 years old for $24k. Used-car loans are much dearer — about 11.4% against 6.9% — and repairs cost more once the warranty is gone.',
-    inputs: {
+    inputs: withLocation({
       a: { ...baseOption, name: 'New compact SUV', price: 36000, apr: 6.9, mpg: 29, insuranceAnnual: 2300, maintenanceAnnual: 500, repairsAnnual: 150, firstYearDepreciation: 20, annualDepreciation: 12 },
       b: { ...baseOption, name: '3-year-old used SUV', price: 24000, apr: 11.4, mpg: 28, insuranceAnnual: 2000, maintenanceAnnual: 700, repairsAnnual: 650, firstYearDepreciation: 12, annualDepreciation: 11 },
       shared: { ...baseShared, ownershipYears: 5 },
-    },
+    }),
   },
   {
     id: 'finance-vs-cash',
     name: 'Finance vs pay cash for the same car',
     chip: 'Finance vs cash',
     description: 'The same $35k car at the current average new-car rate of 6.9%. Finance it and keep your cash invested, or pay cash and avoid the interest? Note that a 6.9% APR compounds to about 7.1% a year, so it beats a 7% expected return.',
-    inputs: {
+    inputs: withLocation({
       a: { ...baseOption, name: 'Finance it (6.9%)', price: 35000, paymentMethod: 'finance', downPayment: 5000, apr: 6.9, termMonths: 60, mpg: 30 },
       b: { ...baseOption, name: 'Pay cash', price: 35000, paymentMethod: 'cash', downPayment: 0, apr: 0, mpg: 30 },
       shared: { ...baseShared, ownershipYears: 5, investmentReturn: 7 },
-    },
+    }),
   },
 ];
 

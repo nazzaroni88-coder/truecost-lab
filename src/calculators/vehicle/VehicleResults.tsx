@@ -1,5 +1,6 @@
 import type { ResultsProps } from '../types';
-import type { VehicleInputs, VehicleOptionResult, VehicleResult } from '../../engine/calculators/vehicle';
+import type { VehicleOptionResult, VehicleResult } from '../../engine/calculators/vehicle';
+import type { VehicleFormInputs } from './inputs';
 import { AnswerHero } from '../../components/results/AnswerHero';
 import { InvestDifference } from '../../components/results/InvestDifference';
 import { BreakEvenList, InsightsList, MethodologyPanel, ResultSection } from '../../components/results/Sections';
@@ -10,7 +11,7 @@ import { categoryColor, OPTION_COLORS } from '../../lib/colors';
 import { fmtMoney, fmtMoneyCompact, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
 import { vehicleInsights, vehicleMethodology, vehicleQuickAdjust, vehicleAssumptions } from './definition';
 
-export function VehicleResults({ inputs, result, onChange }: ResultsProps<VehicleInputs, VehicleResult>) {
+export function VehicleResults({ inputs, result, onChange }: ResultsProps<VehicleFormInputs, VehicleResult>) {
   const { a, b, comparison: c } = result;
   const years = Math.max(1, Math.round(inputs.shared.ownershipYears));
   const months = years * 12;

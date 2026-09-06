@@ -77,8 +77,22 @@ export interface CalculatorDefinition<I, R> extends CalculatorMeta {
   methodology: (i: I, r: R) => MethodologyItem[];
   insights: (i: I, r: R) => Insight[];
   quickAdjust?: (i: I) => QuickAdjust<I>[];
-  /** Fields that only affect "invest the difference", listed for the methodology panel. */
-  assumptions?: (i: I) => { label: string; value: string }[];
+  /**
+   * The handful of numbers the answer leans on hardest, shown as chips above the result.
+   * A chip carrying `fieldId` becomes a button that jumps to that input, so "assumes 9.03% tax"
+   * is a way into the form rather than a dead label.
+   */
+  assumptions?: (i: I) => { label: string; value: string; fieldId?: string }[];
+  /**
+   * Adapts a preset to what the user has already told us about themselves before it is loaded,
+   * and before the shell asks "are the current inputs still this preset?".
+   *
+   * Without it, personalising an input would permanently un-match every preset, and loading an
+   * example would silently discard the personal details already entered.
+   */
+  contextualizePreset?: (presetInputs: I, current: I) => I;
+  /** Extra clause for the "showing the X example" banner, e.g. "with California suggestions". */
+  presetNote?: (i: I) => string | null;
   /**
    * A short, content-derived name for a scenario ("Model 3 vs Camry, 5 yrs").
    * Used when creating scenarios so the tab strip and the compare table stay readable —

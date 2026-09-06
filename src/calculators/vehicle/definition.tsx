@@ -1,6 +1,8 @@
 import type { Insight, MethodologyItem, QuickAdjust, ShareSummary } from '../types';
 import type { VehicleInputs, VehicleResult } from '../../engine/calculators/vehicle';
 import { fmtMoney, fmtNumber, fmtPct, fmtYears, roundHeadline, yearsLabel } from '../../lib/format';
+import { markUserEdited, stateNameOf, VEHICLE_FIELD_IDS as ID, type VehicleFormInputs } from './inputs';
+import { STATE_DATA_REVIEWED, STATE_SOURCES } from '../../data/stateDefaults';
 
 export function vehicleSummary(inputs: VehicleInputs, r: VehicleResult): ShareSummary {
   const { a, b, comparison: c } = r;
@@ -27,32 +29,72 @@ export function vehicleSummary(inputs: VehicleInputs, r: VehicleResult): ShareSu
   };
 }
 
-export function vehicleQuickAdjust(inputs: VehicleInputs): QuickAdjust<VehicleInputs>[] {
+export function vehicleQuickAdjust(inputs: VehicleFormInputs): QuickAdjust<VehicleFormInputs>[] {
   const anyGas = inputs.a.fuelType === 'gas' || inputs.b.fuelType === 'gas';
   const anyEv = inputs.a.fuelType === 'electric' || inputs.b.fuelType === 'electric';
-  const q: QuickAdjust<VehicleInputs>[] = [
-    { key: 'ownershipYears', label: 'Years you own it', get: (i) => i.shared.ownershipYears, set: (i, v) => ({ ...i, shared: { ...i.shared, ownershipYears: Math.round(v) } }), min: 1, max: 15, step: 1, format: (v) => `${fmtNumber(v, 0)} yr` },
-    { key: 'annualMiles', label: 'Miles per year', get: (i) => i.shared.annualMiles, set: (i, v) => ({ ...i, shared: { ...i.shared, annualMiles: v } }), min: 2000, max: 40000, step: 500, format: (v) => `${fmtNumber(v, 0)} mi` },
+  // Dragging a quick-adjust slider is the user setting that number, so it counts as their input and
+  // a later change of state must not overwrite it. Same rule as typing in the field itself.
+  const setShared = (i: VehicleFormInputs, patch: Partial<VehicleFormInputs['shared']>): VehicleFormInputs =>
+    markUserEdited({ ...i, shared: { ...i.shared, ...patch } }, Object.keys(patch).map((k) => `shared.${k}`));
+  const q: QuickAdjust<VehicleFormInputs>[] = [
+    { key: 'ownershipYears', label: 'Years you own it', get: (i) => i.shared.ownershipYears, set: (i, v) => setShared(i, { ownershipYears: Math.round(v) }), min: 1, max: 15, step: 1, format: (v) => `${fmtNumber(v, 0)} yr` },
+    { key: 'annualMiles', label: 'Miles per year', get: (i) => i.shared.annualMiles, set: (i, v) => setShared(i, { annualMiles: v }), min: 2000, max: 40000, step: 500, format: (v) => `${fmtNumber(v, 0)} mi` },
   ];
-  if (anyGas) q.push({ key: 'gasPrice', label: 'Gas price', get: (i) => i.shared.gasPrice, set: (i, v) => ({ ...i, shared: { ...i.shared, gasPrice: v } }), min: 1.5, max: 8, step: 0.05, format: (v) => `${fmtMoney(v, 2)}/gal` });
-  if (anyEv) q.push({ key: 'electricityRate', label: 'Electricity rate', get: (i) => i.shared.electricityRate, set: (i, v) => ({ ...i, shared: { ...i.shared, electricityRate: v } }), min: 0.05, max: 0.6, step: 0.01, format: (v) => `${fmtMoney(v, 2)}/kWh` });
+  if (anyGas) q.push({ key: 'gasPrice', label: 'Gas price', get: (i) => i.shared.gasPrice, set: (i, v) => setShared(i, { gasPrice: v }), min: 1.5, max: 8, step: 0.05, format: (v) => `${fmtMoney(v, 2)}/gal` });
+  if (anyEv) q.push({ key: 'electricityRate', label: 'Electricity rate', get: (i) => i.shared.electricityRate, set: (i, v) => setShared(i, { electricityRate: v }), min: 0.05, max: 0.6, step: 0.01, format: (v) => `${fmtMoney(v, 2)}/kWh` });
   return q.slice(0, 4);
 }
 
-export function vehicleAssumptions(i: VehicleInputs): { label: string; value: string }[] {
+export function vehicleAssumptions(i: VehicleInputs): { label: string; value: string; fieldId?: string }[] {
   const s = i.shared;
   const anyGas = i.a.fuelType === 'gas' || i.b.fuelType === 'gas';
   const anyEv = i.a.fuelType === 'electric' || i.b.fuelType === 'electric';
+  // The first four carry a fieldId, so the chips above the answer double as a way into the inputs
+  // that produced it. They are also the four the answer is most sensitive to.
   return [
-    { label: 'Ownership period', value: yearsLabel(s.ownershipYears) },
-    { label: 'Miles per year', value: `${fmtNumber(s.annualMiles, 0)} mi/yr` },
-    ...(anyGas ? [{ label: 'Gas price', value: `${fmtMoney(s.gasPrice, 2)}/gal` }] : []),
-    ...(anyEv ? [{ label: 'Electricity rate', value: `${fmtMoney(s.electricityRate, 2)}/kWh` }] : []),
-    { label: 'Investment return (for invest-the-difference)', value: `${fmtPct(s.investmentReturn, 1)} return` },
+    { label: 'Ownership period', value: yearsLabel(s.ownershipYears), fieldId: ID.years },
+    { label: 'Miles per year', value: `${fmtNumber(s.annualMiles, 0)} mi/yr`, fieldId: ID.miles },
+    ...(anyGas ? [{ label: 'Gas price', value: `${fmtMoney(s.gasPrice, 2)}/gal`, fieldId: ID.gasPrice }] : []),
+    ...(anyEv ? [{ label: 'Electricity rate', value: `${fmtMoney(s.electricityRate, 2)}/kWh`, fieldId: ID.electricity }] : []),
+    { label: 'Investment return (for invest-the-difference)', value: `${fmtPct(s.investmentReturn, 1)} return`, fieldId: ID.investmentReturn },
     { label: 'Fuel & electricity price growth', value: `${fmtPct(s.fuelPriceGrowth, 1)}/yr` },
     { label: 'Cost inflation (insurance, maintenance, etc.)', value: `${fmtPct(s.costInflation, 1)}/yr` },
     { label: `${i.a.name}: depreciation`, value: `${fmtPct(i.a.firstYearDepreciation, 0)} first year, then ${fmtPct(i.a.annualDepreciation, 0)}/yr${i.a.resaleOverride !== null ? ` (resale set to ${fmtMoney(i.a.resaleOverride)})` : ''}` },
     { label: `${i.b.name}: depreciation`, value: `${fmtPct(i.b.firstYearDepreciation, 0)} first year, then ${fmtPct(i.b.annualDepreciation, 0)}/yr${i.b.resaleOverride !== null ? ` (resale set to ${fmtMoney(i.b.resaleOverride)})` : ''}` },
+  ];
+}
+
+/**
+ * Names the source of every number a state suggestion supplied, so "show me the math" also answers
+ * "and where did that 8.2% come from?". Only rendered once a state has actually been chosen.
+ */
+function stateMethodology(i: VehicleInputs): MethodologyItem[] {
+  const code = (i as Partial<VehicleFormInputs>).stateCode;
+  const provenance = (i as Partial<VehicleFormInputs>).provenance ?? {};
+  if (!code) return [];
+  const suggested = Object.entries(provenance)
+    .filter(([, v]) => v === 'suggested')
+    .map(([k]) => k);
+  if (suggested.length === 0) return [];
+  return [
+    {
+      title: `Where the ${stateNameOf(code)} numbers come from`,
+      body:
+        `Static statewide averages held in the app and last reviewed in ${STATE_DATA_REVIEWED}. They are starting points, not quotes: no live data is fetched, ` +
+        `your location is never detected, and anything you edit yourself is kept. ${suggested.length} field${suggested.length === 1 ? '' : 's'} on this scenario ` +
+        `still hold${suggested.length === 1 ? 's' : ''} a suggested value.`,
+      formula: [
+        ...STATE_SOURCES.map((s) => `${s.label.padEnd(12)} ${s.detail}\n${' '.repeat(13)}${s.url}`),
+        '',
+        'Caveats we do not model:',
+        '  - Some states tax a vehicle under a separate excise, highway-use or title tax',
+        '    at a rate different from the general sales tax shown here.',
+        '  - Local rates are population-weighted averages; your address may differ.',
+        '  - Only the EV surcharge half of registration is sourced. The base is a placeholder,',
+        '    because states charge by flat fee, weight or vehicle value and counties add more.',
+        '  - Insurance is never suggested: it varies more by driver than by state.',
+      ].join('\n'),
+    },
   ];
 }
 
@@ -83,6 +125,7 @@ export function vehicleMethodology(i: VehicleInputs, r: VehicleResult): Methodol
     },
     { title: `${a.name}: your numbers`, body: 'The formulas with your inputs substituted.', formula: opt(a.name, a, i.a) },
     { title: `${b.name}: your numbers`, body: 'The formulas with your inputs substituted.', formula: opt(b.name, b, i.b) },
+    ...stateMethodology(i),
     {
       title: 'Depreciation curve',
       body: 'Vehicle value drops by the first-year percentage in year one, then by the annual percentage each year after. Between year-ends we interpolate geometrically. If you set a resale value, we keep the first-year drop and solve for the annual rate that lands on your number.',
