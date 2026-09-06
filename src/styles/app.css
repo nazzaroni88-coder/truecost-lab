@@ -8,7 +8,19 @@
 }
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /*
+   * NO `scroll-behavior: smooth` here, deliberately.
+   *
+   * It used to be set globally, and in a real Chrome it made every smooth scroll a silent no-op:
+   * verified in the page's own context, `scrollIntoView({behavior:'smooth'})` left scrollY unchanged
+   * after 3 full seconds, while the identical call with `behavior:'instant'` jumped correctly. That
+   * one line broke every in-page anchor in the app — the methodology TOC's eleven links, the
+   * footer's FAQ link, "All assumptions" in every result, and /calculators — because the browser's
+   * native fragment jump and our own ScrollManager both inherit this value.
+   *
+   * Functional navigation must not depend on an animation that may not run. A jump that lands
+   * without animating is fine; a jump that silently does not happen is a broken link.
+   */
   /*
    * Keep anchor targets clear of the sticky header.
    *
@@ -20,11 +32,6 @@ html {
    * as scroll-margin on each target.
    */
   scroll-padding-top: calc(var(--header-h) + var(--sp-3));
-}
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
 }
 body {
   margin: 0;

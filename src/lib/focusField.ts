@@ -30,9 +30,13 @@ export function focusFieldNow(id: string): boolean {
   if (!el) return false;
   // Already there: don't yank an input the user has started typing in back to the top of the pane.
   if (document.activeElement === el) return true;
-  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  // preventScroll because scrollIntoView is already animating; letting focus jump as well lands the
-  // field in a different place than the smooth scroll was heading for.
+  // 'auto', not 'smooth'. A smooth scroll is a silent no-op in some real browsers (verified in
+  // Chrome: unchanged after three seconds), and this one had hidden that fact well — the field still
+  // received focus, so a test that only checked document.activeElement passed while the field was
+  // never actually brought into view.
+  el.scrollIntoView({ block: 'center', behavior: 'auto' });
+  // preventScroll because the scroll above has already positioned the field; letting focus scroll
+  // as well can nudge it somewhere other than where we just put it.
   (el as HTMLElement).focus({ preventScroll: true });
   return document.activeElement === el;
 }
