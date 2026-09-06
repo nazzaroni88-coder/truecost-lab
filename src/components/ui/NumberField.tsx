@@ -168,7 +168,12 @@ export function NumberField({ label, value, onChange, format = 'number', prefix,
         <input
           id={inputId}
           type="text"
-          inputMode="decimal"
+          /*
+           * "numeric" for whole-number fields (price, miles, term) so the phone keypad has no
+           * decimal key to mis-tap; "decimal" wherever fractions are real (rates, $/gal, mi/kWh).
+           * type stays "text" so we keep our own lenient parsing of "38,630" and "$38k".
+           */
+          inputMode={dec === 0 ? 'numeric' : 'decimal'}
           autoComplete={autoComplete}
           value={text}
           placeholder={placeholder}

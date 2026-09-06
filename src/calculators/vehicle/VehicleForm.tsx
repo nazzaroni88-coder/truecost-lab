@@ -393,7 +393,7 @@ function SharedFields({ all, shared: s, onPatch, anyGas, anyEv }: { all: Vehicle
           )}
         </div>
       </FormSection>
-      <FormSection title="Economic assumptions">
+      <FormSection title="Returns & inflation">
         <NumberField id={ID.investmentReturn} label="Investment return" format="percent" value={s.investmentReturn} onChange={(v) => onPatch({ investmentReturn: v })} min={0} max={20} decimals={1} step={0.5} help="Used only for the 'invest the difference' projection. Long-run diversified stock returns have averaged roughly 7–10% before inflation, but are not guaranteed." />
         <Disclosure title="Advanced: inflation & price growth">
           <div className="field-group" style={{ paddingTop: 8 }}>

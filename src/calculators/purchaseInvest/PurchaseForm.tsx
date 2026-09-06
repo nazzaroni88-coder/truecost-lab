@@ -23,7 +23,7 @@ export function PurchaseForm({ inputs: i, onChange }: FormProps<PurchaseInvestIn
           </div>
         </Disclosure>
       </FormSection>
-      <FormSection title="Assumptions">
+      <FormSection title="Returns & inflation">
         <NumberField label="Expected investment return" format="percent" suffix="%/yr" value={i.investmentReturn} onChange={(v) => set({ investmentReturn: v })} min={0} max={20} decimals={1} step={0.5} help="Long-run annual return if the money were invested instead. Diversified stock portfolios have averaged roughly 7–10% before inflation historically, with no guarantee." />
         <NumberField label="Inflation" format="percent" suffix="%/yr" value={i.inflation} onChange={(v) => set({ inflation: v })} min={0} max={15} decimals={1} step={0.5} help="Used to translate future dollars into today's purchasing power." />
       </FormSection>

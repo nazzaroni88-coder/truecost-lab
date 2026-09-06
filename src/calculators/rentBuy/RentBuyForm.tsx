@@ -78,7 +78,7 @@ export function RentBuyForm({ inputs: i, onChange }: FormProps<RentBuyInputs>) {
           <FormSection title="Time">
             <NumberField label="Years you'll stay" suffix="yr" value={i.horizonYears} onChange={(v) => set({ horizonYears: Math.round(v) })} min={1} max={40} decimals={0} step={1} help="How long before you would sell (or stop renting this place). This is usually the single biggest driver of the answer." />
           </FormSection>
-          <FormSection title="Growth assumptions">
+          <FormSection title="How prices grow">
             <NumberField label="Home appreciation" format="percent" suffix="%/yr" value={i.appreciation} onChange={(v) => set({ appreciation: v })} min={-10} max={20} decimals={1} step={0.5} help="Annual growth in the home's value. U.S. homes have averaged roughly 3–4% a year long-term, close to inflation plus a little. Local markets vary widely." />
             <NumberField label="Investment return" format="percent" suffix="%/yr" value={i.investmentReturn} onChange={(v) => set({ investmentReturn: v })} min={0} max={20} decimals={1} step={0.5} help="What the renter earns on the money not spent on buying. Long-run diversified stock returns have averaged about 7–10% before inflation, but are not guaranteed." />
             <NumberField label="Inflation" format="percent" suffix="%/yr" value={i.inflation} onChange={(v) => set({ inflation: v })} min={0} max={15} decimals={1} step={0.5} help="Applied to insurance, HOA and renter's insurance each year." />

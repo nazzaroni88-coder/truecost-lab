@@ -19,7 +19,7 @@ export function DebtInvestForm({ inputs: i, onChange }: FormProps<DebtInvestInpu
       <FormSection title="Extra money each month" sub="The amount you're deciding what to do with.">
         <NumberField label="Extra available" format="currency" suffix="/mo" value={i.extraMonthly} onChange={(v) => set({ extraMonthly: v })} min={0} max={100000} help="Money beyond the minimum that could go to the debt or to investments. Both strategies use exactly this much, every month, so the comparison is fair." />
       </FormSection>
-      <FormSection title="Investment assumptions">
+      <FormSection title="What the market does">
         <NumberField label="Expected investment return" format="percent" suffix="%/yr" value={i.investmentReturn} onChange={(v) => set({ investmentReturn: v })} min={0} max={30} decimals={1} step={0.5} help="Your best guess at the long-run annual return of the investments. Diversified stock portfolios have averaged roughly 7–10% before inflation historically — with big swings, and no guarantee." />
         <NumberField label="Time horizon" suffix="yr" value={i.horizonYears} onChange={(v) => set({ horizonYears: Math.round(v) })} min={1} max={40} decimals={0} step={1} help="How far ahead to compare. Both strategies keep deploying the same monthly budget for the whole period." />
       </FormSection>

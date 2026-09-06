@@ -75,8 +75,31 @@ strong {
   outline-offset: 2px;
   border-radius: 6px;
 }
-.num {
+/*
+ * Lining, fixed-width figures everywhere a number carries meaning.
+ *
+ * Proportional digits make a column of money jitter: the 1s are narrow, so $1,111 and $8,888 no
+ * longer line up and the eye cannot scan down a column. Any surface that shows an amount, a rate or
+ * a total opts in here rather than each component remembering to.
+ */
+.num,
+.amt,
+.val,
+input[inputmode='decimal'],
+input[inputmode='numeric'],
+table,
+.formula,
+.kv dd,
+.stat .val,
+.stat .sub,
+.field-hint,
+.answer-headline,
+.answer-sub,
+.slider-head .val,
+.tornado-row,
+.chip {
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
 }
 .sr-only {
   position: absolute;
@@ -243,7 +266,7 @@ strong {
 }
 .site-nav a {
   padding: 8px 12px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   color: var(--tc-ink-2);
   font-weight: 500;
   font-size: var(--fs-small);
@@ -384,7 +407,7 @@ strong {
   gap: 8px;
   height: 40px;
   padding: 0 16px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-md);
   border: 1px solid var(--btn-bd);
   background: var(--btn-bg);
   color: var(--btn-fg);
@@ -413,11 +436,17 @@ strong {
   cursor: not-allowed;
   transform: none;
 }
+/*
+ * The primary action is the one place the soft radius survives. With everything else square, a
+ * rounded filled button is unmistakably the thing to press — roundness carries meaning here instead
+ * of being the default finish on every surface.
+ */
 .btn-primary {
   --btn-bg: var(--tc-primary);
   --btn-fg: var(--tc-on-primary);
   --btn-bd: var(--tc-primary);
-  box-shadow: var(--sh-1);
+  border-radius: var(--r-cta);
+  font-weight: 600;
 }
 .btn-primary:hover {
   background: var(--tc-primary-strong);
@@ -485,11 +514,15 @@ strong {
 }
 
 /* ---------- Cards & sections ---------- */
+/*
+ * A real box. Rare on purpose now: reserved for surfaces that genuinely need lifting off the page
+ * (the A vs B compare modal, the incentive helper). Result sections use `.ledger-section` below,
+ * which separates with a rule instead, so we never draw a card inside a card.
+ */
 .card {
   background: var(--tc-surface);
   border: 1px solid var(--tc-line);
   border-radius: var(--r-lg);
-  box-shadow: var(--sh-1);
 }
 .card-pad {
   padding: var(--sp-5);
@@ -499,9 +532,31 @@ strong {
     padding: var(--sp-4);
   }
 }
+
+/*
+ * The working-ledger section: no border, no background, no shadow. A hairline rule and whitespace
+ * do the separating, the way ruled columns separate on a page of accounts. Stacked siblings share
+ * one rule between them instead of each drawing its own four sides.
+ */
+.ledger-section {
+  padding-top: var(--sp-7);
+  margin-top: var(--sp-7);
+  border-top: 1px solid var(--tc-rule);
+}
+.ledger-section:first-of-type {
+  padding-top: 0;
+  margin-top: 0;
+  border-top: 0;
+}
+/* Section kickers read as editorial metadata: small spaced caps, quiet — not a coloured badge. */
+.ledger-section .eyebrow {
+  color: var(--tc-ink-3);
+  letter-spacing: var(--track-caps);
+}
 .card-title {
   font-size: var(--fs-h3);
   font-weight: 600;
+  letter-spacing: var(--track-tight);
   margin-bottom: var(--sp-1);
 }
 .card-sub {
@@ -522,7 +577,7 @@ strong {
   color: var(--tc-primary-strong);
   background: var(--tc-primary-soft);
   padding: 4px 10px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
 }
 .eyebrow {
   font-size: var(--fs-micro);
@@ -781,51 +836,62 @@ strong {
   transform: none;
 }
 
-/* Segmented control */
+/*
+ * Segmented control, as a ledger switch rather than an iOS capsule.
+ *
+ * It was a filled --tc-surface-2 track with a floating white shadowed thumb — the single most
+ * recognisable "generated app" control on the page. Now selection is marked the way a ruled form
+ * marks it: a rule under the whole control, and a heavier rule under the option in force.
+ */
 .segmented {
   display: inline-flex;
-  padding: 3px;
-  background: var(--tc-surface-2);
-  border-radius: var(--r-pill);
-  gap: 2px;
+  gap: var(--sp-4);
   max-width: 100%;
+  border-bottom: 1px solid var(--tc-line);
 }
 .segmented.block {
   display: flex;
   width: 100%;
+  gap: 0;
 }
 .segmented.block .seg {
   flex: 1;
 }
 .seg {
   border: 0;
+  border-bottom: 2px solid transparent;
   background: transparent;
   height: 34px;
-  padding: 0 14px;
-  border-radius: var(--r-pill);
+  padding: 0 2px;
+  margin-bottom: -1px;
   font-size: var(--fs-small);
   font-weight: 500;
-  color: var(--tc-ink-2);
+  color: var(--tc-ink-3);
   cursor: pointer;
   transition:
-    background var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease),
-    box-shadow var(--dur-fast) var(--ease);
+    border-color var(--dur-fast) var(--ease);
   white-space: nowrap;
+}
+.segmented.block .seg {
+  padding: 0 10px;
 }
 .seg:hover {
   color: var(--tc-ink);
+  border-bottom-color: var(--tc-line-strong);
 }
 .seg[aria-checked='true'] {
-  background: var(--tc-surface);
   color: var(--tc-ink);
-  box-shadow: var(--sh-1);
+  font-weight: 600;
+  border-bottom-color: var(--tc-ink);
 }
 .seg-a[aria-checked='true'] {
   color: var(--tc-a-strong);
+  border-bottom-color: var(--tc-a);
 }
 .seg-b[aria-checked='true'] {
   color: var(--tc-b-strong);
+  border-bottom-color: var(--tc-b);
 }
 
 /* Slider */
@@ -1001,7 +1067,7 @@ strong {
 .calc-form::-webkit-scrollbar-thumb {
   background: var(--tc-line-strong);
   border-radius: var(--r-pill);
-  border: 3px solid var(--tc-surface);
+  border: 3px solid var(--tc-page);
 }
 .calc-form:hover::-webkit-scrollbar-thumb {
   background: var(--tc-ink-4);
@@ -1013,9 +1079,23 @@ strong {
     overflow: visible;
   }
 }
-.calc-form .card-pad {
-  padding-top: var(--sp-2);
-  padding-bottom: var(--sp-2);
+/*
+ * The inputs pane is no longer a card. It was `aside.calc-form.card` with `.card-pad` inside, which
+ * boxed the entire left column and then boxed every field group again within it. On desktop a single
+ * vertical rule now does the separating; on mobile the pane is full-width so it needs nothing.
+ */
+.form-pad {
+  padding: var(--sp-2) var(--sp-5) var(--sp-5) 0;
+}
+@media (min-width: 961px) {
+  .calc-form {
+    border-right: 1px solid var(--tc-rule);
+  }
+}
+@media (max-width: 960px) {
+  .form-pad {
+    padding: var(--sp-2) 0 var(--sp-5);
+  }
 }
 .calc-results {
   min-width: 0;
@@ -1035,17 +1115,21 @@ strong {
 .option-tabs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: 6px;
+  gap: var(--sp-4);
   padding: var(--sp-3) 0 var(--sp-2);
   position: sticky;
   top: 0;
-  background: var(--tc-surface);
+  background: var(--tc-page);
   z-index: 3;
 }
 .option-tab {
-  border: 1px solid var(--tc-line);
-  background: var(--tc-surface);
-  border-radius: var(--r-md);
+  /* Underline tabs, not three bordered boxes stacked above the form. The old treatment drew a
+     filled, tinted, rounded rectangle per option, so the tab strip competed with the fields it was
+     supposed to be labelling. Selection now reads from a rule and weight, the way a ledger tab does. */
+  border: 0;
+  border-bottom: 2px solid var(--tc-line);
+  background: transparent;
+  border-radius: 0;
   /* Tighter horizontal padding buys roughly 4 characters per tab in a three-column strip, which is
      the difference between "Tesla Model 3" fitting on one line and not. */
   padding: 9px 9px;
@@ -1086,19 +1170,22 @@ strong {
   color: var(--tc-b-strong);
 }
 .option-tab[aria-selected='true'].a {
-  border-color: var(--tc-a);
-  background: var(--tc-a-soft);
+  border-bottom-color: var(--tc-a);
 }
 .option-tab[aria-selected='true'].b {
-  border-color: var(--tc-b);
-  background: var(--tc-b-soft);
+  border-bottom-color: var(--tc-b);
 }
 .option-tab.shared .lab {
   color: var(--tc-ink-3);
 }
 .option-tab[aria-selected='true'].shared {
-  border-color: var(--tc-ink-4);
-  background: var(--tc-surface-2);
+  border-bottom-color: var(--tc-ink-3);
+}
+.option-tab[aria-selected='true'] .nm {
+  color: var(--tc-ink);
+}
+.option-tab .nm {
+  color: var(--tc-ink-3);
 }
 .option-tabs.three {
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
@@ -1131,23 +1218,25 @@ strong {
   gap: 8px;
   flex-wrap: wrap;
 }
+/* Quiet index tags, not capsules: hairline edge, no fill, square-ish corners. */
 .chip {
-  border: 1px solid var(--tc-line-strong);
-  background: var(--tc-surface);
-  border-radius: var(--r-pill);
-  padding: 6px 12px;
+  border: 1px solid var(--tc-line);
+  background: transparent;
+  border-radius: var(--r-sm);
+  padding: 5px 10px;
   font-size: var(--fs-micro);
   font-weight: 500;
   color: var(--tc-ink-2);
   cursor: pointer;
   transition:
     background var(--dur-fast) var(--ease),
-    border-color var(--dur-fast) var(--ease);
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
   white-space: nowrap;
 }
 .chip:hover {
-  background: var(--tc-surface-2);
   border-color: var(--tc-ink-4);
+  color: var(--tc-ink);
 }
 .chip.active {
   background: var(--tc-primary-soft);
@@ -1191,7 +1280,7 @@ strong {
 .scenario-tab {
   border: 1px solid var(--tc-line);
   background: var(--tc-surface);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   height: 36px;
   padding: 0 14px;
   font-size: var(--fs-small);
@@ -1261,21 +1350,22 @@ strong {
 }
 
 /* ---------- Results ---------- */
+/*
+ * The answer is the hero, not the container it sits in. The old treatment was a 22px-radius,
+ * shadowed card with a 6px coloured bar across the top — the answer had to compete with its own
+ * chrome. Now there is no box at all: a single accent rule on the leading edge marks which option
+ * won, and the statement gets the room instead.
+ */
 .answer-hero {
-  background: var(--tc-surface);
-  border: 1px solid var(--tc-line);
-  border-radius: var(--r-xl);
-  padding: var(--sp-6);
-  box-shadow: var(--sh-2);
+  padding: var(--sp-2) 0 var(--sp-6) var(--sp-5);
   position: relative;
-  overflow: hidden;
+  border-left: 2px solid var(--hero-accent, var(--tc-primary));
+  border-bottom: 1px solid var(--tc-rule);
 }
-.answer-hero::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 6px;
-  background: var(--hero-accent, var(--tc-primary));
+@media (max-width: 640px) {
+  .answer-hero {
+    padding-left: var(--sp-4);
+  }
 }
 .answer-hero.winner-a {
   --hero-accent: var(--tc-a);
@@ -1286,16 +1376,12 @@ strong {
 .answer-hero.winner-tie {
   --hero-accent: var(--tc-ink-4);
 }
-@media (max-width: 640px) {
-  .answer-hero {
-    padding: var(--sp-5) var(--sp-4);
-  }
-}
 .answer-headline {
-  font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+  /* Bigger and tighter than before: this sentence is the product. */
+  font-size: clamp(1.6rem, 3.2vw, 2.3rem);
   font-weight: 600;
-  letter-spacing: -0.015em;
-  line-height: 1.25;
+  letter-spacing: var(--track-tighter);
+  line-height: 1.18;
   margin-top: var(--sp-2);
   text-wrap: balance;
 }
@@ -1314,16 +1400,21 @@ strong {
   gap: var(--sp-3);
   margin-top: var(--sp-5);
 }
+/*
+ * Ledger columns, not tiles. These used to be filled --tc-surface-2 boxes with a 12px radius sitting
+ * inside the hero card: a card inside a card, four of them in a row. Now each is a column of figures
+ * under a rule, which is how a set of related totals is actually presented on paper.
+ */
 .stat {
-  background: var(--tc-surface-2);
-  border-radius: var(--r-md);
-  padding: 12px 14px;
   min-width: 0;
+  padding-top: 9px;
+  border-top: 2px solid var(--tc-line);
 }
 .stat .lab {
   font-size: var(--fs-micro);
   color: var(--tc-ink-3);
   font-weight: 500;
+  letter-spacing: 0.01em;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1340,11 +1431,12 @@ strong {
   font-size: var(--fs-micro);
   color: var(--tc-ink-3);
 }
+/* The option a column belongs to is carried by its rule, so no inset bar or fill is needed. */
 .stat.a {
-  box-shadow: inset 3px 0 0 var(--tc-a);
+  border-top-color: var(--tc-a);
 }
 .stat.b {
-  box-shadow: inset 3px 0 0 var(--tc-b);
+  border-top-color: var(--tc-b);
 }
 
 /* Compare table */
@@ -1355,10 +1447,13 @@ strong {
 }
 .cmp-table th,
 .cmp-table td {
-  padding: 10px 8px;
+  padding: 9px 8px;
   text-align: right;
-  border-bottom: 1px solid var(--tc-line);
+  /* Hairline between line items; the heavier rules are saved for subtotals and totals, which is
+     what makes them read as subtotals and totals rather than just more rows. */
+  border-bottom: 1px solid var(--tc-rule);
   font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
   vertical-align: top;
 }
 .cmp-table th:first-child,
@@ -1381,11 +1476,32 @@ strong {
 .cmp-table thead th.col-b {
   color: var(--tc-b-strong);
 }
+/*
+ * The terminal total, ruled the way a ledger rules one: a single rule above to close the column of
+ * line items, and a double rule beneath to say the column is finished and nothing follows it.
+ */
 .cmp-table tr.total td {
   font-weight: 600;
-  border-top: 2px solid var(--tc-line-strong);
-  border-bottom: 0;
+  border-top: 1px solid var(--tc-rule-total);
+  border-bottom: 3px double var(--tc-rule-total);
   color: var(--tc-ink);
+  padding-top: 11px;
+}
+/* A row that closes a group but is not the final answer gets the single heavier rule only. */
+.cmp-table tr.subtotal td {
+  font-weight: 600;
+  border-bottom: 1px solid var(--tc-rule-total);
+  color: var(--tc-ink-2);
+}
+/*
+ * A double rule means "this column is closed, nothing follows". Some tables then show a figure
+ * derived FROM the total (cost per month, per mile), which would contradict that. Those are set as a
+ * footnote under the ruled block rather than as another ledger row.
+ */
+.cmp-table tr.total + tr.subtle td {
+  border-bottom: 0;
+  padding-top: 10px;
+  font-size: var(--fs-micro);
 }
 .cmp-table tr.subtle td {
   color: var(--tc-ink-3);
@@ -1422,7 +1538,7 @@ strong {
 .legend .sw {
   width: 10px;
   height: 10px;
-  border-radius: 3px;
+  border-radius: var(--r-xs);
 }
 
 /* Chart container */
@@ -1439,13 +1555,15 @@ strong {
   font-family: var(--tc-font);
   fill: var(--tc-ink-3);
   font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
+/* The baseline is a real rule; everything above it is scaffolding and should barely register. */
 .chart .axis line {
-  stroke: var(--tc-line);
+  stroke: var(--tc-line-strong);
 }
 .chart .grid line {
-  stroke: var(--tc-line);
-  stroke-dasharray: 2 3;
+  stroke: var(--tc-rule);
+  stroke-dasharray: none;
 }
 .chart-tip {
   position: absolute;
@@ -1453,7 +1571,7 @@ strong {
   background: var(--tc-inverse-surface);
   color: var(--tc-inverse-ink);
   padding: 8px 10px;
-  border-radius: 8px;
+  border-radius: var(--r-md);
   font-size: var(--fs-micro);
   line-height: 1.45;
   box-shadow: var(--sh-3);
@@ -1580,7 +1698,7 @@ strong {
   gap: 4px;
   background: var(--tc-warning-soft);
   color: var(--tc-warning);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   padding: 2px 8px;
   font-size: var(--fs-micro);
   font-weight: 600;
@@ -1601,10 +1719,12 @@ strong {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+/* Ruled column, matching the answer-hero stats rather than another filled tile. */
 .milestone {
-  background: var(--tc-surface-2);
-  border-radius: var(--r-md);
-  padding: 12px 14px;
+  background: transparent;
+  border-radius: 0;
+  border-top: 2px solid var(--tc-line);
+  padding: 9px 0 0;
   min-width: 0;
 }
 .milestone .yrs {
@@ -1904,7 +2024,7 @@ dialog.modal::backdrop {
   background: var(--tc-inverse-surface);
   color: var(--tc-inverse-ink);
   padding: 10px 16px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-lg);
   font-size: var(--fs-small);
   box-shadow: var(--sh-3);
   animation: toast-in var(--dur) var(--ease);
@@ -1963,24 +2083,30 @@ dialog.modal::backdrop {
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: var(--sp-4);
 }
+/*
+ * An index of the calculators, set like a contents page rather than a grid of app tiles.
+ *
+ * The old treatment was the give-away pattern: rounded surface, 1px border on four sides, and a
+ * translateY(-2px) lift with a shadow on hover. Five of them in a grid is every generated landing
+ * page ever made. These are ruled entries now — the rule is the only chrome, and hovering marks the
+ * entry with the brand accent instead of levitating it.
+ */
 .calc-card {
   display: grid;
-  gap: 10px;
-  padding: var(--sp-5);
-  border-radius: var(--r-lg);
-  background: var(--tc-surface);
-  border: 1px solid var(--tc-line);
+  gap: 8px;
+  padding: var(--sp-5) var(--sp-4) var(--sp-5) 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--tc-line);
   color: var(--tc-ink);
   transition:
-    transform var(--dur) var(--ease),
-    box-shadow var(--dur) var(--ease),
-    border-color var(--dur) var(--ease);
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
   position: relative;
 }
 .calc-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh-2);
-  border-color: var(--tc-line-strong);
+  border-top-color: var(--tc-primary);
   text-decoration: none;
 }
 .calc-card .calc-ico {
@@ -2012,7 +2138,7 @@ dialog.modal::backdrop {
   font-size: var(--fs-micro);
   font-weight: 600;
   padding: 3px 9px;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
 }
 .home-section {
   padding: var(--sp-8) 0 0;
@@ -2031,21 +2157,22 @@ dialog.modal::backdrop {
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--sp-4);
 }
+/* Same ruled-entry treatment as .calc-card: no box, no lift, no shadow. */
 .example-card {
   display: grid;
   gap: 8px;
-  padding: var(--sp-5);
-  border-radius: var(--r-lg);
-  background: var(--tc-surface);
-  border: 1px solid var(--tc-line);
+  padding: var(--sp-4) var(--sp-4) var(--sp-5) 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--tc-line);
   color: var(--tc-ink);
   transition:
-    transform var(--dur) var(--ease),
-    box-shadow var(--dur) var(--ease);
+    border-color var(--dur) var(--ease),
+    color var(--dur) var(--ease);
 }
 .example-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh-2);
+  border-top-color: var(--tc-primary);
   text-decoration: none;
 }
 .example-card .kind {
@@ -2081,23 +2208,24 @@ dialog.modal::backdrop {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--sp-4);
 }
+/* Numbered steps as a ruled sequence, not four more tiles. */
 .step {
-  padding: var(--sp-5);
-  border-radius: var(--r-lg);
-  background: var(--tc-surface);
-  border: 1px solid var(--tc-line);
+  padding: var(--sp-4) var(--sp-4) var(--sp-4) 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--tc-line);
   display: grid;
   gap: 8px;
 }
+/* A set numeral in the margin, the way a numbered clause is set — not a filled chip. */
 .step .n {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--tc-primary-soft);
-  color: var(--tc-primary-strong);
-  font-weight: 700;
-  display: grid;
-  place-items: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: var(--track-tight);
+  color: var(--tc-ink-4);
+  font-variant-numeric: tabular-nums;
 }
 .step h3 {
   font-size: var(--fs-body);
@@ -2117,13 +2245,15 @@ dialog.modal::backdrop {
     grid-template-columns: 1fr;
   }
 }
+/* A figure and its caption, ruled like the answer-hero stats rather than boxed. */
 .sticker-card {
-  padding: var(--sp-5);
-  border-radius: var(--r-lg);
-  background: var(--tc-surface);
-  border: 1px solid var(--tc-line);
+  padding: var(--sp-3) 0 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-top: 2px solid var(--tc-line);
   display: grid;
-  gap: 6px;
+  gap: 4px;
   align-content: start;
 }
 .sticker-card .lab {
@@ -2258,7 +2388,7 @@ dialog.modal::backdrop {
 }
 .toc a {
   border: 1px solid var(--tc-line);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   padding: 6px 12px;
   font-size: var(--fs-small);
   color: var(--tc-ink-2);
@@ -2629,37 +2759,46 @@ dialog.modal::backdrop {
 .field-label {
   flex-wrap: wrap;
 }
+/*
+ * Provenance tags. The meaning is unchanged — Yours / CA avg / Example / Estimate — but they were
+ * four filled candy pills stacked down the form, which made every label row shout. A marginal
+ * annotation in a ledger is set quietly: small caps, no fill, no border, with a short colour tick
+ * carrying the semantics. Colour still separates them; it just stops competing with the values.
+ */
 .origin-badge {
   margin-left: auto;
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--track-caps);
   text-transform: uppercase;
-  padding: 2px 7px;
-  border-radius: var(--r-pill);
-  border: 1px solid transparent;
   white-space: nowrap;
   cursor: help;
+  color: var(--tc-ink-3);
 }
+.origin-badge::before {
+  content: '';
+  width: 6px;
+  height: 1px;
+  background: currentColor;
+  flex: none;
+}
+/* "Yours" is the one worth noticing: it is the only tag that means the number can be trusted. */
 .origin-user {
-  background: var(--tc-positive-soft);
-  border-color: var(--tc-positive-soft);
-  color: var(--tc-positive-strong);
+  color: var(--tc-positive);
 }
 .origin-suggested {
-  background: var(--tc-primary-soft);
-  border-color: var(--tc-primary-soft-2);
-  color: var(--tc-primary-strong);
+  color: var(--tc-primary);
 }
 .origin-example {
-  background: var(--tc-surface-2);
-  border-color: var(--tc-line);
+  /* ink-3, not ink-4: this tag says the number is NOT yours, which is meaning, not decoration,
+     and ink-4 measured 2.45:1 against the page — below AA for text this small. */
   color: var(--tc-ink-3);
 }
 .origin-estimate {
-  background: var(--tc-warning-soft);
-  border-color: var(--tc-warning-line);
   color: var(--tc-warning);
 }
 
@@ -2679,4 +2818,23 @@ dialog.modal::backdrop {
   border-color: var(--tc-primary-soft-2);
   background: var(--tc-primary-soft);
   text-decoration-color: currentColor;
+}
+
+/*
+ * Marginal annotation on a ledger row — the pencil note an analyst writes beside the line that
+ * actually decides the answer. Set in the margin after the label, never as a coloured badge, and
+ * only ever driven by a figure the engine already computed.
+ */
+.row-note {
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--tc-ink-3);
+  white-space: nowrap;
+}
+.cmp-table tr.driver td:first-child {
+  box-shadow: inset 2px 0 0 var(--tc-line-strong);
+  padding-left: 10px;
 }

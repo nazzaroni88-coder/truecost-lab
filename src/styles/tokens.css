@@ -24,8 +24,12 @@
   --tc-surface: #ffffff;
   --tc-surface-2: #f1f4f9;
   --tc-surface-3: #e9edf4;
-  --tc-line: #e2e7ef;
-  --tc-line-strong: #cfd7e3;
+  --tc-line: #e0e3e8;
+  --tc-line-strong: #c8cdd6;
+  /* Hairline for ledger rules: lighter than --tc-line, meant to separate rows without drawing a box. */
+  --tc-rule: #ecedf0;
+  /* The heavier rule under a subtotal, and the double rule under a terminal total. */
+  --tc-rule-total: #b4bac4;
   /* Translucent versions of the page surface for sticky bars that blur what is behind them. */
   --tc-surface-blur: rgba(255, 255, 255, 0.92);
   --tc-surface-blur-strong: rgba(255, 255, 255, 0.96);
@@ -35,7 +39,7 @@
   /* Ink */
   --tc-ink: #1a1f2b;
   --tc-ink-2: #454d5c;
-  --tc-ink-3: #6b7484;
+  --tc-ink-3: #616978;
   --tc-ink-4: #98a1b0;
   --tc-on-primary: #ffffff;
 
@@ -108,10 +112,14 @@
   --tc-cat-8: #e4574b;
   --tc-cat-9: #b0b9c6;
 
-  /* Elevation */
-  --sh-1: 0 1px 2px rgba(20, 30, 50, 0.06), 0 1px 3px rgba(20, 30, 50, 0.04);
-  --sh-2: 0 4px 14px rgba(20, 30, 50, 0.08), 0 1px 3px rgba(20, 30, 50, 0.05);
-  --sh-3: 0 12px 32px rgba(20, 30, 50, 0.14), 0 2px 6px rgba(20, 30, 50, 0.06);
+  /*
+   * Elevation. --sh-1 is gone to `none`: it used to sit under every card, and a shadow on every
+   * surface is not depth, it is noise. Only things that genuinely float above the page — menus,
+   * modals, toasts — cast one now.
+   */
+  --sh-1: none;
+  --sh-2: 0 2px 8px rgba(20, 30, 50, 0.07), 0 1px 2px rgba(20, 30, 50, 0.05);
+  --sh-3: 0 10px 28px rgba(20, 30, 50, 0.13), 0 2px 5px rgba(20, 30, 50, 0.06);
   --tc-backdrop: rgba(20, 28, 42, 0.45);
   /* Fade used to show that a scrollable pane has more content below */
   --tc-fade-down: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--tc-surface));
@@ -121,23 +129,33 @@
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  /* Surfaces — deep blue-grey, not pure black: easier on the eyes for long reading. */
-  --tc-bg: #141821;
-  --tc-page: #0f131a;
-  --tc-surface: #171c26;
-  --tc-surface-2: #1e2430;
-  --tc-surface-3: #272e3c;
-  --tc-line: #2b3341;
-  --tc-line-strong: #3c4655;
-  --tc-surface-blur: rgba(15, 19, 26, 0.9);
-  --tc-surface-blur-strong: rgba(15, 19, 26, 0.96);
-  --tc-on-color: #0f131a;
+  /*
+   * Surfaces — warm slate, not blue-grey and not black.
+   *
+   * The old ramp sat around hue 215°, which is the cold blue-black every dark dashboard ships with.
+   * These sit near 30° at very low saturation: still unmistakably neutral, but the warmth stops the
+   * page reading as a screenshot of a devtools panel and is easier to sit in front of for a while.
+   * Values are spaced so surface-2 is visible against surface WITHOUT needing a border.
+   */
+  --tc-bg: #16171a;
+  --tc-page: #101113;
+  --tc-surface: #1a1b1f;
+  --tc-surface-2: #212227;
+  --tc-surface-3: #2a2c32;
+  --tc-line: #2f3037;
+  --tc-line-strong: #43454e;
+  /* Hairline for ledger rules — barely there, enough to separate a row. */
+  --tc-rule: #26272c;
+  --tc-rule-total: #55575f;
+  --tc-surface-blur: rgba(16, 17, 19, 0.9);
+  --tc-surface-blur-strong: rgba(16, 17, 19, 0.96);
+  --tc-on-color: #101113;
 
-  /* Ink — soft off-white rather than #fff to cut glare */
-  --tc-ink: #e7ebf2;
-  --tc-ink-2: #b6bfcd;
-  --tc-ink-3: #8b95a5;
-  --tc-ink-4: #6a7484;
+  /* Ink — warm off-white. Never #fff: at this contrast it glares on a dark ground. */
+  --tc-ink: #ece9e4;
+  --tc-ink-2: #b6b3ad;
+  --tc-ink-3: #97938b;
+  --tc-ink-4: #6b6862;
   --tc-on-primary: #0b1220;
 
   /* Inverse surface — light chips on a dark page */
@@ -206,13 +224,13 @@
   --tc-cat-8: #ff8b7e;
   --tc-cat-9: #7d8798;
 
-  /* Shadows read as depth only if they are darker than the surface */
-  --sh-1: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.28);
-  --sh-2: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --sh-3: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.35);
-  --tc-backdrop: rgba(4, 7, 12, 0.65);
-  --tc-fade-down: linear-gradient(to bottom, rgba(23, 28, 38, 0), var(--tc-surface));
-  --tc-recovered-hatch: rgba(15, 19, 26, 0.55);
+  /* Shadows read as depth only if they are darker than the surface. --sh-1 is none in both themes. */
+  --sh-1: none;
+  --sh-2: 0 2px 10px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --sh-3: 0 10px 28px rgba(0, 0, 0, 0.55), 0 2px 5px rgba(0, 0, 0, 0.35);
+  --tc-backdrop: rgba(6, 6, 8, 0.66);
+  --tc-fade-down: linear-gradient(to bottom, rgba(26, 27, 31, 0), var(--tc-surface));
+  --tc-recovered-hatch: rgba(16, 17, 19, 0.55);
 }
 
 :root {
@@ -242,12 +260,36 @@
   --sp-9: 3rem;
   --sp-10: 4rem;
 
-  /* Shape */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-xl: 22px;
+  /*
+   * Shape.
+   *
+   * Deliberately tight. Soft, uniform 8/12/16/22px corners on every surface are the house style of
+   * generated dashboards, and they make a page of financial working read as a set of app widgets.
+   * A printed ledger has square rules and hard edges, so almost everything here is 0-6px and the
+   * separation between things is done with a hairline rule and whitespace instead of a box.
+   *
+   * --r-cta is the ONE soft radius, reserved for the primary action and focus rings, so roundness
+   * carries meaning: if it is round, it is the thing to click.
+   * --r-pill is reserved for genuinely circular controls (icon buttons, toggle knobs) — not chips,
+   * badges or tabs, which were the pill-spam.
+   */
+  --r-none: 0;
+  --r-xs: 2px;
+  --r-sm: 3px;
+  --r-md: 4px;
+  --r-lg: 6px;
+  --r-xl: 8px;
+  --r-cta: 8px;
   --r-pill: 999px;
+
+  /* Editorial rules — lighter than --tc-line, for separating without boxing. */
+  --rule: 1px solid var(--tc-rule);
+  --rule-strong: 1px solid var(--tc-line-strong);
+
+  /* Tracking: large type tightens, small caps type opens up. */
+  --track-tight: -0.02em;
+  --track-tighter: -0.03em;
+  --track-caps: 0.08em;
 
   /* Motion */
   --ease: cubic-bezier(0.2, 0.7, 0.2, 1);

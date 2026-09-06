@@ -45,8 +45,11 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
   }
 
   const biggestGap = a.categories
-    .map((cat) => ({ label: cat.label, diff: cat.amount - (b.categories.find((x) => x.key === cat.key)?.amount ?? 0) }))
+    .map((cat) => ({ key: cat.key, label: cat.label, diff: cat.amount - (b.categories.find((x) => x.key === cat.key)?.amount ?? 0) }))
     .sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff))[0];
+  // Only annotate a driver that is actually a driver: a sub-$1 gap is a rounding artefact, not the
+  // reason one car wins, and labelling it "largest gap" would be precision theatre.
+  const biggestGapKey = biggestGap && Math.abs(biggestGap.diff) > 1 ? biggestGap.key : null;
   const sameCash = Math.abs(a.cashAtSigning - b.cashAtSigning) < 1;
   const stats = [
     { label: `${a.name} true cost`, value: fmtMoney(a.totalCost), sub: `${fmtMoney(a.monthlyCost)}/mo · ${fmtMoney(a.costPerMile, 2)}/mi`, tone: 'a' as const },
@@ -131,10 +134,14 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
                 </>
               )}
               {catKeys.map((k) => (
-                <tr key={k}>
+                <tr key={k} className={k === biggestGapKey ? 'driver' : undefined}>
                   <td>
                     <span className="cat-dot" style={{ background: categoryColor(k) }} />
                     {catLabel(k)}
+                    {/* A marginal annotation on the line that actually decides the answer. The
+                        category and its amount are already computed above — nothing is invented
+                        here, and no percentage is asserted that the engine did not produce. */}
+                    {k === biggestGapKey && <span className="row-note">largest gap</span>}
                   </td>
                   <td>{fmtMoney(catAmt(a, k))}</td>
                   <td>{fmtMoney(catAmt(b, k))}</td>

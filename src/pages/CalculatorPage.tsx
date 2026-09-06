@@ -317,8 +317,8 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
         </div>
         <div className="calc-layout">
           <div className="calc-form-wrap" ref={wrapRef} hidden={isMobile && mobileView !== 'inputs'}>
-            <aside className="calc-form card" aria-label="Inputs" ref={scrollRef}>
-            <div className="card-pad">
+            <aside className="calc-form" aria-label="Inputs" ref={scrollRef}>
+            <div className="form-pad">
               <div style={{ paddingTop: 'var(--sp-3)' }}>
                 <div className="row-between" style={{ marginBottom: 8 }}>
                   <span className="eyebrow">Start from an example</span>

@@ -3,10 +3,16 @@ import { Link } from 'react-router-dom';
 import type { Insight, MethodologyItem } from '../../calculators/types';
 import { IconChevron, IconClock, IconLightbulb, IconQuestion, IconTarget } from '../ui/Icons';
 
-/** Standard results card with a numbered kicker ("Why?", "What matters most", ...). */
+/**
+ * A section of the working, under a kicker ("Why?", "What matters most", ...).
+ *
+ * Deliberately not a card. Seven of these stacked down a page, each with its own border, radius and
+ * shadow, was the single biggest source of the boxed-in dashboard look — and anything inside one
+ * became a card in a card. A rule and whitespace separate them now.
+ */
 export function ResultSection({ kicker, title, sub, children, id, className, right }: { kicker?: string; title: string; sub?: ReactNode; children: ReactNode; id?: string; className?: string; right?: ReactNode }) {
   return (
-    <section className={`card card-pad ${className ?? ''}`} id={id} aria-labelledby={id ? `${id}-title` : undefined}>
+    <section className={`ledger-section ${className ?? ''}`} id={id} aria-labelledby={id ? `${id}-title` : undefined}>
       <div className="row-between" style={{ alignItems: 'flex-start', marginBottom: 'var(--sp-3)' }}>
         <div>
           {kicker && <div className="eyebrow" style={{ color: 'var(--tc-primary-strong)' }}>{kicker}</div>}
@@ -60,7 +66,7 @@ export function InsightsList({ items }: { items: Insight[] }) {
 
 export function MethodologyPanel({ items, assumptions, id }: { items: MethodologyItem[]; assumptions?: { label: string; value: string }[]; id?: string }) {
   return (
-    <ResultSection id={id} kicker="Show me the math" title="How this was calculated" sub="Every formula, with your numbers plugged in. Nothing is hidden.">
+    <ResultSection id={id} kicker="Show me the math" title="The math & assumptions" sub="Every formula, with your numbers plugged in. Nothing is hidden.">
       <div className="method-list">
         {items.map((m) => (
           <details className="disclosure" key={m.title}>
@@ -79,7 +85,7 @@ export function MethodologyPanel({ items, assumptions, id }: { items: Methodolog
         {assumptions && assumptions.length > 0 && (
           <details className="disclosure">
             <summary>
-              <span>Assumptions in this scenario</span>
+              <span>Every assumption behind this answer</span>
               <IconChevron className="chev" width={18} height={18} />
             </summary>
             <div className="disclosure-body">
