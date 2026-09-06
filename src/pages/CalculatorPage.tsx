@@ -5,6 +5,7 @@ import type { Preset, ShareSummary } from '../calculators/types';
 import { CALCULATORS } from '../calculators/meta';
 import { useScenarios } from '../scenarios/store';
 import { decodeShare } from '../scenarios/urlCodec';
+import { nextScenarioName } from '../scenarios/naming';
 import { Button, IconButton } from '../components/ui/Button';
 import { CalcIcon, IconCheck, IconCompare, IconDuplicate, IconMore, IconPlus, IconRename, IconReset, IconSwap, IconTrash, IconArrowRight, IconWarning } from '../components/ui/Icons';
 import { Modal } from '../components/ui/Modal';
@@ -141,7 +142,26 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   // what replaces the "illustrative example" banner rather than leaving the results unlabelled.
   const presetNote = def.presetNote ? def.presetNote(inputs) : null;
 
-  const onChange = useCallback((next: unknown) => setInputs(next), [setInputs]);
+  /**
+   * Applies an edit, and keeps a generated name in step with the numbers it describes.
+   *
+   * Names used to be generated once and never revisited, so a scenario created at five years and
+   * then edited to nine still read "… · 5 yr" in the tab strip and in any link shared from it — a
+   * label stating something the scenario no longer said. The test is deliberately narrow: we only
+   * touch a name that is exactly what `describe` would have produced for the inputs being replaced,
+   * which is the one case where the name is provably ours. A name the user typed, or a preset's own
+   * name, does not match and is left alone.
+   */
+  const onChange = useCallback(
+    (next: unknown) => {
+      if (active) {
+        const nextName = nextScenarioName(active.name, describe, inputs, next);
+        if (nextName) rename(active.id, nextName);
+      }
+      setInputs(next);
+    },
+    [active, describe, inputs, rename, setInputs],
+  );
   /** True when the scenario still carries a name we generated, so renaming it won't lose the user's own label. */
   const isAutoNamed = (name: string) =>
     name === `${def.shortName} scenario` || name === describe(inputs) || def.presets.some((p: Preset<unknown>) => p.name === name) || scenarios.some((s) => name === describe(s.inputs));
@@ -236,7 +256,9 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                     <button
                       role="menuitem"
                       onClick={() => {
-                        setInputs(def.swap!(inputs));
+                        // Through onChange, not setInputs: swapping reverses the two names, so a
+                        // generated label has to follow it the same way an edit does.
+                        onChange(def.swap!(inputs));
                         setMenuOpen(false);
                         toast('Swapped Option A and Option B');
                       }}
