@@ -333,16 +333,29 @@ export function vehicleSensitivityVariables(inputs: VehicleInputs): SensitivityV
   }
   (['a', 'b'] as const).forEach((side) => {
     const o = inputs[side];
-    vars.push({
-      key: `${side}.annualDepreciation`,
-      label: `${o.name}: depreciation rate`,
-      get: (i) => i[side].annualDepreciation,
-      set: (i, v) => ({ ...i, [side]: { ...i[side], annualDepreciation: v, resaleOverride: null } }),
-      low: (b) => Math.max(0, b - 5),
-      high: (b) => Math.min(60, b + 5),
-      format: (v) => `${fmtPct(v, 0)}/yr`,
-      bounds: [0, 60],
-    });
+    if (o.resaleOverride !== null && o.resaleOverride > 0) {
+      vars.push({
+        key: `${side}.resaleOverride`,
+        label: `${o.name}: resale value`,
+        get: (i) => i[side].resaleOverride ?? 0,
+        set: (i, v) => ({ ...i, [side]: { ...i[side], resaleOverride: Math.max(0, Math.min(i[side].price, v)) } }),
+        low: (b) => b * 0.8,
+        high: (b) => b * 1.2,
+        format: (v) => fmtMoney(v, 0),
+        bounds: [0, o.price],
+      });
+    } else {
+      vars.push({
+        key: `${side}.annualDepreciation`,
+        label: `${o.name}: depreciation rate`,
+        get: (i) => i[side].annualDepreciation,
+        set: (i, v) => ({ ...i, [side]: { ...i[side], annualDepreciation: v, resaleOverride: null } }),
+        low: (b) => Math.max(0, b - 5),
+        high: (b) => Math.min(60, b + 5),
+        format: (v) => `${fmtPct(v, 0)}/yr`,
+        bounds: [0, 60],
+      });
+    }
     vars.push({
       key: `${side}.insuranceAnnual`,
       label: `${o.name}: insurance`,

@@ -43,10 +43,16 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
     }
   }
 
+  const biggestGap = a.categories
+    .map((cat) => ({ label: cat.label, diff: cat.amount - (b.categories.find((x) => x.key === cat.key)?.amount ?? 0) }))
+    .sort((x, y) => Math.abs(y.diff) - Math.abs(x.diff))[0];
+  const sameCash = Math.abs(a.cashAtSigning - b.cashAtSigning) < 1;
   const stats = [
     { label: `${a.name} true cost`, value: fmtMoney(a.totalCost), sub: `${fmtMoney(a.monthlyCost)}/mo · ${fmtMoney(a.costPerMile, 2)}/mi`, tone: 'a' as const },
     { label: `${b.name} true cost`, value: fmtMoney(b.totalCost), sub: `${fmtMoney(b.monthlyCost)}/mo · ${fmtMoney(b.costPerMile, 2)}/mi`, tone: 'b' as const },
-    { label: 'Cash due at signing', value: `${fmtMoneyCompact(a.cashAtSigning)} vs ${fmtMoneyCompact(b.cashAtSigning)}`, sub: `${a.name} vs ${b.name}`, help: 'Down payment when financing, or the full price plus tax and fees when paying cash (minus any trade-in).' },
+    sameCash
+      ? { label: 'Biggest gap', value: biggestGap ? biggestGap.label : '—', sub: biggestGap ? `${fmtMoney(Math.abs(biggestGap.diff))} more for ${biggestGap.diff > 0 ? a.name : b.name}` : '', help: 'The single cost category with the largest difference between the two options.' }
+      : { label: 'Cash due at signing', value: `${fmtMoneyCompact(a.cashAtSigning)} vs ${fmtMoneyCompact(b.cashAtSigning)}`, sub: `${a.name} vs ${b.name}`, help: 'Down payment when financing, or the full price plus tax and fees when paying cash (minus any trade-in).' },
     { label: 'Monthly out of pocket', value: `${fmtMoney(a.monthlyOutOfPocket)} vs ${fmtMoney(b.monthlyOutOfPocket)}`, sub: 'payments + running costs, averaged', help: 'Average monthly spend while you own the car: loan payment plus fuel, insurance, maintenance, repairs, tires and registration. Excludes the upfront cash and the resale you get back.' },
   ];
 
