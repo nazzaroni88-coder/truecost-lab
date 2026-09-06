@@ -3091,3 +3091,65 @@ dialog.modal::backdrop {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/*
+ * The share prompt: the invitation placed where the answer lands.
+ *
+ * A ruled band, not a card. It sits between the answer and the breakdown, so a border box here
+ * would read as a third object competing with both — the hairline rules that separate every other
+ * ledger section are enough to mark it as its own thing.
+ */
+.share-prompt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--sp-4);
+  align-items: center;
+  padding: var(--sp-4) 0 var(--sp-5);
+  border-bottom: 1px solid var(--tc-rule);
+}
+.share-prompt .thumb {
+  /* A button, but the artwork is the affordance. The edge is the strong rule, not the hairline:
+     the card is white, and on the light page a hairline let it dissolve into the background. */
+  padding: 0;
+  border: 1px solid var(--tc-line-strong);
+  border-radius: var(--r-xs);
+  background: #ffffff;
+  cursor: pointer;
+  display: block;
+  line-height: 0;
+  overflow: hidden;
+  transition: border-color 0.12s ease;
+}
+.share-prompt .thumb canvas {
+  display: block;
+  width: 104px;
+  height: auto;
+}
+.share-prompt .thumb:hover {
+  border-color: var(--tc-primary);
+}
+.share-prompt .thumb:focus-visible {
+  outline: 2px solid var(--tc-primary);
+  outline-offset: 2px;
+}
+.share-prompt .eyebrow {
+  color: var(--tc-ink-3);
+  letter-spacing: var(--track-caps);
+}
+.share-prompt p {
+  margin: var(--sp-1) 0 var(--sp-3);
+  max-width: 56ch;
+  font-size: var(--fs-small);
+  color: var(--tc-ink-2);
+}
+@media (max-width: 560px) {
+  .share-prompt {
+    gap: var(--sp-3);
+  }
+  .share-prompt .thumb canvas {
+    width: 76px;
+  }
+  .share-prompt p {
+    margin-bottom: var(--sp-2);
+  }
+}

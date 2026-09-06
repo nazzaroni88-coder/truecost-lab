@@ -1,21 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ShareSummary } from '../../calculators/types';
-import { buildShareUrl } from '../../scenarios/urlCodec';
 import { canvasToBlob, renderShareCard, SHARE_FORMATS, type ShareFormat } from '../../share/shareCard';
-import { buildSummaryText } from '../../share/summaryText';
+import { useShare, type ShareState } from './ShareContext';
 import { Button } from '../ui/Button';
 import { IconCopy, IconDownload, IconLink, IconPrint, IconShare } from '../ui/Icons';
 import { Modal } from '../ui/Modal';
 import { useToast } from '../ui/Toast';
 
-interface Props<I> {
-  calculatorId: string;
-  calculatorName: string;
-  path: string;
-  scenarioName: string;
-  inputs: I;
-  summary: ShareSummary;
-}
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -38,23 +28,23 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
-export function ShareBar<I>({ calculatorId, calculatorName, path, scenarioName, inputs, summary }: Props<I>) {
-  const [open, setOpen] = useState(false);
+/** The utility row above the result. The dialog it opens is owned by ShareProvider. */
+export function ShareBar() {
+  const share = useShare();
   const { toast } = useToast();
-  const url = buildShareUrl({ calculatorId, name: scenarioName, inputs }, path);
-  const text = buildSummaryText(calculatorName, summary, url, scenarioName);
+  if (!share) return null;
 
   const onCopyLink = async () => {
-    toast((await copyText(url)) ? 'Link copied — anyone who opens it sees this exact scenario' : 'Could not copy. Select the link manually.');
+    toast((await copyText(share.url)) ? 'Link copied — anyone who opens it sees this exact scenario' : 'Could not copy. Select the link manually.');
   };
   const onCopySummary = async () => {
-    toast((await copyText(text)) ? 'Summary copied to clipboard' : 'Could not copy the summary');
+    toast((await copyText(share.text)) ? 'Summary copied to clipboard' : 'Could not copy the summary');
   };
 
   return (
     <>
       <div className="share-bar row" style={{ gap: 8 }}>
-        <Button variant="soft" size="sm" icon={<IconShare />} onClick={() => setOpen(true)}>
+        <Button variant="soft" size="sm" icon={<IconShare />} onClick={share.open}>
           Share result
         </Button>
         <Button variant="ghost" size="sm" icon={<IconLink />} onClick={onCopyLink}>
@@ -67,12 +57,12 @@ export function ShareBar<I>({ calculatorId, calculatorName, path, scenarioName, 
           Print / PDF
         </Button>
       </div>
-      <ShareModal open={open} onClose={() => setOpen(false)} calculatorName={calculatorName} scenarioName={scenarioName} summary={summary} url={url} text={text} />
     </>
   );
 }
 
-function ShareModal({ open, onClose, calculatorName, scenarioName, summary, url, text }: { open: boolean; onClose: () => void; calculatorName: string; scenarioName: string; summary: ShareSummary; url: string; text: string }) {
+export function ShareModal({ open, onClose, state }: { open: boolean; onClose: () => void; state: ShareState }) {
+  const { calculatorName, scenarioName, summary, url, text } = state;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { toast } = useToast();
   const [canShareFiles, setCanShareFiles] = useState(false);

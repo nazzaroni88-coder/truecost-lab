@@ -14,7 +14,8 @@ import { useMediaQuery } from '../lib/useMeasure';
 import { requestFieldFocus } from '../lib/focusField';
 import { fmtMoney } from '../lib/format';
 import { useToast } from '../components/ui/Toast';
-import { ShareBar } from '../components/results/ShareBar';
+import { ShareBar, ShareModal } from '../components/results/ShareBar';
+import { ShareProvider } from '../components/results/ShareContext';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { InvalidFieldsProvider, useInvalidFields } from '../components/forms/InvalidFields';
 import { NotFoundPage } from './NotFoundPage';
@@ -386,12 +387,22 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
               </div>
             </aside>
           </div>
+          <ShareProvider
+            calculatorId={def.id}
+            calculatorName={def.name}
+            path={path}
+            scenarioName={active.name}
+            inputs={deferredInputs}
+            summary={summary}
+            blocked={invalidFields.length > 0}
+            renderModal={(p) => <ShareModal {...p} />}
+          >
           <div className="calc-results" ref={resultsRef} id="results" hidden={isMobile && mobileView !== 'results'}>
             <div className="row-between no-print">
               <span className="small muted">
                 Scenario: <strong>{active.name}</strong>
               </span>
-              <ShareBar calculatorId={def.id} calculatorName={def.name} path={path} scenarioName={active.name} inputs={deferredInputs} summary={summary} />
+              <ShareBar />
             </div>
             <div className="print-only" style={{ marginBottom: 8 }}>
               <strong>TrueCost Lab — {def.name}</strong> · Scenario: {active.name} · {new Date().toLocaleDateString()}
@@ -457,6 +468,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
             </ErrorBoundary>
             <RelatedCalculators currentId={def.id} />
           </div>
+          </ShareProvider>
         </div>
       </div>
 

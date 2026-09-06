@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { InfoTip } from '../ui/InfoTip';
 import { IconWarning } from '../ui/Icons';
+import { SharePrompt } from './SharePrompt';
 
 export interface HeroStat {
   label: string;
@@ -12,6 +13,7 @@ export interface HeroStat {
 
 export function AnswerHero({ winner, kicker = 'The answer', headline, sub, stats, warnings, children }: { winner: 'a' | 'b' | 'tie' | 'none'; kicker?: string; headline: ReactNode; sub?: ReactNode; stats?: HeroStat[]; warnings?: string[]; children?: ReactNode }) {
   return (
+    <>
     <section className={`answer-hero winner-${winner === 'none' ? 'tie' : winner}`} aria-labelledby="answer-heading">
       <div className="eyebrow">{kicker}</div>
       <h2 id="answer-heading" className="answer-headline" aria-live="polite" aria-atomic="true">
@@ -44,5 +46,8 @@ export function AnswerHero({ winner, kicker = 'The answer', headline, sub, stats
       )}
       {children}
     </section>
+    {/* A sibling, not a child: the prompt follows the answer rather than becoming part of it. */}
+    <SharePrompt />
+    </>
   );
 }
