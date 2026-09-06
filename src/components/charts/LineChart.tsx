@@ -154,8 +154,11 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
           </g>
         )}
       </svg>
-      <table className="sr-only">
-        <caption>{ariaLabel}</caption>
+      {/* A bare table ignores the 1px width of .sr-only (tables size to their content), so it has to
+          live inside a wrapper that can actually clip it. */}
+      <div className="sr-only">
+        <table>
+          <caption>{ariaLabel}</caption>
         <thead>
           <tr>
             <th scope="col">Point</th>
@@ -175,8 +178,9 @@ export function LineChart({ x, series, height = 240, yFormat = fmtMoneyCompact, 
               ))}
             </tr>
           ))}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
       {tip && hover !== null && (
         <div className="chart-tip" style={{ left: Math.min(Math.max(sx(x[hover]), 70), width - 70), top: pad.t + 8 }}>
           <div style={{ fontWeight: 600, marginBottom: 2 }}>{tip.title}</div>

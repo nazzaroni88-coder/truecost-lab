@@ -93,6 +93,7 @@ contributions = Σ d[t] (+ exit difference once reached);  growth = value − co
         <h2 id="sensitivity">Sensitivity and break-even</h2>
         <p>For each key assumption we re-run the entire model at a plausible low and high value and rank assumptions by how much the result moves (the “swing”). If the sign of the result changes between the low and high value, that assumption alone could flip the answer, and we flag it.</p>
         <p>Break-even values are found by scanning the assumption across realistic bounds for a sign change and then bisecting to the point where the two options are equal. If no sign change exists in bounds, we say so rather than inventing a number.</p>
+        <p>We also suppress break-even answers that are arithmetically true but practically unreachable. "Buying wins below a 0.9% mortgage rate" is not advice anyone can act on, so where the solved value falls outside a range you could actually encounter we say the result holds across the whole range instead.</p>
 
         <h2 id="vehicle">Vehicle True Cost</h2>
         <pre className="formula">{`sales tax     = max(0, price − trade-in) × rate            (most states credit the trade-in)
@@ -109,6 +110,12 @@ exitValue(t)  = value(t) − loan balance(t)
 true cost     = price + tax + fees + interest + fuel + running − resale
 cost per mile = true cost ÷ (miles × years)`}</pre>
         <p>If you sell before the loan ends, the remaining balance is repaid from the sale. If you enter a resale value directly, we keep the first-year drop and solve for the annual rate that lands on your number.</p>
+        <p>
+          <strong>Negative equity.</strong> When the loan balance exceeds the car's value, the cash from a sale is negative — you would have to bring money to close out the loan. We show the car's value, the loan still owed and the resulting cash separately, and warn you rather than reporting the gross resale figure as money you get back.
+        </p>
+        <p>
+          <strong>Trade-ins.</strong> A trade-in is counted as money you put in, because you could have sold the car for cash instead. It can only offset what this purchase costs, though: if your trade-in is worth more than the car, the surplus comes back to you and is not counted as spent.
+        </p>
 
         <h2 id="rent-buy">Rent vs Buy</h2>
         <pre className="formula">{`renter outflow(t) = rent(year) + renter's insurance/12;  rent grows yearly at the rent growth rate

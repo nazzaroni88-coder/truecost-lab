@@ -19,7 +19,7 @@ Every calculator delivers the same results hierarchy: **The answer → Why → W
 ## Stack
 
 - Vite + React 18 + TypeScript, no UI framework — a small custom design system in `src/styles`.
-- Pure, unit-tested financial engine in `src/engine` (Vitest: 112 tests across the engine, persistence, formatting, and an integration suite that runs every preset of every calculator through normalize → compute → summary → share-link round trip, plus zero and extreme inputs).
+- Pure, unit-tested financial engine in `src/engine` (Vitest: 129 tests across the engine, persistence, formatting, and an integration suite that runs every preset of every calculator through normalize → compute → summary → share-link round trip, plus zero and extreme inputs).
 - Custom SVG/CSS charts (`src/components/charts`) — no chart library.
 - Scenarios persist to `localStorage` through a `StorageAdapter` interface (`src/scenarios/storage.ts`) so cloud/account saving can be added later.
 - Shareable links encode the scenario in the URL hash (no backend). Result cards render to a canvas PNG.
