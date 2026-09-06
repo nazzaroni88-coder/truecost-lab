@@ -155,7 +155,21 @@ export function computeDebtInvest(i: DebtInvestInputs): DebtInvestResult {
   const breakEvenReturn = be.value;
 
   const sensitivity = runSensitivity(i, debtInvestMetric, vars);
-  const returnScenarios = [4, 6, 8, 10, 12].map((rp) => {
+  /*
+   * The user's own expected return joins the sampled set.
+   *
+   * The table exists to show where your assumption sits relative to the tipping point, and the UI
+   * marks the row matching your rate — but the samples were a fixed [4, 6, 8, 10, 12] and the app's
+   * own default is 7%, so at the default settings there was no row to mark and the reader could not
+   * find themselves in the table at all.
+   *
+   * This samples the SAME debtInvestMetric at one more input. No formula, amortization or return
+   * logic changes; only which points are evaluated. The raw value is used rather than a rounded one
+   * so the UI's exact-equality match still holds.
+   */
+  const fixedReturns = [4, 6, 8, 10, 12];
+  const sampleReturns = fixedReturns.includes(i.investmentReturn) ? fixedReturns : [...fixedReturns, i.investmentReturn].sort((a, b) => a - b);
+  const returnScenarios = sampleReturns.map((rp) => {
     const d = debtInvestMetric({ ...i, investmentReturn: rp });
     return { returnPct: rp, difference: d, winner: (Math.abs(d) < 1 ? 'tie' : d > 0 ? 'invest' : 'payDebt') as DebtInvestResult['winner'] };
   });
