@@ -1927,14 +1927,22 @@ table,
 }
 
 /* Methodology panel */
-/* The worked figures: a quoted block set off by a rule, not a filled code chip. */
+/*
+ * The worked figures: a quoted block set off by a rule, not a filled code chip.
+ *
+ * The rule is --tc-ink-3, not a line colour. Dropping the filled background removed the ONLY thing
+ * separating a block of formulas from the prose around it, and at --tc-line the replacement rule
+ * measured 1.21:1 against the page — invisible, which is not a quieter boundary but no boundary.
+ * ink-3 is the one token that clears 3:1 in both themes (5.19 light, 6.17 dark) and reads as a
+ * deliberate marginal rule, the way a pull-quote is set.
+ */
 .formula {
   font-family: var(--tc-font-mono);
   font-size: 0.8125rem;
   background: transparent;
-  border-left: 2px solid var(--tc-line);
+  border-left: 2px solid var(--tc-ink-3);
   border-radius: 0;
-  padding: 2px 0 2px 12px;
+  padding: 2px 0 2px 14px;
   overflow-x: auto;
   white-space: pre;
   color: var(--tc-ink);
