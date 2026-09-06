@@ -56,6 +56,17 @@ describeSuite('scenario auto-naming', () => {
     expect(next).toContain(base.b.name.split(' ')[0]);
   });
 
+  it('follows a reset back to defaults', () => {
+    // The path I missed on the first pass: reset writes inputs straight to the store, so without
+    // the rule a scenario reset to five years kept a name saying nine.
+    const nine = withYears(9);
+    const generated = describeVehicle(nine);
+    expect(generated).toContain('9 yr');
+    const next = nextScenarioName(generated, describeVehicle, nine, base);
+    expect(next).toBe(describeVehicle(base));
+    expect(next).not.toContain('9 yr');
+  });
+
   it('keeps a shared link honest: the name travels with inputs that match it', () => {
     // Names only went stale because they were never refreshed. With the rule applied, the name a
     // scenario carries into a share link is the one its own inputs generate.

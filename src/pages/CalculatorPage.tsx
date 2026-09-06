@@ -162,6 +162,20 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
     },
     [active, describe, inputs, rename, setInputs],
   );
+  /**
+   * Resets to defaults through the same naming rule as an edit.
+   *
+   * `reset` writes inputs straight to the store, so on its own it left a generated name describing
+   * the numbers that were just discarded — a scenario reset back to five years still reading
+   * "· 9 yr". Every path that replaces inputs has to go through the rule, not just typing.
+   */
+  const resetInputs = useCallback(() => {
+    if (!active) return;
+    const nextName = nextScenarioName(active.name, describe, inputs, def.defaults);
+    if (nextName) rename(active.id, nextName);
+    reset(active.id);
+  }, [active, describe, inputs, def.defaults, rename, reset]);
+
   /** True when the scenario still carries a name we generated, so renaming it won't lose the user's own label. */
   const isAutoNamed = (name: string) =>
     name === `${def.shortName} scenario` || name === describe(inputs) || def.presets.some((p: Preset<unknown>) => p.name === name) || scenarios.some((s) => name === describe(s.inputs));
@@ -269,7 +283,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                   <button
                     role="menuitem"
                     onClick={() => {
-                      reset(active.id);
+                      resetInputs();
                       setMenuOpen(false);
                       toast('Inputs reset to defaults');
                     }}
@@ -283,7 +297,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                     onClick={() => {
                       setMenuOpen(false);
                       if (scenarios.length <= 1) {
-                        reset(active.id);
+                        resetInputs();
                         toast('Only one scenario — inputs reset instead');
                         return;
                       }
@@ -430,7 +444,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                 </div>
               </div>
             )}
-            <ErrorBoundary label="the results" onReset={() => reset(active.id)}>
+            <ErrorBoundary label="the results" onReset={resetInputs}>
               <Results inputs={deferredInputs} result={result} onChange={onChange} />
             </ErrorBoundary>
             <RelatedCalculators currentId={def.id} />
