@@ -15,7 +15,7 @@
  */
 
 import type { VehicleInputs, VehicleOption } from '../../engine/calculators/vehicle';
-import { REG_BASE_EXAMPLE, stateDefaultsFor } from '../../data/stateDefaults';
+import { INSURANCE_BASE_EXAMPLE, REG_BASE_EXAMPLE, stateDefaultsFor } from '../../data/stateDefaults';
 import { US_STATES } from '../../data/incentives';
 
 /**
@@ -38,6 +38,8 @@ export const SUGGESTIBLE_PATHS = [
   'b.salesTaxRate',
   'a.registrationAnnual',
   'b.registrationAnnual',
+  'a.insuranceAnnual',
+  'b.insuranceAnnual',
   'shared.gasPrice',
   'shared.electricityRate',
 ] as const;
@@ -172,6 +174,11 @@ export function applyStateSuggestions(i: VehicleFormInputs, code: string): Vehic
       next.registrationAnnual = REG_BASE_EXAMPLE + (o.fuelType === 'electric' ? data.evFeeAnnual : 0);
       mark(regPath);
     }
+    const insPath = `${side}.insuranceAnnual` as SuggestiblePath;
+    if (!locked(insPath)) {
+      next.insuranceAnnual = insuranceFor(o.fuelType, data.insuranceIndex);
+      mark(insPath);
+    }
     return next;
   };
 
@@ -200,6 +207,33 @@ export function applyStateSuggestions(i: VehicleFormInputs, code: string): Vehic
  * electric picks up the state's EV surcharge instead of silently keeping the petrol figure.
  * A registration the person edited themselves still wins.
  */
+/**
+ * A state-typical full-coverage premium: a national example moved to the state by NAIC's ratio.
+ *
+ * Deliberately not the state's average expenditure in dollars. That figure spans every insured
+ * vehicle and coverage mix, so it sits near half of what full coverage on a new financed car costs,
+ * and using it would quietly halve a cost the buyer has to carry. The ratio is the part that
+ * transfers; the base carries the car.
+ */
+export function insuranceFor(fuelType: VehicleOption['fuelType'], index: number): number {
+  const base = fuelType === 'electric' ? INSURANCE_BASE_EXAMPLE.electric : INSURANCE_BASE_EXAMPLE.gas;
+  return Math.round((base * index) / 10) * 10;
+}
+
+/**
+ * Re-suggests insurance when the fuel type changes, for the same reason registration is re-suggested:
+ * an option switched to electric should pick up the higher EV premium, not keep the petrol one.
+ */
+export function refreshInsuranceForFuel(i: VehicleFormInputs, side: 'a' | 'b'): VehicleFormInputs {
+  const data = stateDefaultsFor(i.stateCode);
+  const path = `${side}.insuranceAnnual` as SuggestiblePath;
+  if (!data || i.provenance[path] === 'user') return i;
+  const o = i[side];
+  const value = insuranceFor(o.fuelType, data.insuranceIndex);
+  if (o.insuranceAnnual === value) return i;
+  return { ...i, [side]: { ...o, insuranceAnnual: value }, provenance: { ...i.provenance, [path]: 'suggested' } };
+}
+
 export function refreshRegistrationForFuel(i: VehicleFormInputs, side: 'a' | 'b'): VehicleFormInputs {
   const data = stateDefaultsFor(i.stateCode);
   const path = `${side}.registrationAnnual` as SuggestiblePath;

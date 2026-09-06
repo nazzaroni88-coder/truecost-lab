@@ -10,12 +10,13 @@ import { onFieldFocusRequest } from '../../lib/focusField';
 import { TERM_OPTIONS } from './presets';
 import { IncentiveHelper } from './IncentiveHelper';
 import { US_STATES } from '../../data/incentives';
-import { REG_BASE_EXAMPLE, STATE_DATA_REVIEWED, STATE_SOURCES, stateDefaultsFor } from '../../data/stateDefaults';
+import { INSURANCE_BASE_EXAMPLE, REG_BASE_EXAMPLE, STATE_DATA_REVIEWED, STATE_SOURCES, stateDefaultsFor } from '../../data/stateDefaults';
 import {
   applyStateSuggestions,
   ESTIMATE_ORIGIN,
   markUserEdited,
   originFor,
+  refreshInsuranceForFuel,
   refreshRegistrationForFuel,
   stateNameOf,
   VEHICLE_FIELD_IDS as ID,
@@ -53,9 +54,9 @@ export function VehicleForm({ inputs, onChange }: FormProps<VehicleFormInputs>) 
   };
   const setFuelType = (side: 'a' | 'b', fuelType: FuelType) => {
     const next = { ...inputs, [side]: { ...inputs[side], fuelType } };
-    // Switching to electric should pick up the state's EV surcharge; switching back should drop it.
-    // A registration the user typed themselves is left alone by refreshRegistrationForFuel.
-    onChange(refreshRegistrationForFuel(next, side));
+    // Switching to electric should pick up the state's EV surcharge and the higher EV premium;
+    // switching back should drop both. Values the user typed themselves are left alone.
+    onChange(refreshInsuranceForFuel(refreshRegistrationForFuel(next, side), side));
   };
 
   const anyGas = inputs.a.fuelType === 'gas' || inputs.b.fuelType === 'gas';
@@ -240,6 +241,13 @@ function OptionFields({
       ? `Example base ${fmtMoney(REG_BASE_EXAMPLE)} + ${all.stateCode} EV fee ${fmtMoney(evFee)}`
       : `Example base ${fmtMoney(REG_BASE_EXAMPLE)} — ${all.stateCode} adds no EV fee`
     : undefined;
+  const insSuggested = all.provenance[`${side}.insuranceAnnual`] === 'suggested';
+  // Say the arithmetic out loud. A premium that changed when the reader picked a state should show
+  // what it was derived from, not just assert a number.
+  const insHint =
+    insSuggested && stateData
+      ? `${fmtMoney(o.fuelType === 'electric' ? INSURANCE_BASE_EXAMPLE.electric : INSURANCE_BASE_EXAMPLE.gas)} national example × ${stateData.insuranceIndex.toFixed(2)} for ${all.stateCode}`
+      : undefined;
 
   return (
     <>
@@ -312,7 +320,18 @@ function OptionFields({
 
       <FormSection title="Running costs" sub="Per year, in today's dollars. They grow with cost inflation.">
         <div className="grid-2">
-          <NumberField label="Insurance" format="currency" suffix="/yr" value={o.insuranceAnnual} onChange={(v) => onPatch({ insuranceAnnual: v })} min={0} max={50000} help="Annual premium for this specific vehicle. We do not suggest a number here even when you pick a state: premiums vary far more by driver, record and credit than by state, and published state averages disagree with each other by hundreds of dollars. Use your renewal notice or a real quote." />
+          <NumberField
+            label="Insurance"
+            format="currency"
+            suffix="/yr"
+            value={o.insuranceAnnual}
+            onChange={(v) => onPatch({ insuranceAnnual: v })}
+            min={0}
+            max={50000}
+            origin={originFor(all, `${side}.insuranceAnnual`)}
+            hint={insHint}
+            help="Annual premium for this specific vehicle. Picking a state scales a national full-coverage example by how expensive that state is to insure in, using NAIC's average expenditure per insured vehicle — a ratio between states, not a quote. Your own premium depends far more on your record, age and credit than on your state, so replace this with your renewal notice if you have one."
+          />
           <NumberField
             label="Registration"
             format="currency"

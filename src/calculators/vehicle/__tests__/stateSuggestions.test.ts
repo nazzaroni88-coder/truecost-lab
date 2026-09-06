@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeVehicle } from '../../../engine/calculators/vehicle';
-import { REG_BASE_EXAMPLE, STATE_DEFAULTS } from '../../../data/stateDefaults';
+import { INSURANCE_BASE_EXAMPLE, REG_BASE_EXAMPLE, STATE_DEFAULTS } from '../../../data/stateDefaults';
 import { vehicleCalculator } from '..';
 import { vehicleDefaults } from '../presets';
 import {
@@ -10,6 +10,8 @@ import {
   normalizeProvenance,
   normalizeStateCode,
   originFor,
+  insuranceFor,
+  refreshInsuranceForFuel,
   refreshRegistrationForFuel,
   swapVehicleFormInputs,
   userEditCount,
@@ -236,5 +238,69 @@ describe('the engine is untouched by any of this', () => {
     // California is dearer on tax, petrol and power than the example, so costs must rise.
     expect(after.a.totalCost).toBeGreaterThan(before.a.totalCost);
     expect(after.b.totalCost).toBeGreaterThan(before.b.totalCost);
+  });
+});
+
+describe('insurance follows the state without compounding', () => {
+  it('scales the national example by the state index', () => {
+    const out = applyStateSuggestions(base(), 'FL');
+    // Florida is the dearest state; the electric car carries the higher base.
+    expect(out.a.insuranceAnnual).toBe(insuranceFor('electric', STATE_DEFAULTS.FL.insuranceIndex));
+    expect(out.b.insuranceAnnual).toBe(insuranceFor('gas', STATE_DEFAULTS.FL.insuranceIndex));
+    expect(out.a.insuranceAnnual).toBeGreaterThan(INSURANCE_BASE_EXAMPLE.electric);
+    expect(out.b.insuranceAnnual).toBeGreaterThan(INSURANCE_BASE_EXAMPLE.gas);
+  });
+
+  it('goes down as well as up', () => {
+    const out = applyStateSuggestions(base(), 'ND');
+    expect(out.b.insuranceAnnual).toBeLessThan(INSURANCE_BASE_EXAMPLE.gas);
+  });
+
+  it('replaces rather than compounds when the state changes', () => {
+    // The bug this guards: scaling the current value instead of a constant base, so CA then MI
+    // would multiply both indexes together.
+    const once = applyStateSuggestions(base(), 'MI');
+    const twice = applyStateSuggestions(applyStateSuggestions(base(), 'CA'), 'MI');
+    expect(twice.a.insuranceAnnual).toBe(once.a.insuranceAnnual);
+    expect(twice.b.insuranceAnnual).toBe(once.b.insuranceAnnual);
+  });
+
+  it('is idempotent when the same state is applied twice', () => {
+    const once = applyStateSuggestions(base(), 'TX');
+    const twice = applyStateSuggestions(once, 'TX');
+    expect(twice.a.insuranceAnnual).toBe(once.a.insuranceAnnual);
+    expect(twice.b.insuranceAnnual).toBe(once.b.insuranceAnnual);
+  });
+
+  it('never overwrites a premium the user typed', () => {
+    const typed = markUserEdited({ ...base(), a: { ...base().a, insuranceAnnual: 4321 } }, ['a.insuranceAnnual']);
+    const out = applyStateSuggestions(typed, 'FL');
+    expect(out.a.insuranceAnnual).toBe(4321);
+    expect(originFor(out, 'a.insuranceAnnual').label).toBe('Yours');
+    // The other car still gets the suggestion.
+    expect(out.b.insuranceAnnual).toBe(insuranceFor('gas', STATE_DEFAULTS.FL.insuranceIndex));
+  });
+
+  it('re-suggests when a car switches fuel type', () => {
+    const withState = applyStateSuggestions(base(), 'CA');
+    const petrolNow = refreshInsuranceForFuel({ ...withState, b: { ...withState.b, fuelType: 'electric' } }, 'b');
+    expect(petrolNow.b.insuranceAnnual).toBe(insuranceFor('electric', STATE_DEFAULTS.CA.insuranceIndex));
+  });
+
+  it('leaves insurance alone on fuel change when no state is set', () => {
+    const i = base();
+    expect(refreshInsuranceForFuel({ ...i, b: { ...i.b, fuelType: 'electric' } }, 'b').b.insuranceAnnual).toBe(i.b.insuranceAnnual);
+  });
+
+  it('clears the suggestion label when the state is cleared', () => {
+    const cleared = applyStateSuggestions(applyStateSuggestions(base(), 'CA'), '');
+    expect(originFor(cleared, 'a.insuranceAnnual').label).toBe('Example');
+  });
+
+  it('rounds to something a person would say out loud', () => {
+    for (const code of Object.keys(STATE_DEFAULTS)) {
+      const v = insuranceFor('gas', STATE_DEFAULTS[code].insuranceIndex);
+      expect(v % 10, code).toBe(0);
+    }
   });
 });

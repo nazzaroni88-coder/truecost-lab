@@ -68,7 +68,8 @@ describe('state defaults table', () => {
   });
 
   it('names a real source document for each column, not just a domain', () => {
-    expect(STATE_SOURCES).toHaveLength(4);
+    // One per column in StateDefaults; a dropped source is a column the UI can no longer justify.
+    expect(STATE_SOURCES).toHaveLength(5);
     for (const s of STATE_SOURCES) {
       // A bare origin is the failure this catches: the URL has to point at the actual table.
       expect(s.url, s.label).toMatch(/^https:\/\/[^/]+\/.+/);
@@ -80,6 +81,7 @@ describe('state defaults table', () => {
     expect(hosts).toContain('taxfoundation.org');
     expect(hosts).toContain('gasprices.aaa.com');
     expect(hosts).toContain('www.eia.gov');
+    expect(hosts).toContain('content.naic.org');
   });
 
   it('carries a review date the UI can show', () => {
@@ -100,5 +102,42 @@ describe('state defaults table', () => {
     // Prototype keys must not resolve to an object that would then be read as state data.
     expect(stateDefaultsFor('constructor')).toBeNull();
     expect(stateDefaultsFor('toString')).toBeNull();
+  });
+});
+
+describe('insurance index', () => {
+  it('gives every state an index', () => {
+    for (const [code, d] of Object.entries(STATE_DEFAULTS)) {
+      expect(typeof d.insuranceIndex, code).toBe('number');
+      expect(d.insuranceIndex, code).toBeGreaterThan(0);
+    }
+  });
+
+  it('is a ratio around 1, not a premium', () => {
+    // The whole design rests on this: a value near 1,200 here would mean someone pasted dollars in.
+    for (const [code, d] of Object.entries(STATE_DEFAULTS)) {
+      expect(d.insuranceIndex, code).toBeGreaterThan(0.4);
+      expect(d.insuranceIndex, code).toBeLessThan(2.5);
+    }
+  });
+
+  it('averages close to 1 across the states', () => {
+    const all = Object.values(STATE_DEFAULTS).map((d) => d.insuranceIndex);
+    const mean = all.reduce((a, b) => a + b, 0) / all.length;
+    // The mean is unweighted so it sits below the population-weighted national average of 1.00,
+    // but a table that had drifted off its own base would not land anywhere near it.
+    expect(mean).toBeGreaterThan(0.85);
+    expect(mean).toBeLessThan(1.15);
+  });
+
+  it('keeps the ordering NAIC actually reports', () => {
+    const d = (c: string) => STATE_DEFAULTS[c].insuranceIndex;
+    // Florida is the most expensive state and North Dakota the cheapest, at a ratio of about 2.31.
+    expect(Math.max(...Object.values(STATE_DEFAULTS).map((x) => x.insuranceIndex))).toBe(d('FL'));
+    expect(Math.min(...Object.values(STATE_DEFAULTS).map((x) => x.insuranceIndex))).toBe(d('ND'));
+    expect(d('FL') / d('ND')).toBeCloseTo(2.31, 1);
+    // The structurally expensive states sit above the average, the structurally cheap ones below.
+    for (const c of ['LA', 'NY', 'DC', 'NJ', 'MI']) expect(d(c), c).toBeGreaterThan(1);
+    for (const c of ['ME', 'IA', 'ID', 'VT', 'WI']) expect(d(c), c).toBeLessThan(1);
   });
 });

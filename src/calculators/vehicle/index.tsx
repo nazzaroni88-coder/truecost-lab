@@ -51,7 +51,7 @@ function presetNote(i: VehicleFormInputs): string | null {
     const plural = edits === 1 ? 'number is yours' : 'numbers are yours';
     return `${edits} of these ${plural}; the rest are still illustrative estimates.`;
   }
-  if (i.stateCode) return `Tax, fuel and electricity are ${stateNameOf(i.stateCode)} statewide averages, not your bill.`;
+  if (i.stateCode) return `Tax, fuel, electricity and insurance are ${stateNameOf(i.stateCode)} statewide typicals, not your bill.`;
   return null;
 }
 
