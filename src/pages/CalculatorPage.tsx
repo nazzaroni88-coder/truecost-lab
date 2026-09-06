@@ -96,7 +96,23 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
 
   const path = `/calculators/${def.slug}`;
 
-  if (!active) return null;
+  if (!active) {
+    return (
+      <div className="calc-page container" role="status" aria-live="polite">
+        <div className="calc-head">
+          <CalcIcon kind={def.icon} size={48} />
+          <div>
+            <h1>{def.name}</h1>
+            <p>Loading your scenario…</p>
+          </div>
+        </div>
+        <div className="calc-layout">
+          <div className="card" style={{ height: 420, background: 'var(--tc-surface-2)' }} />
+          <div className="card" style={{ height: 320, background: 'var(--tc-surface-2)' }} />
+        </div>
+      </div>
+    );
+  }
 
   const Form = def.Form;
   const Results = def.Results;
