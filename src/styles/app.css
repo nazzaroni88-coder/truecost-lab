@@ -2516,6 +2516,36 @@ dialog.modal::backdrop {
 .scen-cmp th.cur {
   color: var(--tc-primary-strong);
 }
+/*
+ * Pin the row labels while the scenario columns scroll.
+ *
+ * The comparison is wide by nature — one column per scenario, each holding a full sentence — so on
+ * a phone it scrolls horizontally inside its own container. Without pinning, scrolling across to
+ * read the second scenario takes "Answer", "Depreciation" and the rest off the left edge, leaving
+ * a column of figures with nothing saying what they are. A comparison you cannot label is not a
+ * comparison.
+ */
+/*
+ * `border-collapse: collapse` and sticky cells do not mix: with collapsed borders the browser does
+ * not reliably paint a sticky cell background over the cells scrolling beneath it, and fragments of
+ * the next column showed through the pinned labels. Separate borders with zero spacing look
+ * identical here — every rule in this table is a per-cell border-bottom, nothing relies on
+ * collapsing — and the background paints correctly.
+ */
+.scen-cmp {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.scen-cmp th:first-child,
+.scen-cmp td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  /* Opaque, or the scrolling cells show through the label. */
+  background: var(--tc-surface);
+  /* A hairline edge so the pinned column reads as pinned once content slides under it. */
+  box-shadow: 1px 0 0 var(--tc-rule);
+}
 
 /* ---------- Print ---------- */
 @media print {
