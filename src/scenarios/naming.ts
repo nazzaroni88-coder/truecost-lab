@@ -26,8 +26,20 @@ export type Describe<I> = (inputs: I) => string;
  * Comparing against the OLD inputs is what makes this work. Comparing against the new ones would
  * never match — that mismatch is precisely the staleness being fixed.
  */
+/**
+ * The suffix `nextCopyName` in store.ts appends when duplicating: " (copy)", " (copy 2)", …
+ *
+ * A duplicate's name is still one we generated — the user did not type "(copy)" — so it has to keep
+ * tracking its contents too. Without this a duplicate went stale the moment it was edited, which is
+ * the normal reason to duplicate in the first place. The suffix is preserved rather than dropped,
+ * because it is what tells the two apart in the tab strip.
+ */
+const COPY_SUFFIX = /\s\(copy(?: \d+)?\)$/;
+
 export function nextScenarioName<I>(currentName: string, describe: Describe<I>, oldInputs: I, newInputs: I): string | null {
-  if (currentName !== describe(oldInputs)) return null;
-  const next = describe(newInputs);
+  const suffix = currentName.match(COPY_SUFFIX)?.[0] ?? '';
+  const stem = suffix ? currentName.slice(0, -suffix.length) : currentName;
+  if (stem !== describe(oldInputs)) return null;
+  const next = describe(newInputs) + suffix;
   return next === currentName ? null : next;
 }

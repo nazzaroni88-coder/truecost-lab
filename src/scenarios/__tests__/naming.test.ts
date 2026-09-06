@@ -56,6 +56,22 @@ describeSuite('scenario auto-naming', () => {
     expect(next).toContain(base.b.name.split(' ')[0]);
   });
 
+  it('tracks a duplicate too, and keeps the suffix that tells the two apart', () => {
+    const five = withYears(5);
+    const nine = withYears(9);
+    for (const suffix of [' (copy)', ' (copy 2)', ' (copy 10)']) {
+      const next = nextScenarioName(describeVehicle(five) + suffix, describeVehicle, five, nine);
+      expect(next).toBe(describeVehicle(nine) + suffix);
+      expect(next).toContain('9 yr');
+      expect(next!.endsWith(suffix)).toBe(true);
+    }
+  });
+
+  it('does not mistake a user name that merely ends in "(copy)" for one of ours', () => {
+    // The suffix only matters when what precedes it is exactly our generated form.
+    expect(nextScenarioName('My commute plan (copy)', describeVehicle, withYears(5), withYears(9))).toBeNull();
+  });
+
   it('follows a reset back to defaults', () => {
     // The path I missed on the first pass: reset writes inputs straight to the store, so without
     // the rule a scenario reset to five years kept a name saying nine.
