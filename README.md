@@ -36,6 +36,26 @@ npm run typecheck  # tsc
 npm run build      # production build to dist/
 ```
 
+## Live site
+
+**https://nazzaroni88-coder.github.io/truecost-lab/**
+
+Every push to `main` typechecks, runs the tests and redeploys via `.github/workflows/deploy.yml`. A failing test blocks the deploy, so a broken commit cannot reach the live site.
+
+### Moving it to centsofadventure.me
+
+To serve it from a subdomain instead, add a DNS record at your registrar and tell GitHub about it:
+
+```bash
+gh api -X PUT repos/nazzaroni88-coder/truecost-lab/pages -f cname=truecost.centsofadventure.me
+```
+
+The DNS record is a `CNAME` for `truecost` pointing at `nazzaroni88-coder.github.io`. Once the domain is live the base path is no longer needed, so drop the `VITE_BASE_PATH` env line from the workflow's build step — a custom domain serves from the root.
+
+### Known limitation of GitHub Pages
+
+Pages has no rewrite rules, so a deep link such as `/calculators/vehicle` is served through `404.html`. Visitors get the correct page, but the HTTP status is 404, which search engines will honour. If organic search traffic to individual calculators matters, move to a host with real rewrites (Cloudflare Pages, Netlify or Vercel all support the `_redirects` file already in `public/`), or switch the router to hash URLs.
+
 ## Hosting
 
 `npm run build` produces a static site in `dist/`. It is a single-page app, so the host must serve `index.html` for unknown paths (a Netlify `_redirects` file is included; on Vercel/Cloudflare add the equivalent rewrite, on Apache/Nginx a fallback rule).
@@ -44,6 +64,9 @@ To publish under a sub-path of an existing site (e.g. `centsofadventure.com/true
 
 ```bash
 VITE_BASE_PATH=/truecost/ npm run build
+
+# On Windows in Git Bash, prefix with MSYS_NO_PATHCONV=1 or the leading slash is
+# rewritten into a Windows path and every asset URL comes out wrong.
 ```
 
 Routing, share links and assets all respect the base path.
