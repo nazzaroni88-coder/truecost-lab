@@ -35,9 +35,9 @@ export function customQuickAdjust(): QuickAdjust<CustomInputs>[] {
 export function customAssumptions(i: CustomInputs): { label: string; value: string }[] {
   return [
     { label: 'Horizon', value: `${i.horizonYears} years` },
-    { label: 'Inflation', value: `${fmtPct(i.inflation, 1)}/yr${i.growWithInflation ? ' (applied to ongoing costs and savings)' : ' (replacement prices only)'}` },
-    { label: 'Investment return', value: `${fmtPct(i.investmentReturn, 1)}/yr` },
-    ...(['a', 'b'] as const).map((s) => ({ label: `${i[s].name}: lifespan`, value: i[s].lifespanYears > 0 ? `${i[s].lifespanYears} yr, replaced at the inflated price` : 'lasts the whole horizon' })),
+    { label: `Inflation${i.growWithInflation ? ' (ongoing costs, savings and replacements)' : ' (replacement prices only)'}`, value: `${fmtPct(i.inflation, 1)} inflation` },
+    { label: 'Investment return', value: `${fmtPct(i.investmentReturn, 1)} return` },
+    ...(['a', 'b'] as const).map((s) => ({ label: `${i[s].name}: lifespan (replacements bought at the inflated price)`, value: i[s].lifespanYears > 0 ? `${i[s].name}: ${i[s].lifespanYears} yr life` : `${i[s].name}: lasts the whole horizon` })),
   ];
 }
 

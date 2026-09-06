@@ -998,7 +998,15 @@ strong {
 .calc-results {
   min-width: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--sp-4);
+}
+.calc-results > * {
+  min-width: 0;
+}
+.table-scroll {
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* Option tabs (A / B) inside the form */
