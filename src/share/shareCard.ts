@@ -19,7 +19,7 @@ const FONT = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, He
 // Mirrors the light tokens in tokens.css. Canvas cannot read CSS variables, so these are copied by
 // hand and must be updated alongside them — b was left on the old #b85a08 when the token moved to
 // #ad5407 for AA contrast, and the card quietly drifted away from the app.
-const COLORS = { ink: '#1a1f2b', ink2: '#454d5c', ink3: '#616978', line: '#e0e3e8', primary: '#1b6ef3', primaryStrong: '#1256c7', a: '#1256c7', b: '#ad5407', soft: '#f1f4f9', positive: '#167a4a', negative: '#cf3a2e' };
+const COLORS = { ink: '#1a1f2b', ink2: '#454d5c', ink3: '#616978', line: '#e0e3e8', primary: '#1b6ef3', primaryStrong: '#1256c7', a: '#1256c7', b: '#ad5407', soft: '#f1f4f9', lineStrong: '#c8cdd6', positive: '#167a4a', negative: '#cf3a2e' };
 
 function wrap(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const words = text.split(/\s+/);
@@ -116,7 +116,9 @@ function formatSpec(id: ShareFormat) {
   return SHARE_FORMATS.find((f) => f.id === id) ?? SHARE_FORMATS[0];
 }
 
-const FOOT_LEFT = 'Illustrative estimate · not financial advice';
+/** Result cards carry the estimate disclosure; brand cards have no estimate to disclaim. */
+const FOOT_RESULT_NOTE = 'Illustrative estimate · not financial advice';
+const FOOT_BRAND_NOTE = 'Free · nothing you enter leaves your browser';
 const FOOT_RIGHT = 'TrueCost Lab · a Cents of Adventure tool';
 
 /**
@@ -127,11 +129,11 @@ const FOOT_RIGHT = 'TrueCost Lab · a Cents of Adventure tool';
  * clear, then stack them if even the floor is too tight. Shared with the layout pass so the content
  * block knows how much room the footer actually took.
  */
-function footerMetrics(ctx: CanvasRenderingContext2D, w: number, h: number, pad: number, k: number) {
+function footerMetrics(ctx: CanvasRenderingContext2D, w: number, h: number, pad: number, k: number, note: string) {
   const inner = w - pad * 2;
   const width = (size: number) => {
     ctx.font = `500 ${size}px ${FONT}`;
-    const lw = ctx.measureText(FOOT_LEFT).width;
+    const lw = ctx.measureText(note).width;
     ctx.font = `600 ${size}px ${FONT}`;
     return lw + ctx.measureText(FOOT_RIGHT).width;
   };
@@ -146,7 +148,7 @@ function footerMetrics(ctx: CanvasRenderingContext2D, w: number, h: number, pad:
 }
 
 /** Draws the winner accent, header and footer that every format shares. */
-function drawChrome(ctx: CanvasRenderingContext2D, w: number, h: number, data: ShareCardData, pad: number, k: number) {
+function drawChrome(ctx: CanvasRenderingContext2D, w: number, h: number, data: ShareCardData, pad: number, k: number, note: string) {
   const accent = data.summary.winner === 'a' ? '#1b6ef3' : data.summary.winner === 'b' ? '#f0811f' : '#1b6ef3';
   ctx.fillStyle = accent;
   ctx.fillRect(0, 0, w, Math.round(6 * k));
@@ -164,12 +166,12 @@ function drawChrome(ctx: CanvasRenderingContext2D, w: number, h: number, data: S
   ctx.fillText('Lab', pad + markSize + Math.round(14 * k) + tw + Math.round(8 * k), wordY);
 
   // Footer: the disclosure and the attribution, on one rule.
-  const { fs, stacked, lift, inner, footY, footTop } = footerMetrics(ctx, w, h, pad, k);
+  const { fs, stacked, lift, inner, footY, footTop } = footerMetrics(ctx, w, h, pad, k, note);
   ctx.fillStyle = COLORS.line;
   ctx.fillRect(pad, footY - Math.round(30 * k) - lift, inner, 1);
   ctx.fillStyle = COLORS.ink3;
   ctx.font = `500 ${fs}px ${FONT}`;
-  ctx.fillText(FOOT_LEFT, pad, stacked ? footY - lift : footY);
+  ctx.fillText(note, pad, stacked ? footY - lift : footY);
   ctx.fillStyle = COLORS.primaryStrong;
   ctx.font = `600 ${fs}px ${FONT}`;
   if (stacked) {
@@ -197,7 +199,9 @@ function drawRows(ctx: CanvasRenderingContext2D, rows: ShareSummary['rows'], x: 
   ctx.fillText('THE NUMBERS', x, ry);
   ry += Math.round(26 * k);
   for (const r of rows) {
-    const tick = r.tone === 'a' ? COLORS.a : r.tone === 'b' ? COLORS.b : r.tone === 'positive' ? COLORS.positive : COLORS.line;
+    // An untoned row still gets a mark, but a quiet one — at --tc-line it was so faint it read as
+    // a rendering artefact rather than a deliberate rule.
+    const tick = r.tone === 'a' ? COLORS.a : r.tone === 'b' ? COLORS.b : r.tone === 'positive' ? COLORS.positive : COLORS.lineStrong;
     ctx.fillStyle = tick;
     ctx.fillRect(x, ry - Math.round(13 * k), Math.round(3 * k), Math.round(17 * k));
     const labelX = x + Math.round(12 * k);
@@ -250,7 +254,19 @@ function fmtCurrency(n: number): string {
   return `$${Math.round(n).toLocaleString('en-US')}`;
 }
 
-export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, format: ShareFormat = 'portrait', scale = 2): void {
+/**
+ * The slice of the canvas API these cards use.
+ *
+ * The same renderer draws the in-app preview and the Open Graph images the build pre-renders in
+ * Node, so it is typed against what it actually touches rather than against the DOM.
+ */
+export interface CardCanvas {
+  width: number;
+  height: number;
+  getContext(type: '2d'): CanvasRenderingContext2D | null;
+}
+
+export function renderShareCard(canvas: CardCanvas, data: ShareCardData, format: ShareFormat = 'portrait', scale = 2): void {
   const spec = formatSpec(format);
   const w = spec.w;
   const h = spec.h;
@@ -269,11 +285,13 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
    * hanging off the top.
    */
   const pad = Math.round(w * (format === 'landscape' ? 0.047 : 0.074));
-  const colW = format === 'landscape' ? Math.round(w * 0.56) : w - pad * 2;
+  const colW = format === 'landscape' ? Math.round(w * 0.545) : w - pad * 2;
   const headSize = format === 'landscape' ? 44 : 40;
   const subSize = format === 'landscape' ? 19 : 17;
   const ctxSize = format === 'landscape' ? 15 : 14;
   const maxDrivers = format === 'landscape' ? 0 : format === 'story' ? 4 : 3;
+  /** The scale the card would like to use; the fit loop steps down from here if it must. */
+  const kIdeal = format === 'landscape' ? 1 : format === 'story' ? 2.3 : format === 'square' ? 1.7 : 1.95;
 
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, w, h);
@@ -283,7 +301,21 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
   const drivers = data.summary.drivers ?? [];
   // Rows whose figures the supporting sentence has already spent are repetition, not evidence —
   // rent vs buy was printing "home equity $238,158 vs portfolio $338,239" and then both again.
-  const rows = drivers.length ? [] : data.summary.rows.filter((r) => r.value && r.value !== '—' && !data.summary.sub.includes(r.value));
+  /*
+   * A row earns its place only if both halves can be read.
+   *
+   * Debt vs Invest offers "Debt-free in: 4 years, 4 months vs not within horizon" — a value long
+   * enough that fitting it crushed the label to "Debt-fr…", which is worse than not showing the row
+   * at all. Calculators publish more rows than a card has slots, so an unreadable one is dropped
+   * rather than squeezed. The test is against the widest type the card can use; the fit loop only
+   * ever shrinks from there, which leaves more room, never less.
+   */
+  const detailW = format === 'landscape' ? w - Math.round(w * 0.605) - pad : colW;
+  const valueFits = (value: string) => {
+    ctx.font = `500 ${Math.round(16 * kIdeal)}px ${FONT}`;
+    return ctx.measureText(value).width <= detailW * 0.42;
+  };
+  const rows = drivers.length ? [] : data.summary.rows.filter((r) => r.value && r.value !== '—' && !data.summary.sub.includes(r.value) && valueFits(r.value));
   const detail: unknown[] = drivers.length ? drivers : rows;
 
   /** Everything that depends on the type scale, measured but not drawn. */
@@ -302,10 +334,14 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
     const investLines = data.summary.investLine ? wrap(ctx, data.summary.investLine, colW).slice(0, 2) : [];
     const investBlock = investLines.length ? Math.round(30 * k) + investLines.length * Math.round(26 * k) : 0;
     const blockH = Math.round(30 * k) + headLines.length * headLead + Math.round(10 * k) + subLines.length * subLead + (driverBlock ? Math.round(24 * k) + driverBlock : 0) + investBlock;
+    // Landscape puts the detail in a second column instead, so the taller of the two decides
+    // whether this scale fits — measuring only the text column would let the detail run into the
+    // footer on a calculator with four long drivers.
+    const sideH = maxDrivers ? 0 : Math.round(30 * k) + Math.round(26 * k) + Math.min(detail.length, 4) * Math.round(34 * k);
     // The header and footer are drawn at the same scale, so they move with it.
     const headerBottom = Math.round(pad * 0.78) + Math.round(80 * k);
-    const { footTop } = footerMetrics(ctx, w, h, pad, k);
-    return { k, headLead, subLead, headLines, subLines, investLines, blockH, headerBottom, footTop, fits: blockH <= footTop - headerBottom };
+    const { footTop } = footerMetrics(ctx, w, h, pad, k, FOOT_RESULT_NOTE);
+    return { k, headLead, subLead, headLines, subLines, investLines, blockH, headerBottom, footTop, fits: Math.max(blockH, sideH) <= footTop - headerBottom };
   };
 
   /*
@@ -316,15 +352,14 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
    * larger; the loop then steps the scale down only as far as a long headline actually requires,
    * so nothing can run into the footer and short answers still fill the frame.
    */
-  const kIdeal = format === 'landscape' ? 1 : format === 'story' ? 2.3 : format === 'square' ? 1.7 : 1.95;
   let m = measure(kIdeal);
   for (let k = kIdeal; !m.fits && k > 0.7; k -= 0.05) m = measure(k);
   const { k, headLead, subLead, headLines, subLines, investLines, blockH, headerBottom, footTop } = m;
 
-  drawChrome(ctx, w, h, data, pad, k);
+  drawChrome(ctx, w, h, data, pad, k, FOOT_RESULT_NOTE);
 
   const available = footTop - headerBottom;
-  const contentTop = format === 'landscape' ? headerBottom + Math.round(18 * k) : headerBottom + Math.max(Math.round(16 * k), Math.round((available - blockH) / 2));
+  const contentTop = headerBottom + Math.max(Math.round(16 * k), Math.round((available - blockH) / 2));
 
   // Context line: which calculator, which scenario.
   ctx.fillStyle = COLORS.ink3;
@@ -370,7 +405,7 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
 
   if (format === 'landscape') {
     // Two columns: the answer on the left, the detail stacked on the right.
-    const rx = Math.round(w * 0.63);
+    const rx = Math.round(w * 0.605);
     drawDetail(4, rx, contentTop + Math.round(30 * k), w - rx - pad);
     // The left column used to stop at the sub and leave the bottom third blank.
     drawInvest(y + Math.round(30 * k), colW);
@@ -378,6 +413,79 @@ export function renderShareCard(canvas: HTMLCanvasElement, data: ShareCardData, 
     y += Math.round(24 * k);
     y = drawDetail(format === 'story' ? 4 : 3, pad, y, colW);
     drawInvest(y, colW);
+  }
+}
+
+/**
+ * The card for pages that have no result to show — the homepage, methodology, about.
+ *
+ * Same chrome, same type, so a link to the homepage and a link to a result read as one family in a
+ * feed. It states what the tool does and lists what it covers, rather than dressing a brand line up
+ * as an answer: a card that looks like a result but holds no numbers is the worse lie.
+ */
+export function renderBrandCard(canvas: CardCanvas, data: { title: string; sub: string; items: string[] }, format: ShareFormat = 'landscape', scale = 2): void {
+  const spec = formatSpec(format);
+  const { w, h } = spec;
+  canvas.width = w * scale;
+  canvas.height = h * scale;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  ctx.scale(scale, scale);
+
+  // A brand card holds a headline and a list, so it can carry larger type than a result card at
+  // the same size without the frame filling up.
+  const k = format === 'landscape' ? 1.18 : format === 'story' ? 2.1 : 1.7;
+  const pad = Math.round(w * (format === 'landscape' ? 0.047 : 0.074));
+  const colW = format === 'landscape' ? Math.round(w * 0.51) : w - pad * 2;
+  const headSize = 46;
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  // No winner to colour the accent, so the brand card always wears the primary.
+  const { footTop } = drawChrome(ctx, w, h, { calculatorName: '', summary: { headline: '', sub: '', rows: [], winner: 'none', keyMetric: 0, keyMetricLabel: '' } }, pad, k, FOOT_BRAND_NOTE);
+
+  const headerBottom = Math.round(pad * 0.78) + Math.round(80 * k);
+  const headLead = Math.round(headSize * k * 1.16);
+  ctx.font = `600 ${Math.round(headSize * k)}px ${FONT}`;
+  const headLines = wrap(ctx, data.title, colW).slice(0, 3);
+  ctx.font = `400 ${Math.round(19 * k)}px ${FONT}`;
+  const subLines = wrap(ctx, data.sub, colW).slice(0, 4);
+  const subLead = Math.round(19 * k * 1.5);
+  const blockH = headLines.length * headLead + Math.round(14 * k) + subLines.length * subLead;
+  const listH = Math.round(26 * k) + data.items.length * Math.round(31 * k);
+  const contentTop = headerBottom + Math.max(Math.round(10 * k), Math.round((footTop - headerBottom - Math.max(blockH, listH)) / 2));
+  let y = contentTop;
+
+  ctx.fillStyle = COLORS.ink;
+  ctx.font = `600 ${Math.round(headSize * k)}px ${FONT}`;
+  for (const l of headLines) {
+    y += headLead;
+    ctx.fillText(l, pad, y - Math.round(headLead * 0.24));
+  }
+  y += Math.round(14 * k);
+  ctx.fillStyle = COLORS.ink2;
+  ctx.font = `400 ${Math.round(19 * k)}px ${FONT}`;
+  for (const l of subLines) {
+    y += subLead;
+    ctx.fillText(l, pad, y - Math.round(subLead * 0.28));
+  }
+
+  // The list sits beside the headline on a wide card and under it on a tall one.
+  const listX = format === 'landscape' ? Math.round(w * 0.605) : pad;
+  const listW = format === 'landscape' ? w - listX - pad : colW;
+  let ly = format === 'landscape' ? contentTop + Math.round(16 * k) : y + Math.round(40 * k);
+  ctx.fillStyle = COLORS.ink3;
+  ctx.font = `700 ${Math.round(13 * k)}px ${FONT}`;
+  ctx.fillText('WHAT IT COVERS', listX, ly);
+  ly += Math.round(26 * k);
+  for (const item of data.items) {
+    if (ly > footTop) break;
+    ctx.fillStyle = COLORS.primary;
+    ctx.fillRect(listX, ly - Math.round(12 * k), Math.round(3 * k), Math.round(16 * k));
+    ctx.fillStyle = COLORS.ink;
+    ctx.font = `600 ${Math.round(18 * k)}px ${FONT}`;
+    ctx.fillText(ellipsize(ctx, item, listW - Math.round(12 * k)), listX + Math.round(12 * k), ly);
+    ly += Math.round(31 * k);
   }
 }
 

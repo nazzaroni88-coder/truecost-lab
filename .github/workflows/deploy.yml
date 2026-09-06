@@ -40,9 +40,12 @@ jobs:
 
       - name: Build
         # Project Pages sites are served from /<repo>/, so the app has to know its base path.
+        # SITE_URL is the origin the pre-rendered link previews point at: Open Graph needs absolute
+        # URLs, and a relative og:image is simply ignored by every crawler.
         run: npm run build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
 
       # GitHub Pages has no rewrite rules, so a deep link like /calculators/vehicle 404s on
       # refresh. Serving the app itself as the 404 page lets the router resolve the URL.
