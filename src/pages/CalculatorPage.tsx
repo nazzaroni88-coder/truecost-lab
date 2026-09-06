@@ -328,9 +328,6 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
               <Form inputs={inputs} onChange={onChange} />
               </div>
             </aside>
-            <span className="form-scroll-hint" aria-hidden="true">
-              Scroll for more inputs
-            </span>
           </div>
           <div className="calc-results" ref={resultsRef} id="results" hidden={isMobile && mobileView !== 'results'}>
             <div className="row-between no-print">

@@ -981,8 +981,30 @@ strong {
   top: calc(var(--header-h) + var(--sp-4));
   max-height: calc(100vh - var(--header-h) - var(--sp-6));
   overflow: auto;
-  overscroll-behavior: contain;
+  /* Deliberately NOT `overscroll-behavior: contain`. Containing the scroll traps the wheel inside
+     the pane: you reach the last input, keep scrolling, and the page refuses to move. Letting it
+     chain means the form scrolls to its end and then the page carries on, which is what people
+     expect from a sidebar. */
   scrollbar-width: thin;
+  scrollbar-color: var(--tc-line-strong) transparent;
+  /* Reserve the scrollbar's width so the form does not reflow when it appears. */
+  scrollbar-gutter: stable;
+}
+/* A visible scrollbar is the honest affordance: it shows the pane scrolls and how much is left,
+   which no amount of fading can convey as precisely. */
+.calc-form::-webkit-scrollbar {
+  width: 10px;
+}
+.calc-form::-webkit-scrollbar-track {
+  background: transparent;
+}
+.calc-form::-webkit-scrollbar-thumb {
+  background: var(--tc-line-strong);
+  border-radius: var(--r-pill);
+  border: 3px solid var(--tc-surface);
+}
+.calc-form:hover::-webkit-scrollbar-thumb {
+  background: var(--tc-ink-4);
 }
 @media (max-width: 960px) {
   .calc-form {
@@ -1024,12 +1046,15 @@ strong {
   border: 1px solid var(--tc-line);
   background: var(--tc-surface);
   border-radius: var(--r-md);
-  padding: 10px 12px;
+  /* Tighter horizontal padding buys roughly 4 characters per tab in a three-column strip, which is
+     the difference between "Tesla Model 3" fitting on one line and not. */
+  padding: 9px 9px;
   text-align: left;
   cursor: pointer;
   display: grid;
   gap: 2px;
   min-width: 0;
+  align-content: start;
 }
 .option-tab .lab {
   font-size: var(--fs-micro);
@@ -1037,12 +1062,22 @@ strong {
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
+/* Wrap to two lines rather than truncating. "Tesla Model 3" ellipsed to "Tesla Mod…" in a
+   three-column strip, which is worse than a second line: the whole point of the tab is to tell you
+   which car you are editing. */
 .option-tab .nm {
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-size: var(--fs-small);
+  line-height: 1.25;
+  display: -webkit-box;
+  /* Three lines fits the longest realistic vehicle name ("Toyota Camry Hybrid") in a third of a
+     400px column without shrinking the type. Anything longer still gets the full name on hover
+     via the tab's title attribute. */
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 .option-tab.a .lab {
   color: var(--tc-a-strong);
@@ -1119,16 +1154,19 @@ strong {
   border-color: var(--tc-primary-soft-2);
   color: var(--tc-primary-strong);
 }
+/* Presets wrap rather than scroll horizontally.
+   Scrolling hid two or three examples behind an edge that looked like a rendering bug, and only
+   rewarded people who guessed to swipe. Wrapping costs one or two rows and makes every example
+   visible and one tap away, which is the whole job of this control. */
 .chips-scroll {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 4px;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
-.chips-scroll::-webkit-scrollbar {
-  display: none;
+.chips-scroll .chip {
+  white-space: normal;
+  text-align: left;
 }
 
 /* Scenario bar */
@@ -2366,7 +2404,10 @@ dialog.modal::backdrop {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--sp-2);
+  /* Wrap the whole link to its own line rather than letting both the label and the link break
+     mid-phrase ("APPLIES TO BOTH / CARS" beside "More shared / settings") on a narrow column. */
+  flex-wrap: wrap;
+  gap: var(--sp-1) var(--sp-2);
   margin-bottom: var(--sp-2);
 }
 
@@ -2388,7 +2429,8 @@ dialog.modal::backdrop {
   content: '';
   position: absolute;
   left: 1px;
-  right: 1px;
+  /* Stop short of the scrollbar so the fade never washes over the thumb. */
+  right: 12px;
   bottom: 1px;
   height: 48px;
   border-radius: 0 0 var(--r-lg) var(--r-lg);
@@ -2400,33 +2442,8 @@ dialog.modal::backdrop {
 .calc-form-wrap[data-more='true']::after {
   opacity: 1;
 }
-.form-scroll-hint {
-  position: absolute;
-  left: 50%;
-  bottom: 10px;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--tc-surface-2);
-  border: 1px solid var(--tc-line);
-  color: var(--tc-ink-2);
-  border-radius: var(--r-pill);
-  padding: 4px 12px;
-  font-size: var(--fs-micro);
-  font-weight: 500;
-  box-shadow: var(--sh-1);
-  opacity: 0;
-  transition: opacity var(--dur) var(--ease);
-  pointer-events: none;
-  white-space: nowrap;
-}
-.calc-form-wrap[data-more='true'] .form-scroll-hint {
-  opacity: 1;
-}
 @media (max-width: 960px) {
-  .calc-form-wrap::after,
-  .form-scroll-hint {
+  .calc-form-wrap::after {
     display: none;
   }
 }
