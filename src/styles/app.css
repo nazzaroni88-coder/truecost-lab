@@ -2229,10 +2229,6 @@ dialog.modal::backdrop {
   border-top-color: var(--tc-primary);
   text-decoration: none;
 }
-.calc-card .calc-ico {
-  width: 44px;
-  height: 44px;
-}
 .calc-card h3 {
   font-size: var(--fs-lead);
 }
@@ -2248,17 +2244,6 @@ dialog.modal::backdrop {
   align-items: center;
   gap: 4px;
   margin-top: 4px;
-}
-.calc-card .badge {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  background: var(--tc-primary-soft);
-  color: var(--tc-primary-strong);
-  font-size: var(--fs-micro);
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: var(--r-sm);
 }
 .home-section {
   padding: var(--sp-8) 0 0;
@@ -2322,37 +2307,6 @@ dialog.modal::backdrop {
 .example-card p {
   font-size: var(--fs-small);
   color: var(--tc-ink-3);
-}
-.steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--sp-4);
-}
-/* Numbered steps as a ruled sequence, not four more tiles. */
-.step {
-  padding: var(--sp-4) var(--sp-4) var(--sp-4) 0;
-  border-radius: 0;
-  background: transparent;
-  border: 0;
-  border-top: 1px solid var(--tc-line);
-  display: grid;
-  gap: 8px;
-}
-/* A set numeral in the margin, the way a numbered clause is set — not a filled chip. */
-.step .n {
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: var(--track-tight);
-  color: var(--tc-ink-4);
-  font-variant-numeric: tabular-nums;
-}
-.step h3 {
-  font-size: var(--fs-body);
-}
-.step p {
-  font-size: var(--fs-small);
-  color: var(--tc-ink-2);
 }
 .sticker-demo {
   display: grid;
@@ -2443,40 +2397,6 @@ dialog.modal::backdrop {
   padding: 0 0 16px;
   color: var(--tc-ink-2);
   font-size: var(--fs-small);
-}
-.trust-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--sp-4);
-}
-.trust {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-/* A glyph in the margin, not a tinted chip — same treatment as the break-even and Q&A icons. */
-.trust .ico {
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  border-radius: 0;
-  background: none;
-  color: var(--tc-ink-4);
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-.trust .ico svg {
-  width: 18px;
-  height: 18px;
-}
-.trust h3 {
-  font-size: var(--fs-body);
-}
-.trust p {
-  font-size: var(--fs-small);
-  color: var(--tc-ink-2);
-  margin-top: 2px;
 }
 
 /* Static pages */
@@ -3282,4 +3202,106 @@ dialog.modal::backdrop {
 .robustness a {
   white-space: nowrap;
   font-weight: 600;
+}
+
+/*
+ * Trust as something you read.
+ *
+ * This was four icons in tinted boxes — the "Built to be trusted" row that every generated landing
+ * page ships. Claims about transparency are better made in prose that can be checked than in a
+ * grid of badges, so it is two paragraphs at reading measure and nothing else.
+ */
+.trust-prose {
+  display: grid;
+  gap: var(--sp-3);
+  max-width: 72ch;
+  margin-top: var(--sp-4);
+}
+.trust-prose p {
+  color: var(--tc-ink-2);
+  font-size: var(--fs-body);
+}
+.trust-prose strong {
+  color: var(--tc-ink);
+}
+
+/* Attribution: a rule and type. A bordered card here read as a promo unit. */
+.coa-note {
+  display: flex;
+  gap: var(--sp-4);
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border-top: 2px solid var(--tc-line);
+  padding-top: var(--sp-4);
+}
+.coa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  font-size: var(--fs-small);
+  color: var(--tc-primary-strong);
+  white-space: nowrap;
+}
+
+/*
+ * What the answer stands on, beside the answer.
+ *
+ * Prose at small size rather than another token row — the hero already carries an "Assumes" chip
+ * strip, and a second row of pills would compete with the number instead of qualifying it.
+ */
+.answer-provenance {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-small);
+  color: var(--tc-ink-3);
+  max-width: 68ch;
+}
+
+/*
+ * Mobile: get to the answer.
+ *
+ * The page opens on Results now, but the breadcrumb, a 48px mark, the calculator's description
+ * paragraph and the scenario bar still pushed the headline past the fold on a 812px screen — the
+ * first thing a phone showed was chrome. The description is orientation copy that has already done
+ * its job by the time someone has tapped through to the tool, so it stands down on small screens
+ * and the mark shrinks with it. Nothing is removed from the DOM: it all returns above 720px.
+ */
+@media (max-width: 720px) {
+  .calc-head {
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .calc-head p {
+    display: none;
+  }
+  .calc-head .calc-ico {
+    width: 30px;
+    height: 30px;
+  }
+  .calc-page > .container > nav[aria-label='Breadcrumb'] {
+    margin-bottom: var(--sp-2);
+  }
+}
+
+/*
+ * Key levers: the handful of inputs that decide the answer, ranked by the model itself.
+ *
+ * A row of jump chips, matching the assumption chips above the result rather than inventing a
+ * second affordance for the same gesture — both take you to the input behind a number.
+ */
+.key-levers {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--sp-4);
+}
+.key-levers .lab {
+  font-size: var(--fs-micro);
+  font-weight: 600;
+  letter-spacing: var(--track-caps);
+  text-transform: uppercase;
+  color: var(--tc-ink-3);
+  margin-right: 2px;
 }

@@ -277,7 +277,7 @@ function OptionFields({
             <NumberField label="Down payment" format="currency" value={o.downPayment} onChange={(v) => onPatch({ downPayment: v })} min={0} max={1_000_000} />
             <div className="grid-2">
               <NumberField
-                label="Loan APR"
+                id={`veh-${side}-apr`} label="Loan APR"
                 format="percent"
                 value={o.apr}
                 onChange={(v) => onPatch({ apr: v })}
@@ -309,10 +309,10 @@ function OptionFields({
       <FormSection title="Fuel or charging">
         <SegmentedField<FuelType> label="Power" value={o.fuelType} onChange={onFuelType} block options={[{ value: 'gas', label: 'Gas / hybrid' }, { value: 'electric', label: 'Electric' }]} />
         {o.fuelType === 'gas' ? (
-          <NumberField label="Fuel economy" suffix="mpg" value={o.mpg} onChange={(v) => onPatch({ mpg: v })} min={1} max={150} help="Combined city/highway miles per gallon. Use the real-world number you expect, not the sticker's best case. Hybrids go here too." />
+          <NumberField id={`veh-${side}-mpg`} label="Fuel economy" suffix="mpg" value={o.mpg} onChange={(v) => onPatch({ mpg: v })} min={1} max={150} help="Combined city/highway miles per gallon. Use the real-world number you expect, not the sticker's best case. Hybrids go here too." />
         ) : (
           <>
-            <NumberField label="Efficiency" suffix="mi / kWh" value={o.milesPerKwh} onChange={(v) => onPatch({ milesPerKwh: v })} min={0.5} max={10} decimals={2} step={0.1} help="Miles per kilowatt-hour including charging losses. Most EVs get 3–4.5 mi/kWh in mixed driving; large trucks and SUVs less." />
+            <NumberField id={`veh-${side}-milesPerKwh`} label="Efficiency" suffix="mi / kWh" value={o.milesPerKwh} onChange={(v) => onPatch({ milesPerKwh: v })} min={0.5} max={10} decimals={2} step={0.1} help="Miles per kilowatt-hour including charging losses. Most EVs get 3–4.5 mi/kWh in mixed driving; large trucks and SUVs less." />
             <NumberField label="Home charger install" format="currency" value={o.chargerCost} onChange={(v) => onPatch({ chargerCost: v })} min={0} max={50000} hint="One-time. Typically $500–$2,000 installed" help="Cost of buying and installing a Level 2 home charger, paid once at purchase. Leave at 0 if you already have one or will rely on public charging — but note the electricity rate below assumes home charging." />
           </>
         )}
@@ -321,7 +321,7 @@ function OptionFields({
       <FormSection title="Running costs" sub="Per year, in today's dollars. They grow with cost inflation.">
         <div className="grid-2">
           <NumberField
-            label="Insurance"
+            id={`veh-${side}-insuranceAnnual`} label="Insurance"
             format="currency"
             suffix="/yr"
             value={o.insuranceAnnual}
@@ -344,8 +344,8 @@ function OptionFields({
             hint={regHint}
             help="Annual registration, plate and inspection fees. Only the state EV surcharge half of this is sourced; the base is an illustrative figure, because states charge variously by flat fee, vehicle weight or a percentage of the car's value, and counties add their own. Check your DMV for the real number."
           />
-          <NumberField label="Maintenance" format="currency" suffix="/yr" value={o.maintenanceAnnual} onChange={(v) => onPatch({ maintenanceAnnual: v })} min={0} max={50000} help="Scheduled service: oil changes, brakes, filters, fluids. EVs typically need less." />
-          <NumberField label="Repairs" format="currency" suffix="/yr" value={o.repairsAnnual} onChange={(v) => onPatch({ repairsAnnual: v })} min={0} max={50000} help="Expected unscheduled repairs, averaged per year. Higher for older cars and cars out of warranty." />
+          <NumberField id={`veh-${side}-maintenanceAnnual`} label="Maintenance" format="currency" suffix="/yr" value={o.maintenanceAnnual} onChange={(v) => onPatch({ maintenanceAnnual: v })} min={0} max={50000} help="Scheduled service: oil changes, brakes, filters, fluids. EVs typically need less." />
+          <NumberField id={`veh-${side}-repairsAnnual`} label="Repairs" format="currency" suffix="/yr" value={o.repairsAnnual} onChange={(v) => onPatch({ repairsAnnual: v })} min={0} max={50000} help="Expected unscheduled repairs, averaged per year. Higher for older cars and cars out of warranty." />
           <NumberField label="Tire set cost" format="currency" value={o.tireSetCost} onChange={(v) => onPatch({ tireSetCost: v })} min={0} max={10000} help="Cost of a full set of tires, installed." />
           <NumberField label="Tire life" suffix="mi" value={o.tireIntervalMiles} onChange={(v) => onPatch({ tireIntervalMiles: v })} min={0} max={200000} decimals={0} help="Miles per set of tires. Heavier, more powerful cars wear tires faster." />
         </div>
@@ -353,8 +353,8 @@ function OptionFields({
 
       <FormSection title="Depreciation & resale" sub="The biggest cost most people never see.">
         <div className="grid-2">
-          <NumberField label="First-year drop" format="percent" value={o.firstYearDepreciation} onChange={(v) => onPatch({ firstYearDepreciation: v, resaleOverride: null })} min={0} max={80} decimals={1} origin={ESTIMATE_ORIGIN} help="How much value the car loses in the first year you own it. New cars typically lose 15–25%; a 3-year-old used car more like 10–14%. This is a forecast about future used-car prices, not a sourced figure." disabled={overriding} />
-          <NumberField label="Then per year" format="percent" value={o.annualDepreciation} onChange={(v) => onPatch({ annualDepreciation: v, resaleOverride: null })} min={0} max={60} decimals={1} origin={ESTIMATE_ORIGIN} help="Annual value loss after the first year. Typical: 10–15% for most cars; higher for luxury cars and many EVs, lower for trucks and Toyotas." disabled={overriding} />
+          <NumberField id={`veh-${side}-firstYearDepreciation`} label="First-year drop" format="percent" value={o.firstYearDepreciation} onChange={(v) => onPatch({ firstYearDepreciation: v, resaleOverride: null })} min={0} max={80} decimals={1} origin={ESTIMATE_ORIGIN} help="How much value the car loses in the first year you own it. New cars typically lose 15–25%; a 3-year-old used car more like 10–14%. This is a forecast about future used-car prices, not a sourced figure." disabled={overriding} />
+          <NumberField id={`veh-${side}-annualDepreciation`} label="Then per year" format="percent" value={o.annualDepreciation} onChange={(v) => onPatch({ annualDepreciation: v, resaleOverride: null })} min={0} max={60} decimals={1} origin={ESTIMATE_ORIGIN} help="Annual value loss after the first year. Typical: 10–15% for most cars; higher for luxury cars and many EVs, lower for trucks and Toyotas." disabled={overriding} />
         </div>
         <Switch label="I know the expected resale value" checked={overriding} onChange={(on) => onPatch({ resaleOverride: on ? Math.round(curveResale) : null })} help="Turn this on to enter the value you expect to sell the car for at the end of your ownership period instead of using the depreciation rates." />
         {overriding ? (

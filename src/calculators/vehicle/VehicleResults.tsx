@@ -1,10 +1,11 @@
 import type { ResultsProps } from '../types';
 import type { VehicleOptionResult, VehicleResult } from '../../engine/calculators/vehicle';
-import type { VehicleFormInputs } from './inputs';
+import { sensitivityFieldId, type VehicleFormInputs } from './inputs';
 import { AnswerHero } from '../../components/results/AnswerHero';
 import { InvestDifference } from '../../components/results/InvestDifference';
 import { BreakEvenList, InsightsList, MethodologyPanel, ResultSection } from '../../components/results/Sections';
 import { SensitivitySection } from '../../components/results/SensitivitySection';
+import { KeyLevers } from '../../components/results/KeyLevers';
 import { LineChart } from '../../components/charts/LineChart';
 import { StackedBars, type StackRow } from '../../components/charts/StackedBars';
 import { categoryColor, OPTION_COLORS } from '../../lib/colors';
@@ -105,7 +106,9 @@ export function VehicleResults({ inputs, result, onChange }: ResultsProps<Vehicl
 
   return (
     <>
-      <AnswerHero winner={winner} headline={headline} sub={sub} sensitivity={result.sensitivity} stats={stats} warnings={result.warnings} />
+      <AnswerHero winner={winner} headline={headline} sub={sub} sensitivity={result.sensitivity} stats={stats} warnings={result.warnings}>
+        <KeyLevers rows={result.sensitivity} fieldIdFor={sensitivityFieldId} />
+      </AnswerHero>
 
       <ResultSection id="why" kicker="Why?" title="Where the money goes" sub={`Sticker prices: ${fmtMoney(inputs.a.price)} vs ${fmtMoney(inputs.b.price)}. True ${years}-year cost after resale: ${fmtMoney(a.totalCost)} vs ${fmtMoney(b.totalCost)}.`}>
         <StackedBars rows={rows} ariaLabel={`Cost breakdown for ${a.name} and ${b.name}`} />

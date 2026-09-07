@@ -11,11 +11,12 @@ import { CalcIcon, IconCheck, IconCompare, IconDuplicate, IconMore, IconPlus, Ic
 import { Modal } from '../components/ui/Modal';
 import { Segmented, TextField } from '../components/ui/Controls';
 import { useMediaQuery } from '../lib/useMeasure';
-import { requestFieldFocus } from '../lib/focusField';
+import { onFieldFocusRequest, requestFieldFocus } from '../lib/focusField';
 import { fmtMoney } from '../lib/format';
 import { useToast } from '../components/ui/Toast';
 import { ShareBar, ShareModal } from '../components/results/ShareBar';
 import { ShareProvider } from '../components/results/ShareContext';
+import { ProvenanceProvider, countEdited } from '../components/results/ProvenanceContext';
 import { ErrorBoundary } from '../components/ui/ErrorBoundary';
 import { InvalidFieldsProvider, useInvalidFields } from '../components/forms/InvalidFields';
 import { NotFoundPage } from './NotFoundPage';
@@ -78,7 +79,9 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   const [renameOpen, setRenameOpen] = useState(false);
   const [compareOpen, setCompareOpen] = useState(false);
   const [renameText, setRenameText] = useState('');
-  const [mobileView, setMobileView] = useState<'inputs' | 'results'>('inputs');
+  // Results first on mobile: a preset is always loaded, so there is an answer to show on arrival.
+  // Opening on the form made a decision tool read as a data-entry chore.
+  const [mobileView, setMobileView] = useState<'inputs' | 'results'>('results');
   const isMobile = useMediaQuery('(max-width: 960px)');
   const menuRef = useRef<HTMLDivElement>(null);
   const { scrollRef, wrapRef } = useScrollAffordance();
@@ -119,6 +122,15 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
       document.removeEventListener('keydown', onKey);
     };
   }, [menuOpen]);
+
+  /*
+   * Any focus request reveals the form on mobile, wherever it came from.
+   *
+   * The assumption chips used to switch the view themselves, which meant every future caller had to
+   * remember to. The results pane does not know it is a separate view on a phone, and should not
+   * have to — the shell that owns that state handles it once.
+   */
+  useEffect(() => onFieldFocusRequest(() => { if (isMobile) setMobileView('inputs'); }), [isMobile]);
 
   useEffect(() => {
     document.title = `${def.name} — TrueCost Lab`;
@@ -219,6 +231,23 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search, location.pathname, def, navigate]);
 
+  /*
+   * How much of this answer is the reader's own work.
+   *
+   * Measured against the example the scenario was loaded from, falling back to the calculator's
+   * defaults. This feeds the line beside the answer; the count matters because "1 figure is yours"
+   * and "14 figures are yours" deserve very different amounts of trust.
+   *
+   * Above the "loading" early return, not below it: a hook after a conditional return runs on some
+   * renders and not others, and React counts hooks by position. The loading pass ran 49 and the
+   * loaded pass 50, which took the whole calculator page down with "Rendered more hooks than during
+   * the previous render" — a blank screen on any visit that hit the loading state.
+   */
+  const provenance = useMemo(() => {
+    const baseline = activePreset ? def.normalize(activePreset.inputs) : def.defaults;
+    return { edited: countEdited(deferredInputs, baseline), presetName: activePreset?.name };
+  }, [activePreset, def, deferredInputs]);
+
   const path = `/calculators/${def.slug}`;
 
   if (!active) {
@@ -240,6 +269,7 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
   }
 
   const Form = def.Form;
+
   const Results = def.Results;
 
   return (
@@ -446,7 +476,6 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                         className="chip chip-jump"
                         title={`${a.label} — click to edit`}
                         onClick={() => {
-                          if (isMobile) setMobileView('inputs');
                           requestFieldFocus(a.fieldId!);
                         }}
                       >
@@ -463,17 +492,13 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
                 </a>
               </div>
             )}
-            {(activePreset || presetNote) && (
+            {/* Only the calculator's own note survives here. "Showing the X example with illustrative
+                numbers" now sits beside the answer itself, where it qualifies the figure rather than
+                floating above the result as a third copy of the same disclosure. */}
+            {presetNote && (
               <div className="callout callout-neutral no-print" style={{ padding: '8px 12px' }}>
                 <IconWarning />
-                <div>
-                  {activePreset && (
-                    <>
-                      Showing the <strong>{activePreset.name}</strong> example with illustrative numbers.{' '}
-                    </>
-                  )}
-                  {presetNote ?? 'Edit any input to make it yours.'}
-                </div>
+                <div>{presetNote}</div>
               </div>
             )}
             {invalidFields.length > 0 && (
@@ -486,7 +511,9 @@ function CalculatorShell({ def }: { def: AnyCalculator }) {
               </div>
             )}
             <ErrorBoundary label="the results" onReset={resetInputs}>
-              <Results inputs={deferredInputs} result={result} onChange={onChange} />
+              <ProvenanceProvider value={provenance}>
+                <Results inputs={deferredInputs} result={result} onChange={onChange} />
+              </ProvenanceProvider>
             </ErrorBoundary>
             <RelatedCalculators currentId={def.id} />
           </div>

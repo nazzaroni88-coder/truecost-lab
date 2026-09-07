@@ -117,7 +117,7 @@ function formatSpec(id: ShareFormat) {
 }
 
 /** Result cards carry the estimate disclosure; brand cards have no estimate to disclaim. */
-const FOOT_RESULT_NOTE = 'Illustrative estimate · not financial advice';
+const FOOT_RESULT_NOTE = 'Illustrative estimates · not live prices or advice';
 const FOOT_BRAND_NOTE = 'Free · nothing you enter leaves your browser';
 const FOOT_RIGHT = 'TrueCost Lab · a Cents of Adventure tool';
 
@@ -132,13 +132,18 @@ const FOOT_RIGHT = 'TrueCost Lab · a Cents of Adventure tool';
 function footerMetrics(ctx: CanvasRenderingContext2D, w: number, h: number, pad: number, k: number, note: string) {
   const inner = w - pad * 2;
   const width = (size: number) => {
-    ctx.font = `500 ${size}px ${FONT}`;
+    // 600, because that is the weight drawChrome paints the note at. Measuring the lighter face
+    // under-reported the note by a few pixels and let the square card decide the pair fit at 916 of
+    // 920 when it actually drew 921 — the same overlap this loop exists to prevent.
+    ctx.font = `600 ${size}px ${FONT}`;
     const lw = ctx.measureText(note).width;
     ctx.font = `600 ${size}px ${FONT}`;
     return lw + ctx.measureText(FOOT_RIGHT).width;
   };
   const gap = Math.round(24 * k);
-  const floor = Math.round(11 * Math.min(k, 1.2));
+  // The disclosure has to survive the fit loop legibly; 11px on a 1080-wide card is not a caveat,
+  // it is a formality. Floor it higher and let the pair stack instead of shrinking out of sight.
+  const floor = Math.round(13 * Math.min(k, 1.25));
   let fs = Math.round(14 * k);
   while (fs > floor && width(fs) + gap > inner) fs -= 1;
   const stacked = width(fs) + gap > inner;
@@ -169,8 +174,10 @@ function drawChrome(ctx: CanvasRenderingContext2D, w: number, h: number, data: S
   const { fs, stacked, lift, inner, footY, footTop } = footerMetrics(ctx, w, h, pad, k, note);
   ctx.fillStyle = COLORS.line;
   ctx.fillRect(pad, footY - Math.round(30 * k) - lift, inner, 1);
-  ctx.fillStyle = COLORS.ink3;
-  ctx.font = `500 ${fs}px ${FONT}`;
+  // ink2 at 600, not ink3 at 500: the caveat is the one line on the card that must not read as
+  // decoration. It sits opposite the attribution at the same size, so neither outranks the other.
+  ctx.fillStyle = COLORS.ink2;
+  ctx.font = `600 ${fs}px ${FONT}`;
   ctx.fillText(note, pad, stacked ? footY - lift : footY);
   ctx.fillStyle = COLORS.primaryStrong;
   ctx.font = `600 ${fs}px ${FONT}`;

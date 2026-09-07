@@ -63,6 +63,22 @@ export const VEHICLE_FIELD_IDS = {
   investmentReturn: 'veh-investment-return',
 } as const;
 
+/**
+ * The DOM id for the input behind a sensitivity row.
+ *
+ * Sensitivity keys already carry the side and the field ("a.insuranceAnnual"), so the mapping is
+ * mechanical rather than a second hand-maintained list that could drift out of step with the
+ * engine's variables. A key with no matching input returns undefined and the caller renders a
+ * label instead of a link, which is what happens for the shared variables that already have chips.
+ */
+const LEVER_FIELDS = new Set(['insuranceAnnual', 'annualDepreciation', 'firstYearDepreciation', 'resaleOverride', 'apr', 'mpg', 'milesPerKwh', 'maintenanceAnnual', 'repairsAnnual']);
+
+export function sensitivityFieldId(key: string): string | undefined {
+  const [side, field] = key.split('.');
+  if ((side !== 'a' && side !== 'b') || !LEVER_FIELDS.has(field)) return undefined;
+  return `veh-${side}-${field}`;
+}
+
 export interface VehicleFormInputs extends VehicleInputs {
   /** Two-letter state code, or '' when the user has not chosen one. */
   stateCode: string;

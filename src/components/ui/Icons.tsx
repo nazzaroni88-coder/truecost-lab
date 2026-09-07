@@ -131,17 +131,6 @@ export const IconShield = (p: P) => (
     <path d="m9 12 2 2 4-4" />
   </svg>
 );
-export const IconEye = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
-    <circle cx="12" cy="12" r="3" />
-  </svg>
-);
-export const IconSparkle = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.5 6.5 9 9M15 15l2.5 2.5M6.5 17.5 9 15M15 9l2.5-2.5" />
-  </svg>
-);
 export const IconMore = (p: P) => (
   <svg {...base(p)}>
     <circle cx="6" cy="12" r="1.5" fill="currentColor" stroke="none" />
@@ -153,12 +142,6 @@ export const IconCompare = (p: P) => (
   <svg {...base(p)}>
     <rect x="3" y="5" width="7" height="14" rx="1.5" />
     <rect x="14" y="5" width="7" height="14" rx="1.5" />
-  </svg>
-);
-export const IconScaleBalance = (p: P) => (
-  <svg {...base(p)}>
-    <path d="M12 3v18M5 21h14M12 6l-7 4M12 6l7 4" />
-    <path d="M2 14a3 3 0 0 0 6 0l-3-6-3 6ZM16 14a3 3 0 0 0 6 0l-3-6-3 6Z" />
   </svg>
 );
 export const IconLightbulb = (p: P) => (

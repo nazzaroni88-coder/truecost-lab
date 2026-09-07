@@ -32,6 +32,11 @@ jobs:
         run: npm ci
 
       # A broken build should never reach the live site, so the gate runs before it.
+      # Lint first: it is the only step that can see a hook called conditionally, which typecheck,
+      # tests and a successful build all pass straight over on the way to a blank screen.
+      - name: Lint
+        run: npm run lint
+
       - name: Typecheck
         run: npm run typecheck
 

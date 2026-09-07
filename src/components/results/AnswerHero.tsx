@@ -3,6 +3,7 @@ import { InfoTip } from '../ui/InfoTip';
 import { IconWarning } from '../ui/Icons';
 import { SharePrompt } from './SharePrompt';
 import { RobustnessNote } from './Robustness';
+import { provenanceLine, useProvenance } from './ProvenanceContext';
 import type { SensitivityRow } from '../../engine/core/sensitivity';
 
 export interface HeroStat {
@@ -22,6 +23,7 @@ export function AnswerHero({ winner, kicker = 'The answer', headline, sub, sensi
         {headline}
       </h2>
       {sub && <p className="answer-sub">{sub}</p>}
+      <ProvenanceLine />
       {/* Whether the answer survives the inputs being wrong belongs with the answer, not four
           sections below it. */}
       {sensitivity && <RobustnessNote rows={sensitivity} />}
@@ -55,4 +57,14 @@ export function AnswerHero({ winner, kicker = 'The answer', headline, sub, sensi
     <SharePrompt />
     </>
   );
+}
+
+/**
+ * One quiet line saying what the answer stands on. Rendered only where a calculator page has
+ * supplied provenance, so results embedded elsewhere are unaffected.
+ */
+function ProvenanceLine() {
+  const p = useProvenance();
+  if (!p) return null;
+  return <p className="answer-provenance">{provenanceLine(p)}</p>;
 }
