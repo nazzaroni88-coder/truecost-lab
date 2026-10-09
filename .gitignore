@@ -4,3 +4,6 @@ dist
 *.log
 .vite
 tsconfig.tsbuildinfo
+
+CLAUDE_HANDOFF.md
+.claude/
